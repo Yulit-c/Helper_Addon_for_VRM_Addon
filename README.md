@@ -1,2 +1,3 @@
-# VRM_Helper
-This add-on is a collection of multiple tools to assist in the setup of VRM files.
+# Helper_Addon_for_VRM_Addon
+
+This add-on will assist you in setting up a VRM file with add-on "VRM-Addon-for-Blender".
