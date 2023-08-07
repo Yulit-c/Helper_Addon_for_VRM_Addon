@@ -33,6 +33,7 @@ from bpy.types import (
     CopyRotationConstraint,
     DampedTrackConstraint,
     UILayout,
+    bpy_prop_collection,
 )
 
 from ..property_groups import (
@@ -116,7 +117,7 @@ def determine_constraint_type(
 ) -> VrmRollConstraint | VrmAimConstraint | VrmRotationConstraint | None:
     """
     'source_constraint'がVRMが定義するコンストレイントの内､どれに該当するかを判定する｡
-    パラメーター設定に応じて'Roll', 'Aim', 'Rotation'､あるいはNoneとと判定される｡
+    パラメーター設定に応じて'Roll', 'Aim', 'Rotation'､あるいはNoneと判定される｡
 
     Parameters
     ----------
@@ -768,6 +769,15 @@ def detect_constrainted_and_target_element() -> (
 
 
 def set_roll_and_rotation_common_paramette(source_constraint: CopyRotationConstraint):
+    """
+    'source_constraint'に対してRoll Constraint/Rotation Constraintが共通して要求する値をセットする｡
+
+    Parameters
+    ----------
+    source_constraint : CopyRotationConstraint
+        処理対象のコンストレイント
+
+    """
     source_constraint.mix_mode = "ADD"
     source_constraint.owner_space = "LOCAL"
     source_constraint.target_space = "LOCAL"
@@ -777,6 +787,19 @@ def set_vrm_constraint_parametters(
     source_constraint: CopyRotationConstraint | DampedTrackConstraint,
     constraint_type: Literal["ROLL", "AIM", "ROTATION"],
 ):
+    """
+    'source_constraint'に対して'constraint_type'で指定したコンストレイントが要求する値をセットする｡
+
+    Parameters
+    ----------
+    source_constraint : CopyRotationConstraint
+        処理対象のコンストレイント
+
+    constraint_type: Literal["ROLL", "AIM", "ROTATION"]
+        値をセットするVRMコンストレイントのタイプ
+
+    """
+
     match constraint_type:
         case "ROLL":
             logger.debug("Created VRM Constraint : Roll Constraint")
@@ -790,3 +813,21 @@ def set_vrm_constraint_parametters(
         case "ROTATION":
             logger.debug("Created VRM Constraint : Rotation Constraint")
             set_roll_and_rotation_common_paramette(source_constraint)
+
+
+def remove_existing_vrm_constraint(source_constraints: bpy_prop_collection):
+    '''
+    'source_constraints'内の全コンストレイントの内､VRM定義のコンストレイントが存在すればそれを削除する｡
+
+    Parameters
+    ----------
+    source_constraints : bpy_prop_collection
+        コンストレイントを格納したbpy_prop_collection
+
+    '''
+
+    target_armature = get_target_armature
+    for constraint in source_constraints:
+        if determine_constraint_type(constraint, target_armature):
+            logger.debug("Remove Existing Constraint")
+            source_constraints.remove(constraint)

@@ -36,7 +36,7 @@
             "handlers": [ "consoleHandler" ],
             "propagate": false
         },
-        "VRM_Helper": {
+        "Helper_Addon_for_VRM_Addon": {
             "level": "DEBUG",
             "handlers": [ "consoleHandler" ],
             "propagate": false

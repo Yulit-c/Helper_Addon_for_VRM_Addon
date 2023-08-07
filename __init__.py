@@ -3,9 +3,9 @@
 # TODO : 各OperatorのPollの確認｡
 
 bl_info = {
-    "name": "VRM Helper",
+    "name": "Helper Addon for VRM Addon",
     "author": "Yu-Lit",
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "blender": (3, 3, 0),
     "location": "Property Panel, Press N in the 3DView",
     "description": "Addon for VRM Setup",
@@ -105,7 +105,7 @@ def register():
     )
 
     # デバッグ用
-    launch_debug_server()
+    # launch_debug_server()
 
 
 def unregister():
