@@ -1254,6 +1254,20 @@ class VRMHELPER_WM_root_property_group(PropertyGroup):
     Function
 ------------------------------------------------------------
 ---------------------------------------------------------"""
+"""---------------------------------------------------------
+    Common
+---------------------------------------------------------"""
+
+
+def evaluation_active_index_prop(
+    source_list: bpy.types.CollectionProperty,
+    active_index: int,
+) -> int:
+    length = max(len(source_list) - 1, 0)
+    if length < active_index:
+        active_index = length
+    return active_index
+
 
 """---------------------------------------------------------
     Get Common Property Group
@@ -1350,7 +1364,79 @@ def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
     constraint_prop = wm_vrm1_prop.constraint_prop
     return constraint_prop
 
-def
+
+def get_ui_vrm1_first_person_prop() -> VRMHELPER_WM_vrm1_first_person_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    first_person_filter = wm_vrm1_root_prop.first_person_list_items4custom_filter
+    return first_person_filter
+
+
+def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_filter = wm_vrm1_root_prop.expression_list_items4custom_filter
+    return expression_filter
+
+
+def get_ui_vrm1_expression_morph_prop() -> VRMHELPER_WM_vrm1_expression_morph_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_morph_filter = wm_vrm1_root_prop.expression_morph_list_items4custom_filter
+    return expression_morph_filter
+
+
+def get_ui_vrm1_expression_material_prop() -> VRMHELPER_WM_vrm1_expression_material_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_material_filter = wm_vrm1_root_prop.expression_material_list_items4custom_filter
+    return expression_material_filter
+
+
+def get_ui_vrm1_collider_prop() -> VRMHELPER_WM_vrm1_collider_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_filter = wm_vrm1_root_prop.collider_list_items4custom_filter
+    return collider_filter
+
+
+def get_ui_vrm1_collider_group_prop() -> VRMHELPER_WM_vrm1_collider_group_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list_items4custom_filter
+    return collider_group_filter
+
+
+def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list_items4custom_filter
+    return spring_filter
+
+
+def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list_items4custom_filter
+    return spring_filter
+
+
+def get_ui_vrm1_operator_bone_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
+    return bone_group_filter
+
+
+def get_ui_vrm1_operator_collider_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
+    return collider_group_filter
+
+
+def get_ui_vrm1_operator_spring_prop() -> VRMHELPER_WM_vrm1_operator_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list4operator
+    return spring_filter
+
+
+def get_ui_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    constraint_filter = wm_vrm1_root_prop.constraint_list_items4custom_filter
+    return constraint_filter
+
+
 def get_ui_list_prop4custom_filter(
     type: UI_LIST_CUSTOM_FILTER_TYPE,
 ) -> (
@@ -1371,21 +1457,7 @@ def get_ui_list_prop4custom_filter(
 
     Parameters
     ----------
-    type: Literal[
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "EXPRESSION_MORPH",
-        "EXPRESSION_COLOR",
-        "EXPRESSION_TRANSFORM",
-        "EXPRESSION_MATERIAL",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        "BONE_GROUP"
-        "COLLIDER_GROUP_OPERATOR",
-        "SPRING_OPERATOR",
-        "CONSTRAINT",
-    ]
+    ype: UI_LIST_CUSTOM_FILTER_TYPE
         取得するプロパティグループの種類
 
     Returns
