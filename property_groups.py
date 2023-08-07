@@ -1238,6 +1238,10 @@ class VRMHELPER_WM_root_property_group(PropertyGroup):
 ------------------------------------------------------------
 ---------------------------------------------------------"""
 
+"""---------------------------------------------------------
+    Get Common Property Group
+---------------------------------------------------------"""
+
 
 def get_wm_prop_root() -> VRMHELPER_WM_root_property_group:
     wm_root_prop = bpy.context.window_manager.vrm_helper
@@ -1249,22 +1253,62 @@ def get_scene_prop_root() -> VRMHELPER_SCENE_root_property_group:
     return scene_root_prop
 
 
-def get_vrm0_root_prop() -> VRMHELPER_SCENE_vrm0_root_property_group:
-    scene_root_prop = get_scene_prop_root()
-    vrm0_root_property = scene_root_prop.vrm0_props
-    return vrm0_root_property
+"""---------------------------------------------------------
+    Get VRM0 Property Group
+---------------------------------------------------------"""
 
 
-def get_vrm1_root_prop() -> VRMHELPER_SCENE_vrm1_root_property_group:
+def get_vrm0_scene_root_prop() -> VRMHELPER_SCENE_vrm0_root_property_group:
     scene_root_prop = get_scene_prop_root()
-    vrm1_root_property = scene_root_prop.vrm1_props
-    return vrm1_root_property
+    vrm0_scene_root_property = scene_root_prop.vrm0_props
+    return vrm0_scene_root_property
+
+
+def get_vrm0_wm_root_prop() -> VRMHELPER_WM_vrm0_root_property_group:
+    wm_root_prop = get_wm_prop_root()
+    vrm0_wm_root_prop = wm_root_prop.vrm0_props
+
+    return vrm0_wm_root_prop
+
+
+"""---------------------------------------------------------
+    Get VRM1 Property Group
+---------------------------------------------------------"""
+
+
+def get_vrm1_wm_root_prop() -> VRMHELPER_WM_vrm1_root_property_group:
+    wm_root_prop = get_wm_prop_root()
+    vrm1_wm_root_prop = wm_root_prop.vrm1_props
+
+    return vrm1_wm_root_prop
+
+
+def get_vrm1_scene_root_prop() -> VRMHELPER_SCENE_vrm1_root_property_group:
+    scene_root_prop = get_scene_prop_root()
+    vrm1_scene_root_property = scene_root_prop.vrm1_props
+    return vrm1_scene_root_property
 
 
 def get_vrm1_index_root_prop() -> VRMHELPER_SCENE_vrm1_ui_list_active_indexes:
-    vrm1_root_property = get_vrm1_root_prop()
+    vrm1_root_property = get_vrm1_scene_root_prop()
     vrm1_index_root_prop = vrm1_root_property.active_indexes
     return vrm1_index_root_prop
+
+
+def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settigs:
+    scene_vrm1_prop: VRMHELPER_SCENE_vrm1_root_property_group = (
+        get_scene_prop_root().vrm1_props
+    )
+    constraint_prop = scene_vrm1_prop.constraint_settings
+
+    return constraint_prop
+
+
+def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    constraint_prop = wm_vrm1_prop.constraint_prop
+
+    return constraint_prop
 
 
 def get_addon_prop_group(
@@ -1406,22 +1450,6 @@ def get_addon_prop_group(
                     result = vrm1_prop.constraint_settings
 
     return result
-
-
-def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settigs:
-    scene_vrm1_prop: VRMHELPER_SCENE_vrm1_root_property_group = (
-        get_scene_prop_root().vrm1_props
-    )
-    constraint_prop = scene_vrm1_prop.constraint_settings
-
-    return constraint_prop
-
-
-def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
-    wm_vrm1_prop: VRMHELPER_WM_vrm1_root_property_group = get_wm_prop_root().vrm1_props
-    constraint_prop = wm_vrm1_prop.constraint_prop
-
-    return constraint_prop
 
 
 def get_vrm1_active_index_prop(
