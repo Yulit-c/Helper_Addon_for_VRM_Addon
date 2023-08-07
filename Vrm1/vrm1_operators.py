@@ -129,6 +129,7 @@ from .utils_vrm1_constraint import (
     detect_constrainted_and_target_element,
     set_vrm_constraint_parametters,
     detect_constraint_or_label,
+    remove_existing_vrm_constraint,
 )
 
 from ..operators import (
@@ -1851,6 +1852,9 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
         constraint_name = self.constraint_name_dict[self.constraint_type]
 
         constraints = constrainted_element.constraints
+        # 既にVRMコンストレイントが存在する場合は削除する｡
+        remove_existing_vrm_constraint(constraints)
+
         new_constraint: CopyRotationConstraint | DampedTrackConstraint = (
             constraints.new(constraint_type)
         )
