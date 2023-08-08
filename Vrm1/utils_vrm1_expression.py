@@ -29,10 +29,18 @@ from bpy.types import (
     bpy_prop_collection,
 )
 
-from ..property_groups import (
+
+from ..addon_classes import (
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1TextureTransformBindPropertyGroup,
+)
+
+from ..addon_constants import (
+    PRESET_EXPRESSION_NAME_DICT,
+)
+
+from ..property_groups import (
     VRMHELPER_WM_vrm1_expression_material_list_items,
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm1_expression_list_items,
@@ -69,31 +77,6 @@ from ..Logging.preparation_logger import preparating_logger
 logger = preparating_logger(__name__)
 #######################################################
 
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-PRESET_EXPRESSION_NAME_DICT = {
-    "happy": "Happy",
-    "angry": "Angry",
-    "sad": "Sad",
-    "relaxed": "Relaxed",
-    "surprised": "Suprised",
-    "neutral": "Neutral",
-    "aa": "Aa",
-    "ih": "Ih",
-    "ou": "Ou",
-    "ee": "Ee",
-    "oh": "Oh",
-    "blink": "Blink",
-    "blink_left": "Blink Left",
-    "blink_right": "Blink Right",
-    "look_up": "Look Up",
-    "look_down": "Look Down",
-    "look_left": "Look Left",
-    "look_right": "Look Right",
-}
 
 """---------------------------------------------------------
 ------------------------------------------------------------

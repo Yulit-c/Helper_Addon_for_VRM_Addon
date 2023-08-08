@@ -173,7 +173,7 @@ logger = preparating_logger(__name__)
 
 class VRMHELPER_VRM1_joint_property:
     """
-    ジョイント用オペレータープロパティーを持たせた基底クラス｡
+    ジョイント用オペレータープロパティーをフィールドとする基底クラス｡
     """
 
     hit_radius: FloatProperty(

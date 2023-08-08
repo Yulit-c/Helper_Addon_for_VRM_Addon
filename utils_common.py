@@ -34,6 +34,10 @@ from bpy.types import (
 )
 
 
+from .addon_classes import (
+    VRMHelper_Addon_Collection_Dict,
+)
+
 from .preferences import (
     get_addon_preferences,
     get_addon_collection_name,
@@ -49,37 +53,6 @@ from .Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-# ----------------------------------------------------------
-#    UI List
-# ----------------------------------------------------------
-class VRMHelper_Addon_Collection_Dict(TypedDict):
-    ROOT: Collection
-    VRM0_Root: Collection
-    VRM1_Root: Collection
-    VRM1_COLLIDER: Collection
-    VRM1_EXPRESSION_MORPH: Collection
-    VRM1_EXPRESSION_MATERIAL: Collection
-
-
-class VRMHELPER_UL_base:
-    """
-    UI List用基底クラス
-    """
-
-    def add_blank_labels(self, layout: UILayout, count: int, factor: float = 2.0):
-        iteration_count = 0
-        while iteration_count != count:
-            layout.separator(factor=factor)
-            iteration_count += 1
 
 
 """---------------------------------------------------------
