@@ -14,9 +14,7 @@ else:
     from .Logging import preparation_logger
     from . import preferences
 
-from typing import (
-    Literal,
-)
+from typing import Literal, Iterator, Any
 from pathlib import Path
 
 import bpy
@@ -520,7 +518,9 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
             return
 
         # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
-        colliders = get_target_armature_data().vrm_addon_extension.spring_bone1.colliders
+        colliders = (
+            get_target_armature_data().vrm_addon_extension.spring_bone1.colliders
+        )
         current_object_in_loop = None
         if active_item.item_type[1]:
             collider_prop = get_addon_prop_group("COLLIDER")
@@ -549,12 +549,16 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
         # アクティブアイテムがコライダーであればそれを選択する｡
         bpy.ops.object.select_all(action="DESELECT")
         if active_item.item_type[2]:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(True)
+            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
+                True
+            )
             current_object_in_loop = collider
 
         # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
         else:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(True)
+            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
+                True
+            )
             current_object_in_loop = collider
 
         context.view_layer.objects.active = current_object_in_loop
@@ -563,7 +567,9 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
         # 現在のインデックスからアクティブアイテムを取得する｡
         constraint_ui_list = get_ui_list_prop4custom_filter("CONSTRAINT")
         active_index = get_vrm1_active_index_prop("CONSTRAINT")
-        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[active_index]
+        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
+            active_index
+        ]
 
         # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
         if active_item.is_blank or active_item.is_label:
@@ -968,7 +974,9 @@ class VRMHELPER_WM_vrm1_collider_group_list_items(PropertyGroup):
 
     item_name: StringProperty(
         name="Collider Group Name",
-        description=("Name of the collider group component registered in the VRM Extension"),
+        description=(
+            "Name of the collider group component registered in the VRM Extension"
+        ),
         default="",
     )
 
@@ -1070,12 +1078,16 @@ class VRMHELPER_WM_vrm1_constraint_property(PropertyGroup):
             case "OBJECT":
                 active_item = constraint_list[active_index]
                 target_object = bpy.data.objects.get(active_item.name)
-                source_constraint = target_object.constraints[active_item.constraint_index]
+                source_constraint = target_object.constraints[
+                    active_item.constraint_index
+                ]
 
             case "BONE":
                 target_armature = get_target_armature()
                 target_bone = target_armature.pose.bones.get(active_item.name)
-                source_constraint = target_bone.constraints[active_item.constraint_index]
+                source_constraint = target_bone.constraints[
+                    active_item.constraint_index
+                ]
 
         source_constraint.use_x = False
         source_constraint.use_y = False
@@ -1260,7 +1272,7 @@ class VRMHELPER_WM_root_property_group(PropertyGroup):
 
 
 def evaluation_active_index_prop(
-    source_list: bpy.types.CollectionProperty,
+    source_list: Any,
     active_index: int,
 ) -> int:
     length = max(len(source_list) - 1, 0)
@@ -1377,15 +1389,23 @@ def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
     return expression_filter
 
 
-def get_ui_vrm1_expression_morph_prop() -> VRMHELPER_WM_vrm1_expression_morph_list_items:
+def get_ui_vrm1_expression_morph_prop() -> (
+    VRMHELPER_WM_vrm1_expression_morph_list_items
+):
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_morph_filter = wm_vrm1_root_prop.expression_morph_list_items4custom_filter
+    expression_morph_filter = (
+        wm_vrm1_root_prop.expression_morph_list_items4custom_filter
+    )
     return expression_morph_filter
 
 
-def get_ui_vrm1_expression_material_prop() -> VRMHELPER_WM_vrm1_expression_material_list_items:
+def get_ui_vrm1_expression_material_prop() -> (
+    VRMHELPER_WM_vrm1_expression_material_list_items
+):
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_material_filter = wm_vrm1_root_prop.expression_material_list_items4custom_filter
+    expression_material_filter = (
+        wm_vrm1_root_prop.expression_material_list_items4custom_filter
+    )
     return expression_material_filter
 
 
@@ -1413,13 +1433,17 @@ def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
     return spring_filter
 
 
-def get_ui_vrm1_operator_bone_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items:
+def get_ui_vrm1_operator_bone_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
+):
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
     bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
     return bone_group_filter
 
 
-def get_ui_vrm1_operator_collider_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items:
+def get_ui_vrm1_operator_collider_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
+):
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
     collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
     return collider_group_filter
@@ -1534,8 +1558,8 @@ def get_vrm1_active_index_prop(component_type: VRM_COMPONENT_TYPES) -> int:
 
     Parameters
     ----------
-    type: VRM_COMPONENT_TYPES
-        取得対象となるアクティブアイテムインデックスのプロパティ｡
+    component_type: VRM_COMPONENT_TYPES
+        UI Listアクティブインデックスを取得したいVRMデータの種類｡
 
     Returns
     -------
@@ -1544,36 +1568,42 @@ def get_vrm1_active_index_prop(component_type: VRM_COMPONENT_TYPES) -> int:
 
     """
     vrm1_index_prop = get_vrm1_index_root_prop()
-    length = max(len(get_ui_list_prop4custom_filter(component_type)) - 1, 0)
 
     match component_type:
         case "FIRST_PERSON":
+            list_items = get_ui_vrm1_first_person_prop()
             index = vrm1_index_prop.first_person
 
         case "EXPRESSION":
+            list_items = get_ui_vrm1_expression_prop()
             index = vrm1_index_prop.expression
 
         case "EXPRESSION_MORPH":
+            list_items = get_ui_vrm1_expression_morph_prop()
             index = vrm1_index_prop.expression_morph
 
         case "EXPRESSION_MATERIAL":
+            list_items = get_ui_vrm1_expression_material_prop()
             index = vrm1_index_prop.expression_material
 
         case "COLLIDER":
+            list_items = get_ui_vrm1_collider_prop()
             index = vrm1_index_prop.collider
 
         case "COLLIDER_GROUP":
+            list_items = get_ui_vrm1_collider_group_prop()
             index = vrm1_index_prop.collider_group
 
         case "SPRING":
+            list_items = get_ui_vrm1_spring_prop()
             index = vrm1_index_prop.spring
 
         case "CONSTRAINT":
+            list_items = get_ui_vrm1_constraint_prop()
             index = vrm1_index_prop.constraint
 
-    if length < index:
-        index = length
-    return index
+    active_index = evaluation_active_index_prop(list_items, index)
+    return active_index
 
 
 def get_scene_vrm1_first_person_prop() -> VRMHELPER_SCENE_vrm1_first_person_settigs:
