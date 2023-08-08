@@ -41,6 +41,15 @@ from bpy.types import (
     UILayout,
 )
 
+
+from ..addon_classes import (
+    VRMHELPER_UL_base,
+)
+
+from ..addon_constants import (
+    JOINT_PROP_NAMES,
+)
+
 from ..property_groups import (
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_WM_vrm1_collider_list_items,
@@ -62,7 +71,6 @@ from ..property_groups import (
 )
 
 from ..utils_common import (
-    VRMHELPER_UL_base,
     get_properties_to_dict,
     define_ui_list_rows,
     set_properties_to_from_dict,
@@ -183,20 +191,6 @@ from ..Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-JOINT_PROP_NAMES = (
-    "hit_radius",
-    "stiffness",
-    "drag_force",
-    "gravity_power",
-    "gravity_dir",
-    "damping_ratio",
-)
 
 
 """---------------------------------------------------------

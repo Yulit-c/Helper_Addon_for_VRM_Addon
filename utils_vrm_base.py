@@ -38,14 +38,23 @@ from bpy.types import (
     DampedTrackConstraint,
 )
 
-from mathutils import (
-    Color,
+
+from .addon_classes import (
+    MToon1MaterialParameters,
+    ReferenceVrm1FirstPersonPropertyGroup,
+    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1MaterialColorBindPropertyGroup,
+    ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm1ColliderGroupPropertyGroup,
+    ReferenceVrm1SpringPropertyGroup,
+)
+
+from .addon_constants import (
+    MTOON_ATTRIBUTE_NAMES,
+    MTOON_DEFAULT_VALUES,
 )
 
 from .property_groups import (
-    ReferenceVrm1MaterialColorBindPropertyGroup,
-    ReferenceVrm1ColliderPropertyGroup,
-    # ----------------------------------------------------------
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
     get_scene_basic_prop,
@@ -74,89 +83,6 @@ from .Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-class MToon1ParameterNames(TypedDict):
-    texture_scale: str
-    texture_offset: str
-    lit_color: str
-    shade_color: str
-    emission_color: str
-    matcap_color: str
-    rim_color: str
-    outline_color: str
-
-
-class MToon1MaterialParameters(TypedDict, total=False):
-    texture_scale: list[float]
-    texture_offset: list[float]
-    lit_color: list[float]
-    shade_color: list[float]
-    emission_color: list[float]
-    matcap_color: list[float]
-    rim_color: list[float]
-    outline_color: list[float]
-
-
-class VrmRollConstraint:
-    pass
-
-
-class VrmAimConstraint:
-    pass
-
-
-class VrmRotationConstraint:
-    pass
-
-
-class CandidateConstraitProperties(NamedTuple):
-    type: VrmAimConstraint | VrmAimConstraint | VrmRotationConstraint  # VRMコンストレイントの種類
-    element: Object | Bone  # コンストレイントがアタッチされたデータ
-    index: int  # elementが持つコンストレイントスタックにおける対象コンストレイントのインデックス
-    is_circular_dependency: bool  # 循環依存関係が生じていることを示すフラグ
-    constraint: CopyRotationConstraint | DampedTrackConstraint  # 'element'にアタッチされたコンストレイント
-
-
-class ConstraintTypeDict(TypedDict):
-    ROLL: str
-    AIM: str
-    ROTATION: str
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-MTOON_ATTRIBUTE_NAMES: MToon1ParameterNames = {
-    "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
-    "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
-    "lit_color": "pbr_metallic_roughness.base_color_factor",
-    "shade_color": "extensions.vrmc_materials_mtoon.shade_color_factor",
-    "emission_color": "emissive_factor",
-    "matcap_color": "extensions.vrmc_materials_mtoon.matcap_factor",
-    "rim_color": "extensions.vrmc_materials_mtoon.parametric_rim_color_factor",
-    "outline_color": "extensions.vrmc_materials_mtoon.outline_color_factor",
-}
-
-MTOON_DEFAULT_VALUES: MToon1MaterialParameters = {
-    "texture_scale": [1.0, 1.0],
-    "texture_offset": [0.0, 0.0],
-    "lit_color": [1.0, 1.0, 1.0, 1.0],
-    "shade_color": [1.0, 1.0, 1.0],
-    "emission_color": [0.0, 0.0, 0.0],
-    "matcap_color": [1.0, 1.0, 1.0],
-    "rim_color": [0.0, 0.0, 0.0],
-    "outline_color": [0.0, 0.0, 0.0],
-}
 
 
 """---------------------------------------------------------
@@ -310,11 +236,17 @@ def get_vrm_extension_property(
     type: Literal[
         "FIRST_PERSON",
         "EXPRESSION",
-        "SPRING",
         "COLLIDER",
         "COLLIDER_GROUP",
+        "SPRING",
     ]
-) -> ReferenceVrm1ColliderPropertyGroup | PropertyGroup:
+) -> (
+    ReferenceVrm1FirstPersonPropertyGroup
+    | ReferenceVrm1ExpressionPropertyGroup
+    | ReferenceVrm1ColliderPropertyGroup
+    | ReferenceVrm1ColliderGroupPropertyGroup
+    | ReferenceVrm1SpringPropertyGroup
+):
     """
     Target ArmatureのVRM Extensionの中から引数で指定したProperty Groupを取得する｡
 
@@ -323,9 +255,9 @@ def get_vrm_extension_property(
     type : type: Literal[
         "FIRST_PERSON",
         "EXPRESSION",
-        'SPRING'
         "COLLIDER",
         'COLLIDER_GROUP'
+        'SPRING'
 
     ]
 
