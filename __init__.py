@@ -1,6 +1,7 @@
 # TODO : PropertyGroupクラスを返す関数の返り値の型ヒントを､詳細なクラス名が分かる形に変更する｡
 # TODO : VRMAddonが定義するクラスをReferenceとして当アドオン内に定義して型ヒントに記述する｡
 # TODO : 各OperatorのPollの確認｡
+# TODO : ExpressionのUI List上で､Bind設定されているもの/いないものが区別できるようにする｡
 
 bl_info = {
     "name": "VRM Helper",
@@ -105,7 +106,7 @@ def register():
     )
 
     # デバッグ用
-    launch_debug_server()
+    # launch_debug_server()
 
 
 def unregister():
