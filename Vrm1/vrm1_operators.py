@@ -64,6 +64,7 @@ from ..property_groups import (
     get_ui_vrm1_expression_material_prop,
     get_ui_vrm1_collider_group_prop,
     get_ui_vrm1_operator_bone_group_prop,
+    get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_operator_spring_prop,
     get_ui_vrm1_constraint_prop,
     # ----------------------------------------------------------
@@ -956,6 +957,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
                 for key in key_blocks:
                     key.value = 0.0
 
+        # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡i
         existing_bind_info = {}
         for bind in morph_target_binds:
             existing_bind_info.setdefault(
@@ -1575,7 +1577,6 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         layout = self.layout
         box = layout.box()
         row = box.row(align=True)
-        collider_group_collection = get_ui_vrm1_collider_group_prop()
 
         # 処理対象のボーングループを選択するエリア｡
         if self.source_type == "BONE_GROUP":
@@ -1592,6 +1593,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         if self.source_type == "BONE_GROUP":
             anchor_layout = anchor_layout.box()
         anchor_layout.label(text="Target Bone Group")
+        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
         for group in collider_group_collection:
             row_sub = anchor_layout.row(align=True)
             row_sub.prop(group, "is_target", text=group.vrm_name)

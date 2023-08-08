@@ -18,9 +18,10 @@ else:
 
 from pprint import pprint
 from typing import (
-    Any,
+    Optional,
     Iterator,
     TypedDict,
+    Any,
 )
 import bpy
 from bpy.types import (
@@ -64,7 +65,7 @@ class VRMHelper_Addon_Collection_Dict(TypedDict):
     ROOT: Collection
     VRM0_Root: Collection
     VRM1_Root: Collection
-    VRM1_Collider: Collection
+    VRM1_COLLIDER: Collection
     VRM1_EXPRESSION_MORPH: Collection
     VRM1_EXPRESSION_MATERIAL: Collection
 
@@ -499,7 +500,7 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
         "ROOT": addon_root_collection,
         "VRM0_Root": vrm0_root_collection,
         "VRM1_Root": vrm1_root_collection,
-        "VRM1_Collider": vrm1_collider_collection,
+        "VRM1_COLLIDER": vrm1_collider_collection,
         "VRM1_EXPRESSION_MORPH": vrm1_expression_morph_collection,
         "VRM1_EXPRESSION_MATERIAL": vrm1_expression_material_collection,
     }
@@ -590,7 +591,7 @@ def filtering_mesh_type(source_object: Object) -> bool:
         return False
 
 
-def get_parent_count(source, parent_count) -> int:
+def get_parent_count(source, parent_count) -> tuple[Optional[Object], int]:
     """
     'source'で受け取ったオブジェクトかボーンの親の数を再帰的にカウントしてその総数を返す｡
 

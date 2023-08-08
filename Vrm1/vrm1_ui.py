@@ -43,12 +43,14 @@ from bpy.types import (
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
+    VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
     get_vrm1_wm_root_prop,
     get_target_armature,
     get_target_armature_data,
     get_vrm1_scene_root_prop,
     get_vrm1_index_root_prop,
+    get_vrm1_active_index_prop,
     get_ui_vrm1_first_person_prop,
     get_ui_vrm1_expression_prop,
     get_ui_vrm1_expression_morph_prop,
@@ -657,7 +659,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_vrm1_prop = get_vrm1_scene_root_prop()
-    active_index = scene_vrm1_prop.active_indexes.collider
+    active_index = get_vrm1_active_index_prop("COLLIDER")
     collider_prop = scene_vrm1_prop.collider_settings
 
     # UI描画
@@ -688,24 +690,51 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     op = row.operator(VRMHELPER_OT_collider_remove_from_empty.bl_idname)
 
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
-    if (active_item := get_ui_vrm1_collider_prop()) and active_item[
-        active_index
-    ].item_type[1]:
-        row = layout.row()
-        row.prop_search(
-            collider_prop,
-            "link_bone",
-            get_target_armature_data(),
-            "bones",
-            text="Parent Bone",
-        )
+    if items_list := get_ui_vrm1_collider_prop():
+        active_item: VRMHELPER_WM_vrm1_collider_list_items = items_list[active_index]
+        layout.separator()
+        box = layout.box()
+        row = box.row(align=True)
+
+        match tuple(active_item.item_type):
+            case (0, 1, 0, 0):
+                row.prop_search(
+                    collider_prop,
+                    "link_bone",
+                    get_target_armature_data(),
+                    "bones",
+                    text="Parent Bone",
+                )
+
+            case (0, 0, 1, 0) | (0, 0, 0, 1):
+                match active_item.collider_type:
+                    case "SPHERE":
+                        collider_icon = "SPHERE"
+                    case "CAPSULE" | "CAPSULE_END":
+                        collider_icon = "META_CAPSULE"
+
+                row.label(text="Selected Collider:")
+                row.prop(active_item, "collider_name", text="", icon=collider_icon)
+                row = box.row(align=True)
+                row.label(text="Collidaer Radius")
+                row.prop(active_item.collider_object, "empty_display_size", text="")
+
+    # アクティブアイテムがコライダーの場合はEmptyのサイズを表示する
 
 
 class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
     """Vrm1のSpring Bone Colliderを表示するUI List"""
 
     def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
+        self,
+        context,
+        layout,
+        data,
+        item: VRMHELPER_WM_vrm1_collider_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
     ):
         # リスト内の項目のレイアウトを定義する｡
         row = layout.row(align=True)
@@ -723,13 +752,16 @@ class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
             return
 
         # Colliderの描画｡
-        if not (collider := get_vrm_extension_property("COLLIDER")):
+        if not (colliders := get_vrm_extension_property("COLLIDER")):
             return
 
-        collider = collider[item.item_index]
-        collider_icon = "SPHERE"
-        if collider.shape_type == "Capsule":
-            collider_icon = "META_CAPSULE"
+        collider = colliders[item.item_index]
+        match item.collider_type:
+            case "SPHERE":
+                collider_icon = "SPHERE"
+
+            case "CAPSULE" | "CAPSULE_END":
+                collider_icon = "META_CAPSULE"
 
         # ColliderがSphereあるいはCapsuleのHeadの場合｡
         if item.item_type[2]:
@@ -830,7 +862,6 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         # UI List下に描画
         row = layout.row(align=True)
         row.operator(VRMHELPER_OT_collider_group_register_collider_from_bone.bl_idname)
-        row.operator(VRMHELPER_OT_empty_operator.bl_idname)
 
 
 class VRMHELPER_UL_vrm1_collider_group_list(UIList):
@@ -1042,6 +1073,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
             text="Adust Active Joint",
         )
+        op.source_type = "SINGLE"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(

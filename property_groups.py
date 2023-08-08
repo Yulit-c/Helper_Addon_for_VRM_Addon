@@ -950,6 +950,23 @@ class VRMHELPER_WM_vrm1_collider_list_items(PropertyGroup):
         default="",
     )
 
+    collider_object: PointerProperty(
+        name="Collider Object",
+        description="Empty Object that defines vrm spring collider",
+        type=Object,
+    )
+
+    collider_type: EnumProperty(
+        name="Collider Type",
+        description="Type of VRM Spring Collider",
+        items=(
+            ("SPHERE", "Sphere", "Sphere Collider"),
+            ("CAPSULE", "Capsule", "Capsule Collidear"),
+            ("CAPSULE_END", "Capsule End", "Capsule Collidear End"),
+        ),
+        default="SPHERE",
+    )
+
     parent_count: IntProperty(
         name="Parent Count",
         description="Parent count of bone",

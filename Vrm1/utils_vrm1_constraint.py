@@ -824,7 +824,7 @@ def remove_existing_vrm_constraint(source_constraints: bpy_prop_collection):
 
     """
 
-    target_armature = get_target_armature
+    target_armature = get_target_armature()
     for constraint in source_constraints:
         if determine_constraint_type(constraint, target_armature):
             logger.debug("Remove Existing Constraint")

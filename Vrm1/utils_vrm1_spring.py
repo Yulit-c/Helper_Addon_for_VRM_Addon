@@ -38,6 +38,7 @@ from mathutils import (
 
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_spring_list_items,
     get_ui_vrm1_collider_prop,
     get_ui_vrm1_collider_group_prop,
@@ -158,7 +159,7 @@ def add_items2collider_ui_list() -> int:
     label.item_type[0] = True
     for k in source_collider_dict.keys():
         # ボーン名をコレクションプロパティに追加する｡
-        new_item = items.add()
+        new_item: VRMHELPER_WM_vrm1_collider_list_items = items.add()
         new_item.item_type[1] = True
         # colliderの'node.bone_name'が空文字であれば次のキーに移行｡
         if not k:
@@ -176,7 +177,9 @@ def add_items2collider_ui_list() -> int:
             new_item.name = f"{k} {object_name}"
             new_item.bone_name = k
             new_item.collider_name = object_name
-            new_item.parent_count = (parent_count := parent_count + 1)
+            new_item.collider_object = collider.bpy_object
+            new_item.collider_type = collider.shape_type.upper()
+            new_item.parent_count = parent_count + 1
             new_item.item_index = n
             # タイプがカプセルであれば子Emptyオブジェクトもコレクションプロパティに追加する｡
             if collider.shape_type == "Capsule":
@@ -188,7 +191,9 @@ def add_items2collider_ui_list() -> int:
                 new_item.name = f"{k} {child_object_name}"
                 new_item.bone_name = k
                 new_item.collider_name = child_object_name
-                new_item.parent_count = parent_count
+                new_item.collider_object = collider.bpy_object
+                new_item.collider_type = "CAPSULE_END"
+                new_item.parent_count = parent_count + 2
                 new_item.item_index = n
 
     return len(list(items))
@@ -271,7 +276,7 @@ def generate_tail_collider_position(bone: PoseBone, tail: Vector) -> Matrix:
         親ボーンのテールを基に生成されたマトリックス｡
 
     """
-    armature_object = get_target_armature
+    armature_object = get_target_armature()
     return (
         armature_object.matrix_world.inverted()
         @ bone.matrix.inverted()
