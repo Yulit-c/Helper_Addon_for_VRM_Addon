@@ -41,7 +41,7 @@ from bpy.types import (
 )
 
 from .property_groups import (
-    get_addon_prop_group,
+    get_scene_basic_prop,
 )
 
 from .utils_common import (
@@ -181,7 +181,7 @@ class VRMHELPER_PT_ui_basic_settings(VRMHELPER_PT_Base):
     # パネルの項目の描画
     def draw(self, context):
         # Property Groupの取得｡
-        basic_prop = get_addon_prop_group("BASIC")
+        basic_prop = get_scene_basic_prop()
 
         # UI描画
         layout = self.layout
@@ -235,7 +235,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
     # パネルの項目の描画
     def draw(self, context):
         # プロパティグループの取得
-        basic_prop = get_addon_prop_group("BASIC")
+        basic_prop = get_scene_basic_prop()
 
         # UIの描画
         layout = self.layout

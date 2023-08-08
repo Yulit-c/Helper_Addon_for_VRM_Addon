@@ -45,13 +45,17 @@ from mathutils import (
 )
 
 from .property_groups import (
-    get_addon_prop_group,
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_constraint_prop,
-    get_target_armature,
-    get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_ui_vrm1_first_person_prop,
+    get_ui_vrm1_expression_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
+    get_ui_vrm1_collider_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_spring_prop,
+    get_ui_vrm1_constraint_prop,
 )
 
 from .utils_vrm_base import (
@@ -216,7 +220,7 @@ class VRMHELPER_operator_base(Operator):
 
     def offset_active_item_index(
         self,
-        target_type: Literal[
+        component_type: Literal[
             "FIRST_PERSON",
             "EXPRESSION",
             "EXPRESSION_MORPH",
@@ -233,7 +237,7 @@ class VRMHELPER_operator_base(Operator):
 
         Parameters
         ----------
-        target_type: Literal[
+        component_type: Literal[
             "FIRST_PERSON",
             "EXPRESSION",
             "EXPRESSION_MORPH",
@@ -251,35 +255,42 @@ class VRMHELPER_operator_base(Operator):
 
         """
 
-        self.update_ui_list_prop(target_type)
+        self.update_ui_list_prop(component_type)
 
-        list_items = get_ui_list_prop4custom_filter(target_type)
         index_root_prop = get_vrm1_index_root_prop()
 
-        # 'target_type'の種類に応じて操作する属性名を定義する｡
-        match target_type:
+        # 'component_type'の種類に応じて操作する属性名を定義する｡
+        match component_type:
             case "FIRST_PERSON":
+                list_items = get_ui_vrm1_first_person_prop()
                 attr_name = "first_person"
 
             case "EXPRESSION":
+                list_items = get_ui_vrm1_expression_prop()
                 attr_name = "expression"
 
             case "EXPRESSION_MORPH":
+                list_items = get_ui_vrm1_expression_morph_prop()
                 attr_name = "expression_morph"
 
             case "EXPRESSION_MATERIAL":
+                list_items = get_ui_vrm1_expression_material_prop()
                 attr_name = "expression_material"
 
             case "COLLIDER":
+                list_items = get_ui_vrm1_collider_prop()
                 attr_name = "collider"
 
             case "COLLIDER_GROUP":
+                list_items = get_ui_vrm1_collider_group_prop()
                 attr_name = "collider_group"
 
             case "SPRING":
+                list_items = get_ui_vrm1_spring_prop()
                 attr_name = "spring"
 
             case "CONSTRAINT":
+                list_items = get_ui_vrm1_constraint_prop()
                 attr_name = "constraint"
 
         # ----------------------------------------------------------
@@ -300,7 +311,7 @@ class VRMHELPER_operator_base(Operator):
         # ----------------------------------------------------------
         while True:
             try:
-                active_index = max(get_vrm1_active_index_prop(target_type), 0)
+                active_index = max(get_vrm1_active_index_prop(component_type), 0)
                 active_item = list_items[active_index]
                 if active_index <= 0 or (active_item and active_item.name != "Blank"):
                     setattr(index_root_prop, attr_name, active_index)

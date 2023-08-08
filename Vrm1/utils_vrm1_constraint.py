@@ -38,11 +38,10 @@ from bpy.types import (
 
 from ..property_groups import (
     VRMHELPER_WM_vrm1_constraint_list_items,
-    get_addon_prop_group,
     get_vrm1_active_index_prop,
     get_wm_vrm1_constraint_prop,
     get_target_armature,
-    get_ui_list_prop4custom_filter,
+    get_ui_vrm1_constraint_prop,
 )
 
 from ..utils_vrm_base import (
@@ -50,7 +49,6 @@ from ..utils_vrm_base import (
     VrmAimConstraint,
     VrmRotationConstraint,
     CandidateConstraitProperties,
-    get_vrm_extension_property,
 )
 
 
@@ -369,7 +367,7 @@ def add_items2constraint_ui_list(constraint_type: Literal["OBJECT", "BONE"]) -> 
 
     """
 
-    items = get_ui_list_prop4custom_filter("CONSTRAINT")
+    items = get_ui_vrm1_constraint_prop()
 
     # Current Sceneに存在するオブジェクトから対象オブジェクトを取得する｡
     candidate_constraints_list = get_candidate_constraints_for_draw_ui(constraint_type)
@@ -694,7 +692,7 @@ def draw_rotation_constraint(
 #    For Operator
 # ----------------------------------------------------------
 def detect_constraint_or_label() -> VRMHELPER_WM_vrm1_constraint_list_items:
-    if not (constraint_ui_list := get_ui_list_prop4custom_filter("CONSTRAINT")):
+    if not (constraint_ui_list := get_ui_vrm1_constraint_prop()):
         return
 
     active_index = get_vrm1_active_index_prop("CONSTRAINT")
@@ -816,7 +814,7 @@ def set_vrm_constraint_parametters(
 
 
 def remove_existing_vrm_constraint(source_constraints: bpy_prop_collection):
-    '''
+    """
     'source_constraints'内の全コンストレイントの内､VRM定義のコンストレイントが存在すればそれを削除する｡
 
     Parameters
@@ -824,7 +822,7 @@ def remove_existing_vrm_constraint(source_constraints: bpy_prop_collection):
     source_constraints : bpy_prop_collection
         コンストレイントを格納したbpy_prop_collection
 
-    '''
+    """
 
     target_armature = get_target_armature
     for constraint in source_constraints:
