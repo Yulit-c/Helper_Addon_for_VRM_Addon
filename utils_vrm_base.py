@@ -46,6 +46,7 @@ from .property_groups import (
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
     # ----------------------------------------------------------
+    VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
     get_scene_basic_prop,
     get_target_armature,
@@ -163,6 +164,14 @@ MTOON_DEFAULT_VALUES: MToon1MaterialParameters = {
     Function
 ------------------------------------------------------------
 ---------------------------------------------------------"""
+
+
+def set_new_value2index_prop(
+    index_root_prop: VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
+    attr_name: str,
+):
+    new_value = getattr(index_root_prop, attr_name) - 1
+    setattr(index_root_prop, attr_name, new_value)
 
 
 def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:

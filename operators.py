@@ -60,6 +60,7 @@ from .property_groups import (
 
 from .utils_vrm_base import (
     ConstraintTypeDict,
+    set_new_value2index_prop,
     re_link_all_collider_object2collection,
 )
 
@@ -293,9 +294,6 @@ class VRMHELPER_operator_base(Operator):
                 list_items = get_ui_vrm1_constraint_prop()
                 attr_name = "constraint"
 
-        logger.debug(list_items)
-        logger.debug(attr_name)
-
         # ----------------------------------------------------------
         #    後方にオフセットする場合の処理
         # ----------------------------------------------------------
@@ -312,25 +310,32 @@ class VRMHELPER_operator_base(Operator):
         # ----------------------------------------------------------
         #    前方にオフセットする場合の処理
         # ----------------------------------------------------------
+
         loop_count = 0
         while True:
+            # UI Listアイテムのリストが空なら中断｡
+            if not list_items:
+                active_index = 0
+                break
+
+            # 無限ループの回避｡
             loop_count += 1
             if loop_count > 1000:
+                active_index = 0
                 logger.debug("Avoiding Infinite Loops")
-                return
+                break
+
             try:
                 active_index = max(get_vrm1_active_index_prop(component_type), 0)
-                if active_index <= 0:
-                    return
-
                 active_item = list_items[active_index]
-                if active_item and active_item.name != "Blank":
-                    setattr(index_root_prop, attr_name, active_index)
-                    return
+                if active_index <= 0 or active_item.name != "Blank":
+                    break
+                set_new_value2index_prop(index_root_prop, attr_name)
 
             except:
-                new_value = getattr(index_root_prop, attr_name) - 1
-                setattr(index_root_prop, attr_name, new_value)
+                set_new_value2index_prop(index_root_prop, attr_name)
+
+        setattr(index_root_prop, attr_name, active_index)
 
 
 """---------------------------------------------------------

@@ -1170,12 +1170,17 @@ class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
         index_prop = get_vrm1_index_root_prop()
         index_prop.is_locked_update = True
 
+        # 選択Emptyオブジェクトのうち､コライダーとして登録されているものがあればコライダー設定とともに削除する｡
+        logger.debug("Remove Collider & Empty Object")
         for obj in [obj for obj in context.selected_objects if obj.type == "EMPTY"]:
             remove_vrm1_collider_by_selected_object(obj)
 
         # アクティブインデックスをオフセットしてエラーを回避する｡
+        logger.debug("Offset UI List Index : Collider")
         self.offset_active_item_index(self.component_type)
+        logger.debug("Offset UI List Index : Collider Group")
         self.offset_active_item_index("COLLIDER_GROUP")
+        logger.debug("Offset UI List Index : Spring")
         self.offset_active_item_index("SPRING")
         index_prop.is_locked_update = False
 

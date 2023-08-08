@@ -571,10 +571,12 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
         # 現在のインデックスからアクティブアイテムを取得する｡
         constraint_ui_list = get_ui_vrm1_constraint_prop()
         active_index = get_vrm1_active_index_prop("CONSTRAINT")
+        if len(constraint_ui_list) - 1 < active_index:
+            return
+
         active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
             active_index
         ]
-
         # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
         if active_item.is_blank or active_item.is_label:
             return
@@ -1279,6 +1281,25 @@ def evaluation_active_index_prop(
     source_list: Any,
     active_index: int,
 ) -> int:
+    """
+    UI Listアクティブインデックスの値がUi Listの幅を超えていないかどうかを評価する｡
+    超えている場合はアクティブインデックスをリストの幅と同値として扱う｡
+
+    Parameters
+    ----------
+    source_list : Any
+        対象となるUI List用のCollection Property
+
+    active_index : int
+        処理対象のアクティブインデックス
+
+    Returns
+    -------
+    int
+        処理結果として返すインデックスの値
+
+    """
+
     length = max(len(source_list) - 1, 0)
     if length < active_index:
         active_index = length
