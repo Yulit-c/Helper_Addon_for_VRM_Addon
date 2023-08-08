@@ -16,11 +16,9 @@ else:
     from . import preferences
 
 
-import re, time
 from pprint import pprint
 from typing import (
     Any,
-    Literal,
     Iterator,
     TypedDict,
 )
@@ -31,8 +29,6 @@ from bpy.types import (
     Bone,
     Material,
     Collection,
-    CopyRotationConstraint,
-    DampedTrackConstraint,
     UILayout,
 )
 

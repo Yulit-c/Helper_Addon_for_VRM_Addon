@@ -47,10 +47,11 @@ from .property_groups import (
     ReferenceVrm1ColliderPropertyGroup,
     # ----------------------------------------------------------
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
-    get_addon_prop_group,
+    get_scene_basic_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_ui_vrm1_operator_bone_group_prop,
+    get_scene_vrm1_mtoon_stored_prop,
 )
 
 from .utils_common import (
@@ -180,7 +181,7 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
 
     """
 
-    bone_group_collection = get_ui_list_prop4custom_filter("BONE_GROUP")
+    bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
 
     target_group_index_list = [
         i.group_index for i in bone_group_collection if i.is_target
@@ -258,7 +259,7 @@ def check_addon_mode() -> str:
         "2" : Misc Tools
 
     """
-    basic_prop = get_addon_prop_group("BASIC")
+    basic_prop = get_scene_basic_prop()
 
     return basic_prop.tool_mode
 
@@ -379,7 +380,7 @@ def is_existing_target_armature_and_mode() -> bool:
     """
 
     context = bpy.context
-    target_armature = get_addon_prop_group("BASIC").target_armature.data
+    target_armature = get_scene_basic_prop().target_armature.data
     # アクティブオブジェクトのオブジェクトデータがTarget Armatureである｡
     if (context.active_object) and (not context.active_object.data == target_armature):
         return False
@@ -498,7 +499,7 @@ def get_mtoon1_default_values(
 
     stored_mtoon_parameters = None
     if stored_mtoon1_parameters_list := [
-        i for i in get_addon_prop_group("MTOON1") if i.material == source_material
+        i for i in get_scene_vrm1_mtoon_stored_prop() if i.material == source_material
     ]:
         stored_mtoon_parameters: VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters = (
             stored_mtoon1_parameters_list[0]
@@ -711,7 +712,7 @@ def set_mtoon1_default_values(target_material: Material):
     if not target_material:
         return
 
-    stored_material_dict = {i.material: i for i in get_addon_prop_group("MTOON1")}
+    stored_material_dict = {i.material: i for i in get_scene_vrm1_mtoon_stored_prop()}
     source_patameters = stored_material_dict.get(target_material)
 
     mtoon1 = target_material.vrm_addon_extension.mtoon1

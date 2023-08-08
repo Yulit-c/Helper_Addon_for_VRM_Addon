@@ -36,10 +36,12 @@ from ..property_groups import (
     VRMHELPER_WM_vrm1_expression_material_list_items,
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm1_expression_list_items,
-    get_addon_prop_group,
+    get_ui_vrm1_expression_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_vrm1_active_index_prop,
 )
 
 from ..utils_common import (
@@ -103,9 +105,11 @@ PRESET_EXPRESSION_NAME_DICT = {
 # ----------------------------------------------------------
 #    Expressions
 # ----------------------------------------------------------
-def get_active_list_item_in_expression() -> VRMHELPER_WM_vrm1_expression_list_items | None:
-    if expressions_list := get_ui_list_prop4custom_filter("EXPRESSION"):
-        return expressions_list[get_addon_prop_group("INDEX").expression]
+def get_active_list_item_in_expression() -> (
+    VRMHELPER_WM_vrm1_expression_list_items | None
+):
+    if expressions_list := get_ui_vrm1_expression_prop():
+        return expressions_list[get_vrm1_active_index_prop("EXPRESSION")]
     else:
         return None
 
@@ -154,9 +158,12 @@ def add_items2expression_ui_list() -> int:
 
     """
 
-    preset_expressions_dict, custom_expressions_dict = get_source_vrm1_expression4ui_list()
+    (
+        preset_expressions_dict,
+        custom_expressions_dict,
+    ) = get_source_vrm1_expression4ui_list()
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION")
+    items = get_ui_vrm1_expression_prop()
     # Pyhon標準のリストに格納した値はコレクションの全要素で共有されるので､2回目以降の処理ではリセットが必要｡
     if items:
         items[0].expressions_list.clear()
@@ -196,8 +203,8 @@ def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
         リスト内でアクティブになっているエクスプレッションのプロパティグループ｡
 
     """
-    active_index = get_addon_prop_group("INDEX").expression
-    if not (expressions_list := get_ui_list_prop4custom_filter("EXPRESSION")):
+    active_index = get_vrm1_active_index_prop("EXPRESSION")
+    if not (expressions_list := get_ui_vrm1_expression_prop()):
         return
     expressions_list = expressions_list[0].expressions_list
     if len(expressions_list) < active_index + 1:
@@ -207,7 +214,9 @@ def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
     return active_item
 
 
-def get_source_vrm1_expression_morph4ui_list() -> dict[str, list[tuple[PropertyGroup, int]]]:
+def get_source_vrm1_expression_morph4ui_list() -> (
+    dict[str, list[tuple[PropertyGroup, int]]]
+):
     """
     UI Listでアクティブになっているエクスプレションに登録されているMorph Target Bindの情報を取得する｡
 
@@ -223,7 +232,9 @@ def get_source_vrm1_expression_morph4ui_list() -> dict[str, list[tuple[PropertyG
     active_item = get_active_expression()
     morph_target_binds_dict = {}
     for n, morph_bind in enumerate(active_item.morph_target_binds):
-        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append((morph_bind, n))
+        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append(
+            (morph_bind, n)
+        )
 
     return morph_target_binds_dict
 
@@ -240,7 +251,7 @@ def add_items2expression_morph_ui_list() -> int:
 
     """
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION_MORPH")
+    items = get_ui_vrm1_expression_morph_prop()
     source_morph_binds_dict = get_source_vrm1_expression_morph4ui_list()
     items.clear()
 
@@ -260,7 +271,9 @@ def add_items2expression_morph_ui_list() -> int:
 
 
 # Vrm1MorphTargetBindPropertyGroup
-def get_same_value_existing_morph_bind(obj_name: str, shape_key_name: str) -> PropertyGroup | None:
+def get_same_value_existing_morph_bind(
+    obj_name: str, shape_key_name: str
+) -> PropertyGroup | None:
     """
     アクティブエクスプレションのMorph Target Bindの中から
     2つの引数と同じ値が設定されたものを走査して取得する｡
@@ -280,7 +293,10 @@ def get_same_value_existing_morph_bind(obj_name: str, shape_key_name: str) -> Pr
     """
 
     for morph_bind in get_active_expression().morph_target_binds:
-        if morph_bind.node.mesh_object_name == obj_name and morph_bind.index == shape_key_name:
+        if (
+            morph_bind.node.mesh_object_name == obj_name
+            and morph_bind.index == shape_key_name
+        ):
             return morph_bind
     return None
 
@@ -310,7 +326,9 @@ def search_existing_morph_bind_and_update(
         該当するMorph Bindが存在した場合はTrue,存在しなかった場合はFalse｡
     """
 
-    if morph_bind := get_same_value_existing_morph_bind(source_object.name, source_shape_key.name):
+    if morph_bind := get_same_value_existing_morph_bind(
+        source_object.name, source_shape_key.name
+    ):
         if source_shape_key.value == 0:
             logger.debug(f"Remove 0 Value morph_Bind : {morph_bind.index}")
             morph_target_binds.remove(list(morph_target_binds).index(morph_bind))
@@ -371,7 +389,7 @@ def add_items2expression_material_ui_list() -> int:
 
     """
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL")
+    items = get_ui_vrm1_expression_material_prop()
     source_material_binds_dict = get_source_vrm1_expression_material4ui_list()
     items.clear()
 
@@ -499,7 +517,11 @@ def search_existing_material_color_bind_and_update(
     # 既に登録されているMaterial Color Bindがある場合は値の更新/削除を行なう｡
     for bind_type in mtoon_parameters_dict.keys():
         converted_bind_type = convert_str2color_bind_type(bind_type)
-        if not (same_type_bind := get_same_type_material_color_bind(source_material, converted_bind_type)):
+        if not (
+            same_type_bind := get_same_type_material_color_bind(
+                source_material, converted_bind_type
+            )
+        ):
             continue
 
         # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
@@ -522,7 +544,9 @@ def search_existing_material_color_bind_and_update(
             if list(target_value) == current_value:
                 logger.debug(f"Same Value : {same_type_bind}")
             else:
-                logger.debug(f"Updated : {source_material} : {list(target_value)} -->> {current_value}")
+                logger.debug(
+                    f"Updated : {source_material} : {list(target_value)} -->> {current_value}"
+                )
                 setattr(same_type_bind, attr_name, current_value)
             mtoon_parameters_dict[bind_type] = None
 
@@ -596,11 +620,16 @@ def search_existing_texture_transform_bind_and_update(
     logger.debug(mtoon_parameters_dict)
 
     # 既に登録されているTexture Transform Bindがある場合は値の更新/削除を行なう｡
-    if not (same_material_bind := get_same_material_texture_transform_bind(source_material)):
+    if not (
+        same_material_bind := get_same_material_texture_transform_bind(source_material)
+    ):
         return mtoon_parameters_dict
 
     # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
-    if not (mtoon_parameters_dict["texture_scale"] or mtoon_parameters_dict["texture_offset"]):
+    if not (
+        mtoon_parameters_dict["texture_scale"]
+        or mtoon_parameters_dict["texture_offset"]
+    ):
         logger.debug(f"Remove Texture Transform Bind : {source_material.name}")
         remove_target_index = list(texture_transform_binds).index(same_material_bind)
         texture_transform_binds.remove(remove_target_index)
@@ -619,7 +648,9 @@ def search_existing_texture_transform_bind_and_update(
                 continue
 
             converted_parameter_name = convert_str2transform_bind_type(parameter)
-            logger.debug(f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}")
+            logger.debug(
+                f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}"
+            )
             setattr(same_material_bind, converted_parameter_name, new_value)
 
         mtoon_parameters_dict = None
@@ -672,5 +703,9 @@ def set_mtoon1_texture_transform_from_bind(
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1
 
-    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale)
-    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], transform_bind.offset)
+    set_attr_from_strings(
+        mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
+    )
+    set_attr_from_strings(
+        mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], transform_bind.offset
+    )

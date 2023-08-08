@@ -4,9 +4,9 @@
 # TODO : ExpressionのUI List上で､Bind設定されているもの/いないものが区別できるようにする｡
 
 bl_info = {
-    "name": "VRM Helper",
+    "name": "Helper Addon for VRM Addon",
     "author": "Yu-Lit",
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "blender": (3, 3, 0),
     "location": "Property Panel, Press N in the 3DView",
     "description": "Addon for VRM Setup",

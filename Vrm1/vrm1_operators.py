@@ -56,13 +56,22 @@ from ..preferences import (
 )
 
 from ..property_groups import (
-    get_addon_prop_group,
-    get_scene_vrm1_constraint_prop,
-    get_vrm1_index_root_prop,
-    get_vrm1_active_index_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    # ----------------------------------------------------------
+    get_ui_vrm1_first_person_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_operator_bone_group_prop,
+    get_ui_vrm1_operator_spring_prop,
+    get_ui_vrm1_constraint_prop,
+    # ----------------------------------------------------------
+    get_vrm1_index_root_prop,
+    get_vrm1_active_index_prop,
+    get_scene_vrm1_first_person_prop,
+    get_scene_vrm1_constraint_prop,
+    get_scene_vrm1_mtoon_stored_prop,
 )
 
 from ..utils_common import (
@@ -129,6 +138,7 @@ from .utils_vrm1_constraint import (
     detect_constrainted_and_target_element,
     set_vrm_constraint_parametters,
     detect_constraint_or_label,
+    remove_existing_vrm_constraint,
 )
 
 from ..operators import (
@@ -240,7 +250,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base)
 
     def execute(self, context):
         mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
-        annotation_type = get_addon_prop_group("FIRST_PERSON").annotation_type
+        annotation_type = get_scene_vrm1_first_person_prop().annotation_type
 
         # 選択オブジェクトの数だけMesh Annotationを追加する｡
         # 既にオブジェクトが存在する場合､Typeが異なれば値を更新､同じであれば処理をスキップする｡
@@ -285,8 +295,8 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
 
     def execute(self, context):
         # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
-        list_items = get_ui_list_prop4custom_filter("FIRST_PERSON")
-        active_item_index = get_addon_prop_group("INDEX").first_person
+        list_items = get_ui_vrm1_first_person_prop()
+        active_item_index = get_vrm1_index_root_prop().first_person
         active_item_name = list_items[active_item_index].name
 
         # オブジェクトの名前に一致するMesh Annotationを走査してVRM Extensionから削除する｡
@@ -395,7 +405,7 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression
 
 class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_clear_custom_expression"
-    bl_label = "Cleare Custom Expression"
+    bl_label = "Clear Custom Expression"
     bl_description = "Clear all custom expressions from the target armature"
     bl_options = {"UNDO"}
 
@@ -478,11 +488,11 @@ class VRMHELPER_OT_vrm1_expression_morph_remove_morph(VRMHELPER_expression_sub_m
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがシェイプキーである
-        if morphs := get_ui_list_prop4custom_filter("EXPRESSION_MORPH"):
+        if morphs := get_ui_vrm1_expression_morph_prop():
             return morphs[get_vrm1_active_index_prop("EXPRESSION_MORPH")].item_type[1]
 
     def execute(self, context):
-        morphs = get_ui_list_prop4custom_filter("EXPRESSION_MORPH")
+        morphs = get_ui_vrm1_expression_morph_prop()
         active_item = morphs[get_vrm1_active_index_prop("EXPRESSION_MORPH")]
 
         morph_target_binds = get_active_expression().morph_target_binds
@@ -506,7 +516,7 @@ class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(VRMHELPER_expression_sub_m
 
     def execute(self, context):
         get_active_expression().morph_target_binds.clear()
-        get_addon_prop_group("INDEX").expression_morph = 0
+        get_vrm1_index_root_prop().expression_morph = 0
 
         return {"FINISHED"}
 
@@ -609,13 +619,13 @@ class VRMHELPER_OT_vrm1_expression_material_remove_color(
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがMaterial Colorである
-        if materials := get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL"):
+        if materials := get_ui_vrm1_expression_material_prop():
             return materials[
                 get_vrm1_active_index_prop("EXPRESSION_MATERIAL")
             ].item_type[1]
 
     def execute(self, context):
-        materials = get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL")
+        materials = get_ui_vrm1_expression_material_prop()
         active_item = materials[get_vrm1_active_index_prop("EXPRESSION_MATERIAL")]
 
         material_color_binds = get_active_expression().material_color_binds
@@ -687,13 +697,13 @@ class VRMHELPER_OT_vrm1_expression_material_remove_transform(
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがMaterial Colorである
-        if materials := get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL"):
+        if materials := get_ui_vrm1_expression_material_prop():
             return materials[
                 get_vrm1_active_index_prop("EXPRESSION_MATERIAL")
             ].item_type[2]
 
     def execute(self, context):
-        materials = get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL")
+        materials = get_ui_vrm1_expression_material_prop()
         active_item = materials[get_vrm1_active_index_prop("EXPRESSION_MATERIAL")]
 
         texture_transform_binds = get_active_expression().texture_transform_binds
@@ -870,10 +880,10 @@ class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(
 
     @classmethod
     def poll(cls, context):
-        return get_addon_prop_group("MTOON1")
+        return get_scene_vrm1_mtoon_stored_prop()
 
     def execute(self, context):
-        get_addon_prop_group("MTOON1").clear()
+        get_scene_vrm1_mtoon_stored_prop().clear()
         return {"FINISHED"}
 
 
@@ -899,7 +909,7 @@ class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
         source_collection = bpy.data.collections.get(
             get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
         )
-        mtoon1_stored_parameters = get_addon_prop_group("MTOON1")
+        mtoon1_stored_parameters = get_scene_vrm1_mtoon_stored_prop()
         mtoon1_stored_parameters.clear()
 
         for mat in get_all_materials_from_source_collection_objects(source_collection):
@@ -1013,8 +1023,8 @@ class VRMHELPER_OT_vrm1_expression_change_bind_material(
         return {"FINISHED"}
 
     def execute(self, context):
-        material_binds_list = get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL")
-        current_index = get_addon_prop_group("INDEX").expression_material
+        material_binds_list = get_ui_vrm1_expression_material_prop()
+        current_index = get_vrm1_index_root_prop().expression_material
         active_item = material_binds_list[current_index]
         old_bind_material = bpy.data.materials.get(active_item.bind_material_name)
         new_bind_material = bpy.data.materials.get(self.material_name)
@@ -1157,7 +1167,7 @@ class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
 
     def execute(self, context):
         # 処理中はプロパティのアップデートのコールバック関数をロックする｡
-        index_prop = get_addon_prop_group("INDEX")
+        index_prop = get_vrm1_index_root_prop()
         index_prop.is_locked_update = True
 
         for obj in [obj for obj in context.selected_objects if obj.type == "EMPTY"]:
@@ -1238,7 +1248,7 @@ class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_collider_group_base):
             )
 
         collider_groups.clear()
-        get_addon_prop_group("INDEX").collider_group = 0
+        get_vrm1_index_root_prop().collider_group = 0
         self.offset_active_item_index("SPRING")
 
         return {"FINISHED"}
@@ -1283,7 +1293,7 @@ class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_collider_group_base)
             active_indexes[0]
         ].colliders.remove(active_indexes[1])
 
-        get_addon_prop_group("INDEX").collider_group -= 1
+        get_vrm1_index_root_prop().collider_group -= 1
 
         return {"FINISHED"}
 
@@ -1407,7 +1417,7 @@ class VRMHELPER_OT_spring_clear_spring(VRMHELPER_spring_base):
 
     def execute(self, context):
         get_vrm_extension_property("SPRING").clear()
-        get_addon_prop_group("INDEX").spring = 0
+        get_vrm1_index_root_prop().spring = 0
 
         return {"FINISHED"}
 
@@ -1498,7 +1508,7 @@ class VRMHELPER_OT_spring_remove_joint(VRMHELPER_spring_base):
         get_vrm_extension_property("SPRING")[active_indexes[0]].joints.remove(
             active_indexes[1]
         )
-        get_addon_prop_group("INDEX").spring -= 1
+        get_vrm1_index_root_prop().spring -= 1
 
         return {"FINISHED"}
 
@@ -1560,13 +1570,11 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         layout = self.layout
         box = layout.box()
         row = box.row(align=True)
-        collider_group_collection = get_ui_list_prop4custom_filter(
-            "COLLIDER_GROUP_OPERATOR"
-        )
+        collider_group_collection = get_ui_vrm1_collider_group_prop()
 
         # 処理対象のボーングループを選択するエリア｡
         if self.source_type == "BONE_GROUP":
-            bone_group_collection = get_ui_list_prop4custom_filter("BONE_GROUP")
+            bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
             anchor_layout = row.column(align=True)
             box_sub = anchor_layout.box()
             box_sub.label(text="Target Bone Group")
@@ -1688,14 +1696,14 @@ class VRMHELPER_OT_spring_assign_parameters_to_selected_joints(
 
         # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
         active_indexes = get_active_list_item_in_spring().item_indexes
-        for spring in get_ui_list_prop4custom_filter("SPRING_OPERATOR"):
+        for spring in get_ui_vrm1_operator_spring_prop():
             if spring.spring_index != active_indexes[0]:
                 spring.is_target = False
 
         return self.execute(context)
 
     def draw(self, context):
-        spring_collection = get_ui_list_prop4custom_filter("SPRING_OPERATOR")
+        spring_collection = get_ui_vrm1_operator_spring_prop()
         layout = self.layout
         box = layout.box()
         box.label(text="Target Spring")
@@ -1706,7 +1714,7 @@ class VRMHELPER_OT_spring_assign_parameters_to_selected_joints(
 
     def execute(self, context):
         springs = get_vrm_extension_property("SPRING")
-        springs_filter_list = get_ui_list_prop4custom_filter("SPRING_OPERATOR")
+        springs_filter_list = get_ui_vrm1_operator_spring_prop()
 
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
         for spring, filter in zip(springs, springs_filter_list):
@@ -1771,7 +1779,7 @@ class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_spring_base):
         get_vrm_extension_property("SPRING")[active_indexes[0]].collider_groups.remove(
             active_indexes[2]
         )
-        get_addon_prop_group("INDEX").spring -= 1
+        get_vrm1_index_root_prop().spring -= 1
 
         return {"FINISHED"}
 
@@ -1851,6 +1859,9 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
         constraint_name = self.constraint_name_dict[self.constraint_type]
 
         constraints = constrainted_element.constraints
+        # 既にVRMコンストレイントが存在する場合は削除する｡
+        remove_existing_vrm_constraint(constraints)
+
         new_constraint: CopyRotationConstraint | DampedTrackConstraint = (
             constraints.new(constraint_type)
         )
@@ -1875,7 +1886,7 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
         # 作成されたコンストレイントがリスト内のアクティブアイテムになるようにUI Listインデックスを調整する｡
         current_ui_constraint_type = constraint_prop.constraint_type
         add_items2constraint_ui_list(current_ui_constraint_type)
-        constraint_collection = get_ui_list_prop4custom_filter("CONSTRAINT")
+        constraint_collection = get_ui_vrm1_constraint_prop()
         target_constraint_index = None
 
         for n, props in enumerate(constraint_collection):
