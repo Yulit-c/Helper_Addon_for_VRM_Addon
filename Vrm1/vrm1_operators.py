@@ -405,7 +405,7 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression
 
 class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_clear_custom_expression"
-    bl_label = "Cleare Custom Expression"
+    bl_label = "Clear Custom Expression"
     bl_description = "Clear all custom expressions from the target armature"
     bl_options = {"UNDO"}
 
