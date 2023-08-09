@@ -957,7 +957,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
                 for key in key_blocks:
                     key.value = 0.0
 
-        # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡i
+        # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}
         for bind in morph_target_binds:
             existing_bind_info.setdefault(
@@ -1004,7 +1004,7 @@ class VRMHELPER_OT_vrm1_expression_change_bind_material(
 ):
     bl_idname = "vrm_helper.vrm1_expression_change_bind_material"
     bl_label = "Change Bind Material"
-    bl_description = "Change the material of the active binding"
+    bl_description = "Change the material of the active bind"
     bl_options = {"UNDO"}
     bl_property = "material_name"
 

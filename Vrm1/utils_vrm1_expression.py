@@ -40,9 +40,10 @@ from bpy.types import (
 from ..addon_classes import (
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
-    Vrm1MorphTargetBindPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1TextureTransformBindPropertyGroup,
+    ReferenceVrm1MorphTargetBindPropertyGroup,
+    ExpressionCandidateUIList,
 )
 
 from ..addon_constants import (
@@ -107,10 +108,7 @@ def get_active_list_item_in_expression() -> (
 
 
 def get_source_vrm1_expression4ui_list() -> (
-    tuple[
-        dict[str, ReferenceVrm1ExpressionPropertyGroup],
-        dict[str, ReferenceVrm1CustomExpressionPropertyGroup],
-    ]
+    tuple[list[ExpressionCandidateUIList], list[ExpressionCandidateUIList]]
 ):
     """
     Target Armatureに登録されたプリセットエクスプレッションのリストと
@@ -118,24 +116,72 @@ def get_source_vrm1_expression4ui_list() -> (
 
     Returns
     -------
-    tuple[
-        dict[str, ReferenceVrm1ExpressionPropertyGroup],
-        dict[str, ReferenceVrm1CustomExpressionPropertyGroup],
-    ]
-        Target Armatureが持つプリセットエクスプレッションを格納した辞書と
-        カスタムエクスプレションを格納した辞書を格納したタプル｡
+    tuple[list[ExpressionCandidateUIList], list[ExpressionCandidateUIList]]
+        Target Armatureが持つプリセットエクスプレッション･カスタムエクスプレションそれぞれの
+        情報を持つ辞書を格納したリストのタプル｡
+
 
     """
     expressions = get_vrm_extension_property("EXPRESSION")
 
-    preset_expressions_dict = {}
-    # UI Listに表示する対象オブジェクトをリストに格納するk
+    # ----------------------------------------------------------
+    #    Preset Expression
+    # ----------------------------------------------------------
+    candidate_preset_expressions = []
+    # UI Listに表示する対象オブジェクトをリストに格納する｡
     for data_name, display_name in PRESET_EXPRESSION_NAME_DICT.items():
-        preset_expressions_dict[display_name] = attrgetter(data_name)(expressions)
+        # 'expressionsから表示名を用いてプリセットのエクスプレッションを取得する｡
+        preset_expression: ReferenceVrm1ExpressionPropertyGroup = attrgetter(data_name)(
+            expressions
+        )
+        # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
+        has_any_morph_bind = True if preset_expression.morph_target_binds else False
+        has_any_material_bind = (
+            True
+            if (
+                preset_expression.material_color_binds
+                or preset_expression.texture_transform_binds
+            )
+            else False
+        )
 
-    custom_expressions_dict = {i.custom_name: i.expression for i in expressions.custom}
+        # 取得した情報を格納した辞書を作成し､Preset Expressionのリストに加える｡
+        preset_expression_info: ExpressionCandidateUIList = {
+            "name": display_name,
+            "preset_expression": preset_expression,
+            "has_morph_bind": has_any_morph_bind,
+            "has_material_bind": has_any_material_bind,
+        }
+        candidate_preset_expressions.append(preset_expression_info)
 
-    return preset_expressions_dict, custom_expressions_dict
+    # ----------------------------------------------------------
+    #    Custom Expression
+    # ----------------------------------------------------------
+    candidate_custom_expressions = []
+    for i in expressions.custom:
+        custom_exp: ReferenceVrm1CustomExpressionPropertyGroup = i
+        # custom_expressions_dict[custom_exp.name] = custom_exp.expression
+        # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
+        has_any_morph_bind = True if custom_exp.expression.morph_target_binds else False
+        has_any_material_bind = (
+            True
+            if (
+                custom_exp.expression.material_color_binds
+                or custom_exp.expression.texture_transform_binds
+            )
+            else False
+        )
+
+        # 取得した情報を格納した辞書を作成し､Custom Expressionのリストに加える｡
+        custom_expression_info: ExpressionCandidateUIList = {
+            "name": custom_exp.name,
+            "custom_expression": custom_exp.expression,
+            "has_morph_bind": has_any_morph_bind,
+            "has_material_bind": has_any_material_bind,
+        }
+        candidate_custom_expressions.append(custom_expression_info)
+
+    return candidate_preset_expressions, candidate_custom_expressions
 
 
 def add_items2expression_ui_list() -> int:
@@ -151,8 +197,8 @@ def add_items2expression_ui_list() -> int:
     """
 
     (
-        preset_expressions_dict,
-        custom_expressions_dict,
+        candidate_preset_expressions,
+        candidate_custom_expressions,
     ) = get_source_vrm1_expression4ui_list()
 
     items = get_ui_vrm1_expression_prop()
@@ -162,19 +208,29 @@ def add_items2expression_ui_list() -> int:
     items.clear()
 
     # プリセットエクスプレッションの情報を追加
-    for display_name in preset_expressions_dict.keys():
-        new_item = items.add()
-        new_item.name = display_name
+    preset_expressions = []
+    for preset_exp_info in candidate_preset_expressions:
+        new_item: VRMHELPER_WM_vrm1_expression_list_items = items.add()
+        new_item.name = preset_exp_info["name"]
+        new_item.has_morph_bind = preset_exp_info["has_morph_bind"]
+        new_item.has_material_bind = preset_exp_info["has_material_bind"]
 
-    new_item.expressions_list.extend(preset_expressions_dict.values())
+        preset_expressions.append(preset_exp_info["preset_expression"])
+
+    new_item.expressions_list.extend(preset_expressions)
 
     # カスタムエクスプレッションの情報を追加
-    for n, custom_name in enumerate(custom_expressions_dict.keys()):
-        new_item = items.add()
-        new_item.name = custom_name
+    custom_expressions = []
+    for n, custom_exp_info in enumerate(candidate_custom_expressions):
+        new_item: VRMHELPER_WM_vrm1_expression_list_items = items.add()
+        new_item.name = custom_exp_info["name"]
+        new_item.has_morph_bind = custom_exp_info["has_morph_bind"]
+        new_item.has_material_bind = custom_exp_info["has_material_bind"]
         new_item.custom_expression_index = n
 
-    new_item.expressions_list.extend(custom_expressions_dict.values())
+        custom_expressions.append(custom_exp_info["custom_expression"])
+
+    new_item.expressions_list.extend(custom_expressions)
 
     return len(items)
 
@@ -207,14 +263,14 @@ def get_active_expression() -> Optional[ReferenceVrm1ExpressionPropertyGroup]:
 
 
 def get_source_vrm1_expression_morph4ui_list() -> (
-    dict[str, list[tuple[Vrm1MorphTargetBindPropertyGroup, int]]]
+    dict[str, list[tuple[ReferenceVrm1MorphTargetBindPropertyGroup, int]]]
 ):
     """
     UI Listでアクティブになっているエクスプレションに登録されているMorph Target Bindの情報を取得する｡
 
     Returns
     -------
-    dict[str, list[tuple[Vrm1MorphTargetBindPropertyGroup, int]]]
+    dict[str, list[tuple[ReferenceVrm1MorphTargetBindPropertyGroup, int]]]
         エクスプレッションに登録されたMorph Target Bindとインデックスのペアを格納したタプルのリストを
         対応するオブジェクト名をキーとして格納した辞書｡
 
@@ -262,10 +318,10 @@ def add_items2expression_morph_ui_list() -> int:
     return len(items)
 
 
-# Vrm1MorphTargetBindPropertyGroup
+# ReferenceVrm1MorphTargetBindPropertyGroup
 def get_same_value_existing_morph_bind(
     obj_name: str, shape_key_name: str
-) -> Optional[Vrm1MorphTargetBindPropertyGroup]:
+) -> Optional[ReferenceVrm1MorphTargetBindPropertyGroup]:
     """
     アクティブエクスプレションのMorph Target Bindの中から
     2つの引数と同じ値が設定されたものを走査して取得する｡
@@ -279,7 +335,7 @@ def get_same_value_existing_morph_bind(
 
     Returns
     -------
-    Optional[Vrm1MorphTargetBindPropertyGroup]
+    Optional[ReferenceVrm1MorphTargetBindPropertyGroup]
         'mesh_object_name'と'indes'の値が引数と同じMorpht Target Bind｡
         該当データがなければNone｡
     """

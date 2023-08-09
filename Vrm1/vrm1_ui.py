@@ -52,6 +52,7 @@ from ..addon_constants import (
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
+    VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
     get_vrm1_wm_root_prop,
@@ -372,10 +373,6 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         # アクティブアイテムのMorph Target設定用フォーム
         if morph_target_binds := get_ui_vrm1_expression_morph_prop():
             current_index = active_indexes.expression_morph
-            # if len(morph_target_binds) < current_index + 1:
-            #     active_bind = morph_target_binds[-1]
-            # else:
-            # active_bind = morph_target_binds[current_index]
             active_bind = morph_target_binds[current_index]
 
             if active_bind.item_type[1]:
@@ -457,7 +454,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
             current_index = active_indexes.expression_material
             active_item = material_binds_list[current_index]
 
-            # アクティブアイテムが 'Blank'以外のラベル/Color Bind/Transform Bindであるかを判定する｡
+            # アクティブアイテムが 'Blank'以外のラベル､Color Bind､Transform Bindであるかを判定する｡
             match tuple(active_item.item_type):
                 case (1, 0, 0) if active_item.name != "Blank":  # Label Exclude 'Blank'
                     ui_draw_flag = "Material"
@@ -537,26 +534,49 @@ class VRMHELPER_UL_expression_list(UIList):
     """Expressionを表示するUI List"""
 
     def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
+        self,
+        context,
+        layout: UILayout,
+        data,
+        item: VRMHELPER_WM_vrm1_expression_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
     ):
         expression = item.expressions_list[index]
 
-        # row = layout.row(align=False)
-        sp = layout.split(factor=0.35)
-
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
+        sp = layout.split(factor=0.4)
+        row = sp.row(align=True)
         if item.custom_expression_index < 0:
-            sp.label(text=item.name)
+            row.label(text=item.name)
         else:
             custom_expression = get_vrm_extension_property("EXPRESSION").custom[
                 item.custom_expression_index
             ]
-            sp.prop(custom_expression, "custom_name", text="", emboss=False)
-        sp = sp.split(factor=0.1)
-        sp.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
-        sp.prop(expression, "override_blink", text="", icon="HIDE_ON")
-        sp.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
-        sp.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
+            row.prop(custom_expression, "custom_name", text="", emboss=False)
+
+        # 各種バインドを持つ場合はアイコンを描画する｡
+        sp = sp.split(factor=0.2)
+        row = sp.row(align=True)
+        if item.has_morph_bind:
+            row.label(text="", icon="MESH_DATA")
+        else:
+            row.label(text="", icon="NONE")
+
+        if item.has_material_bind:
+            row.label(text="", icon="MATERIAL")
+        else:
+            row.label(text="", icon="NONE")
+
+        # エクスプレッションが持つ各パラメーターの描画
+        row = sp.row(align=True)
+        row.alignment = "RIGHT"
+        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
+        row.prop(expression, "override_blink", text="", icon="HIDE_ON")
+        row.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
+        row.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
 
 
 class VRMHELPER_UL_expressin_morph_list(UIList):
