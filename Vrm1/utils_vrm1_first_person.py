@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_constants",
         "utils_common",
     ]
 
@@ -12,14 +13,19 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_constants
     from .. import utils_common
 
 import re
 from typing import Literal
 import bpy
 from bpy.types import (
-    Object,
     PropertyGroup,
+)
+
+
+from ..addon_constants import (
+    FIRST_PERSON_ANNOTATION_TYPES,
 )
 
 from ..property_groups import (
@@ -63,19 +69,24 @@ def get_source_vrm1_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
 
     """
     # VRM ExtensionのFirst Personのプロパティと現在のUI Listのモードを取得する｡
-    annotation_type = get_scene_vrm1_first_person_prop().annotation_type
-    first_person = get_vrm_extension_property("FIRST_PERSON")
+    first_person_prop = get_scene_vrm1_first_person_prop()
+    annotation_type_filter = {first_person_prop.annotation_type}
+    # 選択タイプによるフィルタリングの有無｡
+    if not first_person_prop.is_filtering_by_type:
+        annotation_type_filter |= FIRST_PERSON_ANNOTATION_TYPES
+
+    ext_first_person = get_vrm_extension_property("FIRST_PERSON")
 
     # UI Listに表示する対象オブジェクトをリストに格納する
     if mode == "UI":
         source_annotation_list = [
             i
-            for i in first_person.mesh_annotations
-            if i.type == annotation_type and not i.node.mesh_object_name == ""
+            for i in ext_first_person.mesh_annotations
+            if i.type in annotation_type_filter and not i.node.mesh_object_name == ""
         ]
 
     if mode == "OPERATOR":
-        source_annotation_list = [i for i in first_person.mesh_annotations]
+        source_annotation_list = [i for i in ext_first_person.mesh_annotations]
 
     return source_annotation_list
 

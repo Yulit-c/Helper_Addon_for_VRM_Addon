@@ -3,7 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
-        "preferences",
+        "addon_constants" "preferences",
     ]
 
     for module in reloadable_modules:
@@ -12,6 +12,7 @@ if "bpy" in locals():
 
 else:
     from .Logging import preparation_logger
+    from . import addon_constants
     from . import preferences
 
 from typing import (
@@ -204,8 +205,16 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
         name="First Person Type",
         description="Determine the First_Person annotation you wish to apply",
         items=(
-            ("auto", "Auto", "Set the value to Auto"),
-            ("both", "Both", "Set the value to Both"),
+            (
+                "auto",
+                "Auto",
+                "Set the value to Auto",
+            ),
+            (
+                "both",
+                "Both",
+                "Set the value to Both",
+            ),
             (
                 "thirdPersonOnly",
                 "Third Person Only",
@@ -218,6 +227,12 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
             ),
         ),
         default="both",
+    )
+
+    is_filtering_by_type: BoolProperty(
+        name="Filtering by Selected Type",
+        description="Filters the display of the list according to the currently selected mode",
+        default=True,
     )
 
 

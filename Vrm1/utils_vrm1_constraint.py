@@ -36,19 +36,20 @@ from bpy.types import (
     bpy_prop_collection,
 )
 
+
+from ..addon_classes import (
+    VrmRollConstraint,
+    VrmAimConstraint,
+    VrmRotationConstraint,
+    CandidateConstraitProperties,
+)
+
 from ..property_groups import (
     VRMHELPER_WM_vrm1_constraint_list_items,
     get_vrm1_active_index_prop,
     get_wm_vrm1_constraint_prop,
     get_target_armature,
     get_ui_vrm1_constraint_prop,
-)
-
-from ..utils_vrm_base import (
-    VrmRollConstraint,
-    VrmAimConstraint,
-    VrmRotationConstraint,
-    CandidateConstraitProperties,
 )
 
 
