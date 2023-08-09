@@ -25,6 +25,7 @@ from operator import (
 
 from typing import (
     Optional,
+    Any,
 )
 
 import bpy
@@ -50,6 +51,10 @@ from ..addon_constants import (
     PRESET_EXPRESSION_NAME_DICT,
 )
 
+from ..preferences import (
+    get_addon_collection_name,
+)
+
 from ..property_groups import (
     VRMHELPER_WM_vrm1_expression_material_list_items,
     # ----------------------------------------------------------
@@ -65,6 +70,7 @@ from ..property_groups import (
 from ..utils_common import (
     get_attr_from_strings,
     set_attr_from_strings,
+    reset_shape_keys_value,
 )
 
 from ..utils_vrm_base import (
@@ -318,7 +324,6 @@ def add_items2expression_morph_ui_list() -> int:
     return len(items)
 
 
-# ReferenceVrm1MorphTargetBindPropertyGroup
 def get_same_value_existing_morph_bind(
     obj_name: str, shape_key_name: str
 ) -> Optional[ReferenceVrm1MorphTargetBindPropertyGroup]:
@@ -393,6 +398,20 @@ def search_existing_morph_bind_and_update(
         return True
 
     return False
+
+
+def reset_shape_keys_value_in_morpth_binds(source_morph_binds: Any):
+    source_collection_morph = bpy.data.collections.get(
+        get_addon_collection_name("VRM1_EXPRESSION_MORPH")
+    )
+    # if existing_bind_meshes := {
+    #     bpy.data.objects.get(bind.node.mesh_object_name).data
+    #     for bind in source_morph_binds
+    # }:
+    # for existing_bind_mesh in existing_bind_meshes:
+    #     reset_shape_keys_value(existing_bind_mesh)
+    for obj in source_collection_morph.all_objects:
+        reset_shape_keys_value(obj.data)
 
 
 # ----------------------------------------------------------
@@ -601,14 +620,30 @@ def search_existing_material_color_bind_and_update(
     return mtoon_parameters_dict
 
 
-########################################################################################################################
 def convert_str2transform_bind_type(source_name: str) -> str:
+    """
+    MToonのパラメーター名を表す文字列をコード上の定義に即したものに変換する｡
+
+    Parameters
+    ----------
+    source_name : str
+        処理対象の文字列
+
+    Returns
+    -------
+    str
+        処理結果の文字列
+
+    """
     match source_name:
         case "texture_scale":
             return "scale"
 
         case "texture_offset":
             return "offset"
+
+        case _:
+            return source_name
 
 
 def get_same_material_texture_transform_bind(
@@ -750,10 +785,9 @@ def set_mtoon1_texture_transform_from_bind(
     if not (target_material := transform_bind.material):
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1
+    offset_value = [i * -1 for i in transform_bind.offset]
 
     set_attr_from_strings(
         mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
     )
-    set_attr_from_strings(
-        mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], transform_bind.offset
-    )
+    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], offset_value)

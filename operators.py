@@ -61,6 +61,11 @@ from .property_groups import (
     get_ui_vrm1_constraint_prop,
 )
 
+from .utils_common import (
+    reset_shape_keys_value,
+    filtering_mesh_type,
+)
+
 from .utils_vrm_base import (
     set_new_value2index_prop,
     re_link_all_collider_object2collection,
@@ -141,6 +146,25 @@ class VRMHELPER_OT_evaluate_addon_collections(Operator):
     def execute(self, context):
         os.system("cls")
         re_link_all_collider_object2collection()
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_reset_shape_keys_on_selected_objects(Operator):
+    bl_idname = "vrmhelper.reset_shape_keys_on_selected_objects"
+    bl_label = "Reset Shape Keys"
+    bl_description = "Reset all shape keys on selected objects"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.selected_objects
+
+    def execute(self, context):
+        for obj in [
+            obj for obj in context.selected_objects if filtering_mesh_type(obj)
+        ]:
+            reset_shape_keys_value(obj.data)
+
         return {"FINISHED"}
 
 
@@ -400,4 +424,5 @@ CLASSES = (
     # ----------------------------------------------------------
     VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
+    VRMHELPER_OT_reset_shape_keys_on_selected_objects,
 )

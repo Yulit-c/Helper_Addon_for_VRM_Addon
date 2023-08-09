@@ -71,6 +71,7 @@ from .utils_common import (
     get_bones_for_each_branch_from_source_bones,
     unlink_object_from_all_collections,
     setting_vrm_helper_collection,
+    get_addon_collection_name,
 )
 
 
@@ -90,6 +91,44 @@ logger = preparating_logger(__name__)
     Function
 ------------------------------------------------------------
 ---------------------------------------------------------"""
+
+
+def evaluation_expression_morph_collection() -> bool:
+    """
+    # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Morph'のコレクションが
+    # 存在するか否かを判定する｡
+
+    Returns
+    -------
+    bool
+        条件を満たしていればTrue､そうでなければFalseを返す｡
+    """
+
+    if collection_mat := bpy.data.collections.get(
+        get_addon_collection_name("VRM1_EXPRESSION_MORPH")
+    ):
+        if collection_mat.all_objects:
+            return True
+    return False
+
+
+def evaluation_expression_material_collection() -> bool:
+    """
+    # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Material'のコレクションが
+    # 存在するか否かを判定する｡
+
+    Returns
+    -------
+    bool
+        条件を満たしていればTrue､そうでなければFalseを返す｡
+    """
+
+    if collection_mat := bpy.data.collections.get(
+        get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
+    ):
+        if collection_mat.all_objects:
+            return True
+    return False
 
 
 def set_new_value2index_prop(
@@ -415,6 +454,7 @@ def store_mtoon1_current_values(
     for name in stored_parameter_names:
         mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES[name]
         value = attrgetter(mtoon1_attr_name)(mtoon1)
+        value = [abs(i) for i in value]
 
         setattr(target_item, name, value)
 
@@ -448,7 +488,9 @@ def get_mtoon1_default_values(
 
     if stored_mtoon_parameters:
         default_texture_scale = stored_mtoon_parameters.texture_scale
-        default_texture_offset = stored_mtoon_parameters.texture_offset
+        default_texture_offset = [
+            abs(i) for i in stored_mtoon_parameters.texture_offset
+        ]
         default_lit_factor = stored_mtoon_parameters.lit_color
         default_shade_factor = stored_mtoon_parameters.shade_color
         default_emissive_factor = stored_mtoon_parameters.emission_color
@@ -602,20 +644,24 @@ def get_mtoon_transform_current_parameters(
     current_texture_offset = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"])
     )
+    current_texture_offset = [abs(i) for i in current_texture_offset]
     current_texture_scale = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"])
     )
     #####################################################################################################
     # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+    default_offset = default_value_dict["texture_offset"]
     texture_offset = (
         current_texture_offset
-        if current_texture_offset != default_value_dict["texture_offset"]
+        if current_texture_offset != default_offset
+        # else default_offset
         else None
     )
-
+    default_scale = default_value_dict["texture_scale"]
     texture_scale = (
         current_texture_scale
-        if current_texture_scale != default_value_dict["texture_scale"]
+        if current_texture_scale != default_scale
+        # else default_scale
         else None
     )
     #####################################################################################################

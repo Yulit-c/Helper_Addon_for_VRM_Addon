@@ -4,13 +4,13 @@ if "bpy" in locals():
     reloadable_modules = [
         "preparation_logger",
         "property_groups",
-        "operators",
-        "vrm1_operators",
         "utils_common",
         "utils_vrm1_first_person",
         "utils_vrm1_expression",
         "utils_vrm1_spring",
         "utils_vrm1_constraint",
+        "operators",
+        "vrm1_operators",
     ]
 
     for module in reloadable_modules:
@@ -110,6 +110,10 @@ from .utils_vrm1_constraint import (
     draw_rotation_constraint,
 )
 
+from ..operators import (
+    VRMHELPER_OT_reset_shape_keys_on_selected_objects,
+)
+
 from .vrm1_operators import (
     # ----------------------------------------------------------
     #    First Person
@@ -136,12 +140,14 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_expression_material_create_transform,
     VRMHELPER_OT_vrm1_expression_material_remove_transform,
     VRMHELPER_OT_vrm1_expression_material_clear_transforms,
+    VRMHELPER_OT_vrm1_expression_change_bind_material,
     VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene,
     VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
-    VRMHELPER_OT_vrm1_expression_change_bind_material,
+    VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
+    VRMHELPER_OT_vrm1_expression_restore_initial_values,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -390,13 +396,6 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
                     icon="OUTLINER_OB_MESH",
                 )
 
-        # オペレーターの描画
-        box.separator()
-        col = box.column(align=True)
-        col.operator(
-            VRMHELPER_OT_vrm1_expression_set_morph_from_scene.bl_idname,
-            text="Set from Collection",
-        )
     ##################################
     # Material Bind
     ##################################
@@ -481,10 +480,10 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
                     box_bind_material.label(
                         text=f"Binded Material : {active_item.bind_material_name}"
                     )
-                    # TODO : オペレーターで対象マテリアル全部入れ替える処理を作る
                     box_bind_material.operator(
                         VRMHELPER_OT_vrm1_expression_change_bind_material.bl_idname,
                         text="Change Bind Material",
+                        icon="MATERIAL",
                     )
 
                 case "Material_Color_Bind" | "Texture_Transform_Bind":
@@ -503,30 +502,49 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
 
     # オペレーターの描画
     box.separator()
-    col = box.column()
+    box_op_mtoon = box.box()
+    col = box_op_mtoon.column(align=True)
     col.scale_y = 1.2
     col.operator(
         VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters.bl_idname,
         text="Store MToon Current Value",
+        icon="IMPORT",
     )
     col.operator(
         VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters.bl_idname,
         text="Discard stored MToon Value",
+        icon="EXPORT",
     )
 
+    # col.operator(
+    #     VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters.bl_idname,
+    #     text="Restore MToon Initial Value",
+    # )
+
+    box_op_bottom = box.box()
+    col = box_op_bottom.column(align=True)
+    col.scale_y = 1.2
+    col.operator(
+        VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene.bl_idname,
+        text="Set Binds from Scene",
+    )
+
+    col = box_op_bottom.column(align=True)
+    col.scale_y = 1.2
+    col.operator(
+        VRMHELPER_OT_reset_shape_keys_on_selected_objects.bl_idname,
+        text="Reset Shape Kye on Selected",
+        icon="SHAPEKEY_DATA",
+    )
     col.operator(
         VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters.bl_idname,
-        text="Restore MToon Initial Value",
-    )
-
-    col.separator()
-    col.operator(
-        VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene.bl_idname,
-        text="Set from Collection",
+        text="Restore MToon Initial Values",
+        icon="NODE_MATERIAL",
     )
     col.operator(
-        VRMHELPER_OT_vrm1_expression_assign_expression_to_scene.bl_idname,
-        text="Assign to Scene",
+        VRMHELPER_OT_vrm1_expression_restore_initial_values.bl_idname,
+        text="Reset Bind's All Values",
+        icon="RECOVER_LAST",
     )
 
 

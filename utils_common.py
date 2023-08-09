@@ -624,3 +624,19 @@ def define_ui_list_rows(item_count: int, max_length: int = 10) -> int:
 
     """
     return max(min(item_count, max_length), 5)
+
+
+def reset_shape_keys_value(target_mesh: bpy.types.Mesh):
+    """
+    'target_mesh'に存在するすべてのシェイプキーの値を0にセットする.add()
+
+    Parameters
+    ----------
+    target_mesh : bpy.types.Mesh
+        処理対象のMesh
+
+    """
+    if sks := target_mesh.shape_keys:
+        key_blocks = sks.key_blocks
+        for key in key_blocks:
+            key.value = 0.0
