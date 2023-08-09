@@ -644,7 +644,7 @@ def get_mtoon_transform_current_parameters(
     current_texture_offset = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"])
     )
-    current_texture_offset = [abs(i) for i in current_texture_offset]
+    # current_texture_offset = [abs(i) for i in current_texture_offset]
     current_texture_scale = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"])
     )

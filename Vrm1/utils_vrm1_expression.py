@@ -401,17 +401,19 @@ def search_existing_morph_bind_and_update(
 
 
 def reset_shape_keys_value_in_morpth_binds(source_morph_binds: Any):
-    source_collection_morph = bpy.data.collections.get(
-        get_addon_collection_name("VRM1_EXPRESSION_MORPH")
-    )
-    # if existing_bind_meshes := {
-    #     bpy.data.objects.get(bind.node.mesh_object_name).data
-    #     for bind in source_morph_binds
-    # }:
-    # for existing_bind_mesh in existing_bind_meshes:
-    #     reset_shape_keys_value(existing_bind_mesh)
-    for obj in source_collection_morph.all_objects:
-        reset_shape_keys_value(obj.data)
+    """
+    'source_morph_binds'内に登録されているオブジェクトに存在する全てのシェイプキーの値を0にセットする｡
+
+    Parameters
+    ----------
+    source_morph_binds : Any
+        処理対象のMorph Target Binds
+
+    """
+
+    for bind_object_name in {bind.node.mesh_object_name for bind in source_morph_binds}:
+        if target_object := bpy.data.objects.get(bind_object_name):
+            reset_shape_keys_value(target_object.data)
 
 
 # ----------------------------------------------------------
@@ -785,7 +787,8 @@ def set_mtoon1_texture_transform_from_bind(
     if not (target_material := transform_bind.material):
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1
-    offset_value = [i * -1 for i in transform_bind.offset]
+    # offset_value = [i * -1 for i in transform_bind.offset]
+    offset_value = transform_bind.offset
 
     set_attr_from_strings(
         mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
