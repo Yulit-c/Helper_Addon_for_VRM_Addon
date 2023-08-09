@@ -1163,9 +1163,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_values(
             get_addon_collection_name("VRM1_EXPRESSION_MORPH")
         ):
             for obj in {
-                obj
-                for obj in source_collection_morph.all_objects
-                if filtering_mesh_type(obj)
+                obj for obj in source_collection_morph.all_objects if obj.type == "MESH"
             }:
                 reset_shape_keys_value(obj.data)
 
