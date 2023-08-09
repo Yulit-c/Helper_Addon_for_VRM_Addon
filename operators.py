@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_classes",
         "utils_common",
         "utils_vrm_base",
         "utils_first_person",
@@ -15,6 +16,7 @@ if "bpy" in locals():
 
 else:
     from .Logging import preparation_logger
+    from . import addon_classes
     from . import utils_common
     from . import utils_vrm_base
     from .Vrm1 import utils_vrm1_first_person
@@ -40,8 +42,9 @@ from bpy.props import (
     EnumProperty,
 )
 
-from mathutils import (
-    Vector,
+
+from .addon_classes import (
+    ConstraintTypeDict,
 )
 
 from .property_groups import (
@@ -59,7 +62,6 @@ from .property_groups import (
 )
 
 from .utils_vrm_base import (
-    ConstraintTypeDict,
     set_new_value2index_prop,
     re_link_all_collider_object2collection,
 )

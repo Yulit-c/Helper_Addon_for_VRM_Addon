@@ -312,7 +312,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
     VRMHELPER_first_person_base
 ):
     bl_idname = "vrm_helper.remove_mesh_annotation"
-    bl_label = "Remove by Selected Objects"
+    bl_label = "Remove  Mesh Annotation by Selected Objects"
     bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
 
     """

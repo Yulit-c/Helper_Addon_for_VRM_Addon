@@ -215,6 +215,10 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     rows = add_items2annotation_ui_list()
 
     row = layout.row()
+    row.prop(
+        first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type"
+    )
+    row = layout.row()
     row.scale_y = 1.4
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
     row = layout.row()
@@ -229,9 +233,6 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     )
     col = row.column()
     col.operator(
-        VRMHELPER_OT_vrm1_first_person_set_annotation.bl_idname, text="", icon="ADD"
-    )
-    col.operator(
         VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list.bl_idname,
         text="",
         icon="REMOVE",
@@ -242,9 +243,17 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
         icon="PANEL_CLOSE",
     )
 
-    row = layout.row()
-    row.operator(
-        VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects.bl_idname
+    layout.separator()
+    col = layout.column(align=True)
+    col.operator(
+        VRMHELPER_OT_vrm1_first_person_set_annotation.bl_idname,
+        text="Set from Selected Objects",
+        icon="IMPORT",
+    )
+    col.operator(
+        VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects.bl_idname,
+        text="Remove by Selected Objects",
+        icon="EXPORT",
     )
 
 
