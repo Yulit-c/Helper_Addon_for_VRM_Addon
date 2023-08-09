@@ -3,7 +3,8 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
-        "utils_common",
+        "addon_classes",
+        "addon_constants" "utils_common",
         "utils_vrm_base",
     ]
 
@@ -13,13 +14,19 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_classes
+    from .. import addon_constants
     from .. import utils_common
     from .. import utils_vrm_base
 
 from operator import (
     attrgetter,
 )
-from pprint import pprint
+
+from typing import (
+    Optional,
+)
+
 import bpy
 from bpy.types import (
     Object,
@@ -32,6 +39,8 @@ from bpy.types import (
 
 from ..addon_classes import (
     ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1CustomExpressionPropertyGroup,
+    Vrm1MorphTargetBindPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1TextureTransformBindPropertyGroup,
 )
@@ -89,7 +98,7 @@ logger = preparating_logger(__name__)
 #    Expressions
 # ----------------------------------------------------------
 def get_active_list_item_in_expression() -> (
-    VRMHELPER_WM_vrm1_expression_list_items | None
+    Optional[VRMHELPER_WM_vrm1_expression_list_items]
 ):
     if expressions_list := get_ui_vrm1_expression_prop():
         return expressions_list[get_vrm1_active_index_prop("EXPRESSION")]
@@ -99,8 +108,8 @@ def get_active_list_item_in_expression() -> (
 
 def get_source_vrm1_expression4ui_list() -> (
     tuple[
-        dict[str, PropertyGroup],
-        dict[str, PropertyGroup],
+        dict[str, ReferenceVrm1ExpressionPropertyGroup],
+        dict[str, ReferenceVrm1CustomExpressionPropertyGroup],
     ]
 ):
     """
@@ -110,8 +119,8 @@ def get_source_vrm1_expression4ui_list() -> (
     Returns
     -------
     tuple[
-        dict[str, VRM_Addon_for_Blender.editor.vrm1.property_group.Vrm1ExpressionPropertyGroup],
-        dict[str, VRM_Addon_for_Blender.editor.vrm1.property_group.Vrm1ExpressionPropertyGroup],
+        dict[str, ReferenceVrm1ExpressionPropertyGroup],
+        dict[str, ReferenceVrm1CustomExpressionPropertyGroup],
     ]
         Target Armatureが持つプリセットエクスプレッションを格納した辞書と
         カスタムエクスプレションを格納した辞書を格納したタプル｡
@@ -120,7 +129,7 @@ def get_source_vrm1_expression4ui_list() -> (
     expressions = get_vrm_extension_property("EXPRESSION")
 
     preset_expressions_dict = {}
-    # UI Listに表示する対象オブジェクトをリストに格納する
+    # UI Listに表示する対象オブジェクトをリストに格納するk
     for data_name, display_name in PRESET_EXPRESSION_NAME_DICT.items():
         preset_expressions_dict[display_name] = attrgetter(data_name)(expressions)
 
@@ -175,14 +184,14 @@ def add_items2expression_ui_list() -> int:
 # ----------------------------------------------------------
 
 
-def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
+def get_active_expression() -> Optional[ReferenceVrm1ExpressionPropertyGroup]:
     """
     エクスプレッションリストでアクティブになっているエクスプレッションを取得する｡
     エラーになる場合はオフセットしてエラーを回避する｡
 
     Returns
     -------
-    ReferenceVrm1ExpressionPropertyGroup
+    Optional[ReferenceVrm1ExpressionPropertyGroup]
         リスト内でアクティブになっているエクスプレッションのプロパティグループ｡
 
     """
@@ -198,14 +207,14 @@ def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
 
 
 def get_source_vrm1_expression_morph4ui_list() -> (
-    dict[str, list[tuple[PropertyGroup, int]]]
+    dict[str, list[tuple[Vrm1MorphTargetBindPropertyGroup, int]]]
 ):
     """
     UI Listでアクティブになっているエクスプレションに登録されているMorph Target Bindの情報を取得する｡
 
     Returns
     -------
-    dict[str, list[tuple[VrmAddon.Vrm1MorphTargetBindPropertyGroup, int]]]
+    dict[str, list[tuple[Vrm1MorphTargetBindPropertyGroup, int]]]
         エクスプレッションに登録されたMorph Target Bindとインデックスのペアを格納したタプルのリストを
         対応するオブジェクト名をキーとして格納した辞書｡
 
@@ -256,7 +265,7 @@ def add_items2expression_morph_ui_list() -> int:
 # Vrm1MorphTargetBindPropertyGroup
 def get_same_value_existing_morph_bind(
     obj_name: str, shape_key_name: str
-) -> PropertyGroup | None:
+) -> Optional[Vrm1MorphTargetBindPropertyGroup]:
     """
     アクティブエクスプレションのMorph Target Bindの中から
     2つの引数と同じ値が設定されたものを走査して取得する｡
@@ -270,7 +279,7 @@ def get_same_value_existing_morph_bind(
 
     Returns
     -------
-    VRM_Addon.Vrm1MorphTargetBindPropertyGroup | None
+    Optional[Vrm1MorphTargetBindPropertyGroup]
         'mesh_object_name'と'indes'の値が引数と同じMorpht Target Bind｡
         該当データがなければNone｡
     """

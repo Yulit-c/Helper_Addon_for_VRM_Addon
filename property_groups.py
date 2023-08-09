@@ -53,6 +53,11 @@ from bpy.props import (
 )
 
 
+from .addon_classes import (
+    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1CustomExpressionPropertyGroup,
+)
+
 from .addon_constants import (
     VRM_COMPONENT_TYPES,
 )
@@ -250,8 +255,6 @@ class VRMHELPER_SCENE_vrm1_expression_settigs(PropertyGroup):
         items=(
             ("MORPH", "Morph Target", "Edit Morph Target Bind"),
             ("MATERIAL", "Material", "Edit Material Binds"),
-            # ("COLOR", "Color", "Edit Material Color Bind"),
-            # ("TRANSFORM", "Texture Transform", "Edit Texture Transform Bind"),
         ),
         default="MORPH",
     )
@@ -793,7 +796,22 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
     Expression設定･確認用UI Listに表示する候補アイテム｡
     """
 
-    expressions_list: list[IDPropertyGroup] = []  # 全エクスプレッションを格納したリスト
+    expressions_list: list[
+        ReferenceVrm1ExpressionPropertyGroup
+        | ReferenceVrm1CustomExpressionPropertyGroup
+    ] = []  # 全エクスプレッションを格納したリスト
+
+    has_morph_bind: BoolProperty(
+        name="Has Morph Bind",
+        description="This Expression has one or more Morph Binds",
+        default=False,
+    )
+
+    has_material_bind: BoolProperty(
+        name="Has Material Bind",
+        description="This Expression has one or more Color or Texture Transform Binds",
+        default=False,
+    )
 
     custom_expression_index: IntProperty(
         name="Custom Expression Index",

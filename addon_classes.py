@@ -108,6 +108,9 @@ class ReferenceVrm1FirstPersonPropertyGroup:
     pass
 
 
+# ----------------------------------------------------------
+#    Expression
+# ----------------------------------------------------------
 class ReferenceVrm1ExpressionPropertyGroup:
     morph_target_binds: bpy.props.CollectionProperty()
     material_color_binds: bpy.props.CollectionProperty()
@@ -124,6 +127,17 @@ class ReferenceVrm1ExpressionPropertyGroup:
     show_expanded_morph_target_binds: bpy.props.BoolProperty()
     show_expanded_material_color_binds: bpy.props.BoolProperty()
     show_expanded_texture_transform_binds: bpy.props.BoolProperty()
+
+
+class ReferenceVrm1CustomExpressionPropertyGroup:
+    custom_name: bpy.props.StringProperty()
+    expression: bpy.props.PointerProperty()
+
+
+class Vrm1MorphTargetBindPropertyGroup:
+    node: bpy.props.PointerProperty()
+    index: bpy.props.StringProperty()
+    weight: bpy.props.FloatProperty()
 
 
 class ReferenceVrm1MaterialColorBindPropertyGroup:
@@ -145,6 +159,9 @@ class ReferenceVrm1TextureTransformBindPropertyGroup:
     offset: bpy.props.FloatVectorProperty()
 
 
+# ----------------------------------------------------------
+#    Spring Bone
+# ----------------------------------------------------------
 class ReferenceVrm1ColliderPropertyGroup:
     node: bpy.props.PointerProperty()
     shape: bpy.props.PointerProperty()
