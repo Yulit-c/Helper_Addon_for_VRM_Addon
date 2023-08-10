@@ -517,11 +517,6 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         icon="EXPORT",
     )
 
-    # col.operator(
-    #     VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters.bl_idname,
-    #     text="Restore MToon Initial Value",
-    # )
-
     box_op_bottom = box.box()
     col = box_op_bottom.column(align=True)
     col.scale_y = 1.2
@@ -566,7 +561,7 @@ class VRMHELPER_UL_expression_list(UIList):
         expression = item.expressions_list[index]
 
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
-        sp = layout.split(factor=0.4)
+        sp = layout.split(factor=0.25)
         row = sp.row(align=True)
         if item.custom_expression_index < 0:
             row.label(text=item.name)
@@ -577,17 +572,19 @@ class VRMHELPER_UL_expression_list(UIList):
             row.prop(custom_expression, "custom_name", text="", emboss=False)
 
         # 各種バインドを持つ場合はアイコンを描画する｡
-        sp = sp.split(factor=0.2)
-        row = sp.row(align=True)
+        sp = sp.split(factor=0.15)
+        row = sp.row(align=False)
+        row.alignment = "RIGHT"
+
         if item.has_morph_bind:
             row.label(text="", icon="MESH_DATA")
         else:
-            row.label(text="", icon="NONE")
+            row.label(text="")
 
         if item.has_material_bind:
             row.label(text="", icon="MATERIAL")
         else:
-            row.label(text="", icon="NONE")
+            row.label(text="")
 
         # エクスプレッションが持つ各パラメーターの描画
         row = sp.row(align=True)

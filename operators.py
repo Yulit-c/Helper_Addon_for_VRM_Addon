@@ -160,9 +160,7 @@ class VRMHELPER_OT_reset_shape_keys_on_selected_objects(Operator):
         return context.selected_objects
 
     def execute(self, context):
-        for obj in [
-            obj for obj in context.selected_objects if filtering_mesh_type(obj)
-        ]:
+        for obj in [obj for obj in context.selected_objects if obj.type == "MESH"]:
             reset_shape_keys_value(obj.data)
 
         return {"FINISHED"}
