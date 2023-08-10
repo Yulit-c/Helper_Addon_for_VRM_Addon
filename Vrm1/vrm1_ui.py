@@ -52,6 +52,7 @@ from ..addon_constants import (
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm1_collider_settigs,
+    VRMHELPER_SCENE_vrm1_spring_settigs,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
@@ -759,14 +760,11 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
                 row.label(text="Selected Collider:")
                 row.prop(active_item, "collider_name", text="", icon=collider_icon)
                 row = box.row(align=True)
-                # row.label(text="Collider Radius")
                 row.prop(
                     collider_prop,
                     "active_collider_radius",
                     text="Active Collider Radius",
                 )
-
-    # アクティブアイテムがコライダーの場合はEmptyのサイズを表示する
 
 
 class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
@@ -964,7 +962,9 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_vrm1_prop = get_vrm1_scene_root_prop()
-    spring_settings = scene_vrm1_prop.spring_settings
+    spring_settings: VRMHELPER_SCENE_vrm1_spring_settigs = (
+        scene_vrm1_prop.spring_settings
+    )
     joint_properties = get_properties_to_dict(spring_settings, JOINT_PROP_NAMES)
 
     # UI描画
@@ -1058,17 +1058,6 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     box_sub.prop(joint, "gravity_power", slider=True)
                     box_sub.prop(joint, "gravity_dir")
 
-                # ジョイント作成用/調整用プロパティ､オペレーター
-                if active_item.name == "Joint":
-                    box_sub.label(text="Operator Settings")
-                    box_sub.prop(spring_settings, "hit_radius", slider=True)
-                    box_sub.prop(spring_settings, "stiffness", slider=True)
-                    box_sub.prop(spring_settings, "drag_force", slider=True)
-                    box_sub.prop(spring_settings, "gravity_power", slider=True)
-                    box_sub.prop(spring_settings, "gravity_dir")
-                    box_sub.separator(factor=0.5)
-                    box_sub.prop(spring_settings, "damping_ratio", slider=True)
-
             # アクティブアイテムがCollider Groupの場合｡
             if active_item.item_type[3] or active_item.name == "Collider Group":
                 col_side.label(icon="OVERLAY")
@@ -1098,7 +1087,33 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         #    ジョイントの自動作成｡
         # ----------------------------------------------------------
         box = layout.box()
+        # オペレーター用ジョイントパラメーターの描画
+        box_sub = box.box()
+        if spring_settings.is_expand_operator_parameters:
+            expand_icon = "TRIA_DOWN"
+        else:
+            expand_icon = "TRIA_RIGHT"
+
+        row = box_sub.row(align=False)
+        row.prop(
+            spring_settings,
+            "is_expand_operator_parameters",
+            icon=expand_icon,
+            icon_only=True,
+        )
+        row.label(text="Operator Settings")
+        if spring_settings.is_expand_operator_parameters:
+            box_sub.prop(spring_settings, "hit_radius", slider=True)
+            box_sub.prop(spring_settings, "stiffness", slider=True)
+            box_sub.prop(spring_settings, "drag_force", slider=True)
+            box_sub.prop(spring_settings, "gravity_power", slider=True)
+            box_sub.prop(spring_settings, "gravity_dir")
+            box_sub.separator(factor=0.5)
+            box_sub.prop(spring_settings, "damping_ratio", slider=True)
+
+        # ジョイント作成オペレーターの描画
         col = box.column(align=True)
+        col.scale_y = 1.2
         op = col.operator(
             VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
             text="Create from Selected",
@@ -1115,7 +1130,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         #    既存ジョイントのパラメーター調整
         # ----------------------------------------------------------
-        col.separator()
+        col.separator(factor=2.0)
         op = col.operator(
             VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
             text="Adust Active Joint",

@@ -122,7 +122,7 @@ class ReferenceVrm1ColliderPropertyGroup:
 # ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    colliders: bpy.props.CollectionProperty(ReferenceVrm1ColliderPropertyGroup)
+    colliders: bpy.props.CollectionProperty()  # ReferenceVrm1ColliderPropertyGroup
     show_expanded: bpy.types.BoolProperty
     uuid: bpy.types.StringProperty
     search_one_time_uuid: bpy.types.StringProperty
@@ -151,10 +151,8 @@ class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
 
 class ReferenceVrm1SpringPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    joints: bpy.props.CollectionProperty(type=ReferenceSpringBone1JointPropertyGroup)
-    collider_groups: bpy.props.CollectionProperty(
-        type=ReferenceSpringBone1ColliderGroupPropertyGroup
-    )
+    joints: bpy.props.CollectionProperty()  # ReferenceSpringBone1JointPropertyGroup
+    collider_groups: bpy.props.CollectionProperty()  # ReferenceSpringBone1ColliderGroupPropertyGroup
     center: ReferenceBonePropertyGroup
     show_expanded: bpy.types.BoolProperty
     show_expanded_bones: bpy.types.BoolProperty

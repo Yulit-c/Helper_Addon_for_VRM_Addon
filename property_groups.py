@@ -483,6 +483,12 @@ class VRMHELPER_SCENE_vrm1_spring_settigs(PropertyGroup):
         default=False,
     )
 
+    is_expand_operator_parameters: BoolProperty(
+        name="Is Expand Operator Parameters",
+        description="Select whether to display operator parameters.",
+        default=True,
+    )
+
 
 # ----------------------------------------------------------
 #    Constraint

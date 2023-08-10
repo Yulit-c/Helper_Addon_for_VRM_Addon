@@ -42,6 +42,10 @@ from ..addon_classes import (
     ReferenceVrm1SpringPropertyGroup,
 )
 
+from ..preferences import (
+    get_addon_preferences,
+)
+
 from ..property_groups import (
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_collider_group_list_items,
@@ -336,7 +340,7 @@ def get_active_list_item_in_collider_group() -> (
 
 
 def get_source_vrm1_collider_groups() -> (
-    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any]]]
+    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any], None, None]]
 ):
     """
     Target ArmatureのVRM Extension内のVRM1コライダーグループと登録されたコライダーの情報を格納した辞書を返す｡
@@ -478,7 +482,7 @@ def get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm1_spring_list_i
 
 
 def get_source_vrm1_springs() -> (
-    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any]]
+    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any], None, None]
 ):
     """
     Target ArmatureのVRM Extension内のVRM1スプリングの全スプリングから
@@ -596,7 +600,8 @@ def add_list_item2bone_group_list4operator():
     オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
 
-    filtering_word = "spb"
+    addon_pref = get_addon_preferences()
+    filtering_word = addon_pref.bone_group_filter_name
 
     bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
     bone_group_collection.clear()

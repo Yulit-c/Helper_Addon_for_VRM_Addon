@@ -74,6 +74,12 @@ class VRMHELPER_PREF_addon_preferences(AddonPreferences):
         "VRM1_EXPRESSION_MATERIAL": "VRM_Helper_VRM1_Expression_Material",
     }
 
+    bone_group_filter_name: StringProperty(
+        name="Bone Group Filter Name",
+        description="Name that the operator creating the joints will recognize as the target bone group",
+        default="spring_",
+    )
+
     # ----------------------------------------------------------
     #    UI描画
     # ----------------------------------------------------------
@@ -83,6 +89,9 @@ class VRMHELPER_PREF_addon_preferences(AddonPreferences):
             row = layout.row(align=True)
             row.label(text=k)
             row.label(text=v)
+
+        layout.separator()
+        layout.prop(self, "bone_group_filter_name")
 
 
 """----------------------------------------------------
