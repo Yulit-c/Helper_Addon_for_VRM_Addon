@@ -56,6 +56,7 @@ from bpy.props import (
 from .addon_classes import (
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
+    ReferenceVrm1ColliderPropertyGroup,
 )
 
 from .addon_constants import (
@@ -268,7 +269,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
     Colliderの設定に関するプロパティ
     """
 
-    def update_item2vrm1_collider(self, context):
+    def update_item2vrm1_collider(self, context: bpy.types.Context):
         """
         VRM1.xのSpring Bone_Colliderのリストに登録されたBone Nameが更新された際に､
         そのボーンを親とするColliderの'node.bone_name'を更新する｡
@@ -298,6 +299,37 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
             # 自身のプロパティの値を更新｡
             self.old_bone = self.link_bone
 
+    def update_active_and_selected_collider_radius(self, context: bpy.types.Context):
+        """
+        値が変更された際にリスト内のアクティブコライダー及び選択されたEmptyオブジェクトに対応したコライダーの
+        半径に同じ値を適応する｡
+        """
+
+        target_armature_data = get_target_armature_data()
+        vrm_extension = target_armature_data.vrm_addon_extension
+        colliders = vrm_extension.spring_bone1.colliders
+
+        collider_list = get_ui_vrm1_collider_prop()
+        active_index = get_vrm1_active_index_prop("COLLIDER")
+        try:
+            active_collider: VRMHELPER_WM_vrm1_collider_list_items = collider_list[
+                active_index
+            ]
+        except:
+            return
+
+        # 選択オブジェクト中のEmptyとアクティブコライダーに対応するEmptyオブジェクトの名前の集合｡
+        collider_names = {i.name for i in context.selected_objects if i.type == "EMPTY"}
+        collider_names.add(active_collider.collider_name)
+
+        for collider in colliders:
+            collider: ReferenceVrm1ColliderPropertyGroup = collider
+            if collider.bpy_object.name in collider_names:
+                collider.shape.sphere.radius = self.active_collider_radius
+                collider.shape.capsule.radius = self.active_collider_radius
+
+    # ---------------------------------------------------------------------------------
+
     is_updated_link_bone: BoolVectorProperty(
         name="Is Updated Link Bone",
         description="Avoid infinite recursion when updating",
@@ -318,7 +350,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
     collider_radius: FloatProperty(
         name="Collider Radius",
         description="Radius of the collider to be created",
-        default=0.1,
+        default=0.05,
         unit="LENGTH",
     )
 
@@ -333,6 +365,15 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
         description="Description",
         default="",
         update=update_item2vrm1_collider,
+    )
+
+    active_collider_radius: FloatProperty(
+        name="Active Collider Radius",
+        description="Change the radius of the active collider in the listing",
+        default=0.05,
+        min=0.0001,
+        unit="LENGTH",
+        update=update_active_and_selected_collider_radius,
     )
 
 

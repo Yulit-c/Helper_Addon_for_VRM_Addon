@@ -236,6 +236,8 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
     def draw(self, context):
         # プロパティグループの取得
         basic_prop = get_scene_basic_prop()
+        target_armature_data = basic_prop.target_armature.data
+        vrm_extension = target_armature_data.vrm_addon_extension
 
         # UIの描画
         layout = self.layout
@@ -255,40 +257,41 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                 match type:
                     case "FIRST_PERSON":
                         box = layout.box()
-                        box.label(text="First Person Tool", icon="HIDE_OFF")
+                        box.label(text="First Person Tools", icon="HIDE_OFF")
                         box_sub = box.box()
                         draw_panel_vrm1_first_person(self, context, box_sub)
 
                     case "EXPRESSION":
                         box = layout.box()
-                        box.label(text="Expression Tool", icon="SHAPEKEY_DATA")
+                        box.label(text="Expression Tools", icon="SHAPEKEY_DATA")
                         box_sub = box.box()
                         draw_panel_vrm1_expression(self, context, box_sub)
 
                     case "COLLIDER":
                         box_spring = draw_spring_setting_box(box_spring, layout)
                         box = box_spring.box()
-                        box.label(text="Collider", icon="MESH_UVSPHERE")
+                        box.label(text="Collider Tools", icon="MESH_UVSPHERE")
                         box_sub = box.box()
                         draw_panel_vrm1_collider(self, context, box_sub)
 
                     case "COLLIDER_GROUP":
                         box_spring = draw_spring_setting_box(box_spring, layout)
                         box = box_spring.box()
-                        box.label(text="Collider Group", icon="OVERLAY")
+                        box.label(text="Collider Group Tools", icon="OVERLAY")
                         box_sub = box.box()
                         draw_panel_vrm1_collider_group(self, context, box_sub)
 
                     case "SPRING":
                         box_spring = draw_spring_setting_box(box_spring, layout)
                         box = box_spring.box()
-                        box.label(text="Joint", icon="BONE_DATA")
+                        box.label(text="Spring Tools", icon="BONE_DATA")
+                        box.prop(vrm_extension, "spring_bone1.enable_animation")
                         box_sub = box.box()
                         draw_panel_vrm1_spring(self, context, box_sub)
 
                     case "CONSTRAINT":
                         box = layout.box()
-                        box.label(text="Node Constraint", icon="CONSTRAINT")
+                        box.label(text="Node Constraint Tools", icon="CONSTRAINT")
                         box_sub = box.box()
                         draw_panel_vrm1_constraint_ui_list(self, context, box_sub)
                         draw_panel_vrm1_constraint_operator(self, context, box_sub)

@@ -7,7 +7,13 @@ from typing import (
 
 
 """---------------------------------------------------------
+------------------------------------------------------------
     VRM Addon Reference
+------------------------------------------------------------
+---------------------------------------------------------"""
+
+"""---------------------------------------------------------
+    First Person
 ---------------------------------------------------------"""
 
 
@@ -15,40 +21,42 @@ class ReferenceVrm1FirstPersonPropertyGroup:
     pass
 
 
-# ----------------------------------------------------------
-#    Expression
-# ----------------------------------------------------------
+"""---------------------------------------------------------
+    Expression
+---------------------------------------------------------"""
+
+
 class ReferenceVrm1ExpressionPropertyGroup:
     morph_target_binds: bpy.props.CollectionProperty()
     material_color_binds: bpy.props.CollectionProperty()
     texture_transform_binds: bpy.props.CollectionProperty()
-    is_binary: bpy.props.BoolProperty()
+    is_binary: bpy.types.BoolProperty
 
     EXPRESSION_OVERRIDE_TYPE_VALUES = []
 
-    override_blink: bpy.props.EnumProperty()
-    override_look_at: bpy.props.EnumProperty()
-    override_mouth: bpy.props.EnumProperty()
+    override_blink: bpy.types.EnumProperty
+    override_look_at: bpy.types.EnumProperty
+    override_mouth: bpy.types.EnumProperty
 
-    show_expanded: bpy.props.BoolProperty()
-    show_expanded_morph_target_binds: bpy.props.BoolProperty()
-    show_expanded_material_color_binds: bpy.props.BoolProperty()
-    show_expanded_texture_transform_binds: bpy.props.BoolProperty()
+    show_expanded: bpy.types.BoolProperty
+    show_expanded_morph_target_binds: bpy.types.BoolProperty
+    show_expanded_material_color_binds: bpy.types.BoolProperty
+    show_expanded_texture_transform_binds: bpy.types.BoolProperty
 
 
 class ReferenceVrm1CustomExpressionPropertyGroup:
-    custom_name: bpy.props.StringProperty()
+    custom_name: bpy.types.StringProperty
     expression: bpy.props.PointerProperty()
 
 
 class ReferenceVrm1MorphTargetBindPropertyGroup:
     node: bpy.props.PointerProperty()
-    index: bpy.props.StringProperty()
-    weight: bpy.props.FloatProperty()
+    index: bpy.types.StringProperty
+    weight: bpy.types.FloatProperty
 
 
 class ReferenceVrm1MaterialColorBindPropertyGroup:
-    material: bpy.props.PointerProperty()
+    material: bpy.types.Material
     type: Literal[
         "color",
         "shadeColor",
@@ -57,36 +65,68 @@ class ReferenceVrm1MaterialColorBindPropertyGroup:
         "rimColor",
         "outlineColor",
     ]
-    target_value: bpy.props.FloatVectorProperty()
+    target_value: list[bpy.types.FloatProperty]
 
 
 class ReferenceVrm1TextureTransformBindPropertyGroup:
-    material: bpy.props.PointerProperty()
-    scale: bpy.props.FloatVectorProperty()
-    offset: bpy.props.FloatVectorProperty()
+    material: bpy.types.Material
+    scale: list[bpy.types.FloatProperty]
+    offset: list[bpy.types.FloatProperty]
+
+
+"""---------------------------------------------------------
+    Spring Bone
+---------------------------------------------------------"""
 
 
 # ----------------------------------------------------------
-#    Spring Bone
+#    Collider
 # ----------------------------------------------------------
+class ReferenceSpringBone1ColliderShapeSpherePropertyGroup:
+    offset: list[bpy.types.FloatProperty]
+    radius: bpy.types.FloatProperty
+
+
+class ReferenceSpringBone1ColliderShapeCapsulePropertyGroup:
+    offset: list[bpy.types.FloatProperty]
+    radius: bpy.types.FloatProperty
+    tail: list[bpy.types.FloatProperty]
+
+
+class ReferenceBonePropertyGroup:
+    bone_name: bpy.types.StringProperty
+    value: bpy.types.StringProperty
+    bone_uuid: bpy.types.StringProperty
+    armature_data_name: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
+
+
+class ReferenceSpringBone1ColliderShapePropertyGroup:
+    sphere: ReferenceSpringBone1ColliderShapeSpherePropertyGroup
+    capsule: ReferenceSpringBone1ColliderShapeCapsulePropertyGroup
+
+
 class ReferenceVrm1ColliderPropertyGroup:
-    node: bpy.props.PointerProperty()
-    shape: bpy.props.PointerProperty()
+    node: ReferenceBonePropertyGroup
+    shape: ReferenceSpringBone1ColliderShapePropertyGroup
 
-    show_expanded: bpy.props.BoolProperty()
-
+    show_expanded: bpy.types.BoolProperty
     shape_type: Literal["Sphere", "Capsule"]
-
-    bpy_object: bpy.props.PointerProperty()
-
-    uuid: bpy.props.StringProperty
-    search_one_time_uuid: bpy.props.StringProperty()
+    bpy_object: bpy.types.Object
+    uuid: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
 
 
+# ----------------------------------------------------------
+#    Collider Group
+# ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
     pass
 
 
+# ----------------------------------------------------------
+#    Spring
+# ----------------------------------------------------------
 class ReferenceVrm1SpringPropertyGroup:
     pass
 

@@ -51,6 +51,7 @@ from ..addon_constants import (
 )
 
 from ..property_groups import (
+    VRMHELPER_SCENE_vrm1_collider_settigs,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
@@ -700,8 +701,11 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_vrm1_prop = get_vrm1_scene_root_prop()
-    active_index = get_vrm1_active_index_prop("COLLIDER")
-    collider_prop = scene_vrm1_prop.collider_settings
+    # active_index = get_vrm1_active_index_prop("COLLIDER")
+    active_index = scene_vrm1_prop.active_indexes.collider
+    collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs = (
+        scene_vrm1_prop.collider_settings
+    )
 
     # UI描画
     row = layout.row()
@@ -757,8 +761,10 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
                 row.label(text="Selected Collider:")
                 row.prop(active_item, "collider_name", text="", icon=collider_icon)
                 row = box.row(align=True)
-                row.label(text="Collidaer Radius")
-                row.prop(active_item.collider_object, "empty_display_size", text="")
+                # row.label(text="Collider Radius")
+                row.prop(
+                    collider_prop, "active_collider_radius", text="Collider Radius"
+                )
 
     # アクティブアイテムがコライダーの場合はEmptyのサイズを表示する
 
