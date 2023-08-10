@@ -285,7 +285,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                         box_spring = draw_spring_setting_box(box_spring, layout)
                         box = box_spring.box()
                         box.label(text="Spring Tools", icon="BONE_DATA")
-                        box.prop(vrm_extension, "spring_bone1.enable_animation")
+                        box.prop(vrm_extension.spring_bone1, "enable_animation")
                         box_sub = box.box()
                         draw_panel_vrm1_spring(self, context, box_sub)
 

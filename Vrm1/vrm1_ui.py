@@ -708,11 +708,12 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     )
 
     # UI描画
-    row = layout.row()
+    layout.prop(collider_prop, "is_additive_selecting")
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2collider_ui_list()
 
+    row = layout.row()
     row.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
         "",
@@ -725,7 +726,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     row = layout.row()
     row.prop(collider_prop, "collider_type", text=" ", expand=True)
     row = layout.row()
-    row.prop(collider_prop, "collider_radius", text="Radius")
+    row.prop(collider_prop, "collider_radius", text="Generated Collider Radius")
     row = layout.row()
 
     op = row.operator(VRMHELPER_OT_collider_create_from_bone.bl_idname)
@@ -763,7 +764,9 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
                 row = box.row(align=True)
                 # row.label(text="Collider Radius")
                 row.prop(
-                    collider_prop, "active_collider_radius", text="Collider Radius"
+                    collider_prop,
+                    "active_collider_radius",
+                    text="Active Collider Radius",
                 )
 
     # アクティブアイテムがコライダーの場合はEmptyのサイズを表示する

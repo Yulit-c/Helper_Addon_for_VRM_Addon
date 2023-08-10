@@ -305,6 +305,9 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
         半径に同じ値を適応する｡
         """
 
+        if self.is_updated_collider_raduis:
+            return
+
         target_armature_data = get_target_armature_data()
         vrm_extension = target_armature_data.vrm_addon_extension
         colliders = vrm_extension.spring_bone1.colliders
@@ -322,11 +325,30 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
         collider_names = {i.name for i in context.selected_objects if i.type == "EMPTY"}
         collider_names.add(active_collider.collider_name)
 
+        is_target_collider = (
+            None,
+            None,
+        )  # [0]: Sphere or Collider Head [1]: Collidaer End
         for collider in colliders:
             collider: ReferenceVrm1ColliderPropertyGroup = collider
-            if collider.bpy_object.name in collider_names:
-                collider.shape.sphere.radius = self.active_collider_radius
-                collider.shape.capsule.radius = self.active_collider_radius
+
+            match detect_collider_shape_type(collider.shape_type):
+                case -1:  # Invailed
+                    continue
+
+                case 0:  # Sphere Collider
+                    if not collider.bpy_object.name in collider_names:
+                        continue
+                    collider.shape.sphere.radius = self.active_collider_radius
+
+                case 1:  # Capsule Collider
+                    object_names = {
+                        collider.bpy_object.name,
+                        collider.bpy_object.children[0].name,
+                    }
+                    if not object_names & collider_names:
+                        continue
+                    collider.shape.capsule.radius = self.active_collider_radius
 
     # ---------------------------------------------------------------------------------
 
@@ -335,6 +357,18 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
         description="Avoid infinite recursion when updating",
         size=2,
         default=(0, 0),
+    )
+
+    is_updated_collider_raduis: BoolProperty(
+        name="Locked Active Collider Radius",
+        description="Update callback functions are locked while this flag is on",
+        default=False,
+    )
+
+    is_additive_selecting: BoolProperty(
+        name="Is Additive Selecting",
+        description="Whether to unselect the selected object when updating the active item in the list",
+        default=False,
     )
 
     collider_type: EnumProperty(
@@ -483,69 +517,117 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
     UI Listのアクティブアイテムインデックス用のIntPropertyを登録するプロパティグループ｡
     """
 
+    def update_active_collider_radius(
+        self,
+        collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs,
+        collider: ReferenceVrm1ColliderPropertyGroup,
+    ):
+        """
+        'collider_prop'の'active_collider_radius'の値を'collider'のタイプに応じた
+        'radius'と同じ値にセットする｡
+
+        Parameters
+        ----------
+        collider_prop : VRMHELPER_SCENE_vrm1_collider_settigs
+            プロパティ更新の対象となるプロパティグループ
+
+        collider : ReferenceVrm1ColliderPropertyGroup
+            'radius'の参照元となるVRM AddonのColliderプロパティ
+
+        """
+        match detect_collider_shape_type(collider.shape_type):
+            case -1:
+                return
+            case 0:
+                source_radius = collider.shape.sphere.radius
+            case 1:
+                source_radius = collider.shape.capsule.radius
+
+        collider_prop.active_collider_radius = source_radius
+
     def select_collider_object_by_ui_list(self, context: Context):
         """
         Spring Bone_ColliderのUIリストアクティブアイテムが更新された際に､
         アクティブアイテムインデックスに対応したシーン内オブジェクトを選択状態にする｡
+        また､アクティブコライダーの半径を'Active Collider Radius'に反映する｡
         """
 
         if self.is_locked_update:
             return
 
-        collider_list = get_ui_vrm1_collider_prop()
-        active_index = get_vrm1_active_index_prop("COLLIDER")
-
-        # アクティブアイテムがラベルである
-        if (active_item := collider_list[active_index]).item_type[0]:
-            return
-
-        # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
-        colliders = (
-            get_target_armature_data().vrm_addon_extension.spring_bone1.colliders
-        )
-        current_object_in_loop = None
-        if active_item.item_type[1]:
-            collider_prop = get_scene_vrm1_collider_prop()
-
-            if collider_prop.link_bone != active_item.name:
-                collider_prop.is_updated_link_bone[0] = True
-                collider_prop.old_bone = active_item.name
-                collider_prop.link_bone = active_item.name
-
-            if context.mode != "OBJECT":
-                return
-            bpy.ops.object.select_all(action="DESELECT")
-            [
-                (
-                    i.bpy_object.select_set(True),
-                    (current_object_in_loop := i.bpy_object),
-                )
-                for i in colliders
-                if i.node.bone_name == active_item.bone_name
-            ]
-            return
-
         if context.mode != "OBJECT":
             return
 
-        # アクティブアイテムがコライダーであればそれを選択する｡
-        bpy.ops.object.select_all(action="DESELECT")
-        if active_item.item_type[2]:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
-                True
-            )
-            current_object_in_loop = collider
+        collider_prop = get_scene_vrm1_collider_prop()
+        collider_list = get_ui_vrm1_collider_prop()
+        active_index = get_vrm1_active_index_prop("COLLIDER")
+        active_item = collider_list[active_index]
+        vrm_extension = get_target_armature_data().vrm_addon_extension
+        colliders = vrm_extension.spring_bone1.colliders
 
-        # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
-        else:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
-                True
-            )
-            current_object_in_loop = collider
+        current_object_in_loop = None
+        collider_prop.is_updated_collider_raduis = True
 
+        match tuple(active_item.item_type):
+            # アクティブアイテムがラベルである
+            case (1, 0, 0, 0):
+                return
+
+            # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
+            case (0, 1, 0, 0):
+                if collider_prop.link_bone != active_item.name:
+                    collider_prop.is_updated_link_bone[0] = True
+                    collider_prop.old_bone = active_item.name
+                    collider_prop.link_bone = active_item.name
+
+                if not collider_prop.is_additive_selecting:
+                    bpy.ops.object.select_all(action="DESELECT")
+
+                [
+                    (
+                        i.bpy_object.select_set(True),
+                        (current_object_in_loop := i.bpy_object),
+                    )
+                    for i in colliders
+                    if i.node.bone_name == active_item.bone_name
+                ]
+
+            # アクティブアイテムがコライダーであればそれを選択する｡
+            case (0, 0, 1, 0):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider.select_set(True)
+                    current_object_in_loop = collider
+
+            # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
+            case (0, 0, 0, 1):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider_object := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider_object.select_set(True)
+                    current_object_in_loop = collider_object
+
+        collider_prop.is_updated_collider_raduis = False
+
+        # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
         context.view_layer.objects.active = current_object_in_loop
 
     def select_constraint_by_ui_list(self, context: Context):
+        """
+        Node ConstraintのUIリストアクティブアイテムが更新された際に､
+        アクティブアイテムインデックスに対応したコンストレイントを持つ要素を可能なら選択状態にする｡
+        """
         # 現在のインデックスからアクティブアイテムを取得する｡
         constraint_ui_list = get_ui_vrm1_constraint_prop()
         active_index = get_vrm1_active_index_prop("CONSTRAINT")
@@ -1576,6 +1658,64 @@ def get_scene_vrm1_collider_prop() -> VRMHELPER_SCENE_vrm1_collider_settigs:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     collider_prop = scene_vrm1_prop.collider_settings
     return collider_prop
+
+
+def detect_collider_shape_type(shape_type: str) -> int:
+    """
+    引数'shape_type'に応じてint型のステータスを返す｡
+
+    Parameters
+    ----------
+    shape_type : str
+        判定を行なうコライダーのシェイプタイプ｡
+
+    Returns
+    -------
+    int
+        コライダーのシェイプに応じたステータス｡
+        -1 : Error
+         0 : Sphere
+         1 : Capsule
+
+    """
+    match shape_type:
+        case "Sphere":
+            return 0
+
+        case "Capsule":
+            return 1
+
+        case _:
+            logger.debug("Invailed Shape Type")
+            return -1
+
+
+def find_collider_from_empty_name(
+    colliders: Any, empty_name: str
+) -> Optional[ReferenceVrm1ColliderPropertyGroup]:
+    """
+    'colliders'で受け取ったVRM Addonのコライダーコレクションプロパティグループのうち､
+    参照オブジェクトの名前が引数'empty_name'と一致するものを判定してそれを返す｡
+
+    Parameters
+    ----------
+    colliders : Any
+        処理対象のColliderコレクションプロパティ｡
+
+    empty_name : str
+        判定のソースとなる文字列
+
+    Returns
+    -------
+    Optional[ReferenceVrm1ColliderPropertyGroup]
+        名前が一致したコライダーが存在すればそれを返す｡
+    """
+
+    if not (temp := [i for i in colliders if i.bpy_object.name == empty_name]):
+        return
+
+    collider = temp[0]
+    return collider
 
 
 def get_scene_vrm1_collider_group_prop() -> VRMHELPER_SCENE_vrm1_collider_group_settigs:
