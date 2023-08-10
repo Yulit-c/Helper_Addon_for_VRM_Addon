@@ -121,14 +121,45 @@ class ReferenceVrm1ColliderPropertyGroup:
 #    Collider Group
 # ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
-    pass
+    vrm_name: bpy.types.StringProperty
+    colliders: bpy.props.CollectionProperty(ReferenceVrm1ColliderPropertyGroup)
+    show_expanded: bpy.types.BoolProperty
+    uuid: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
 
 
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
+class ReferenceSpringBone1JointPropertyGroup:
+    node: ReferenceBonePropertyGroup
+    hit_radius: bpy.types.FloatProperty
+    stiffness: bpy.types.FloatProperty
+    gravity_power: bpy.types.FloatProperty
+
+
+class ReferenceSpringBone1ColliderGroupPropertyGroup:
+    collider_group_name: bpy.types.StringProperty
+    collider_group_uuid: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
+
+
+class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
+    use_center_space: bpy.types.BoolProperty
+    previous_center_world_translation: list[bpy.types.FloatProperty]
+
+
 class ReferenceVrm1SpringPropertyGroup:
-    pass
+    vrm_name: bpy.types.StringProperty
+    joints: bpy.props.CollectionProperty(type=ReferenceSpringBone1JointPropertyGroup)
+    collider_groups: bpy.props.CollectionProperty(
+        type=ReferenceSpringBone1ColliderGroupPropertyGroup
+    )
+    center: ReferenceBonePropertyGroup
+    show_expanded: bpy.types.BoolProperty
+    show_expanded_bones: bpy.types.BoolProperty
+    show_expanded_collider_groups: bpy.types.BoolProperty
+    animation_state: ReferenceSpringBone1SpringAnimationStatePropertyGroup
 
 
 """---------------------------------------------------------

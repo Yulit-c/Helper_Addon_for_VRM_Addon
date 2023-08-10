@@ -20,25 +20,31 @@ else:
 from pprint import pprint
 
 from typing import (
+    Optional,
     Literal,
     Generator,
+    Any,
 )
 import bpy
 from bpy.types import (
-    Context,
     Object,
     PoseBone,
     PropertyGroup,
-    bpy_prop_collection,
 )
 from mathutils import (
     Vector,
     Matrix,
 )
 
+from ..addon_classes import (
+    ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm1ColliderGroupPropertyGroup,
+    ReferenceVrm1SpringPropertyGroup,
+)
 
 from ..property_groups import (
     VRMHELPER_WM_vrm1_collider_list_items,
+    VRMHELPER_WM_vrm1_collider_group_list_items,
     VRMHELPER_WM_vrm1_spring_list_items,
     get_ui_vrm1_collider_prop,
     get_ui_vrm1_collider_group_prop,
@@ -93,13 +99,15 @@ def get_pose_bone_by_name(bone_name: str) -> PoseBone:
 ---------------------------------------------------------"""
 
 
-def get_source_vrm1_colliders() -> dict[str, list[tuple[int, PropertyGroup]]]:
+def get_source_vrm1_colliders() -> (
+    dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
+):
     """
     Target ArmatureのVRM Extension内のVRM1のコライダーと対応ボーンの情報を格納した辞書を返す｡
 
     Returns
     -------
-    dict[str, list[tuple[int,PropertyGroup]]]
+    dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
         コライダーとインデックスを格納したタプルのリストを､対応するボーン名をキーとして格納した辞書｡
 
     """
@@ -309,7 +317,9 @@ def is_existing_collider_group() -> bool:
         return False
 
 
-def get_active_list_item_in_collider_group() -> PropertyGroup | None:
+def get_active_list_item_in_collider_group() -> (
+    VRMHELPER_WM_vrm1_collider_group_list_items | None
+):
     """
     UIリストのアクティブインデックスに対応したコライダーグループを取得する｡
 
@@ -325,13 +335,15 @@ def get_active_list_item_in_collider_group() -> PropertyGroup | None:
         return None
 
 
-def get_source_vrm1_collider_groups() -> Generator[tuple[PropertyGroup], None, None]:
+def get_source_vrm1_collider_groups() -> (
+    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any]]]
+):
     """
     Target ArmatureのVRM Extension内のVRM1コライダーグループと登録されたコライダーの情報を格納した辞書を返す｡
 
     Returns
     -------
-    Generator[tuple[PropertyGroup], None, None]
+    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any]]]
         VRM Extensionに登録されたコライダーグループと､
         グループに登録されたコライダーを格納したタプルを出力するジェネレーター
 
@@ -448,23 +460,34 @@ def cleanup_empty_collider_group():
 ---------------------------------------------------------"""
 
 
-def get_active_list_item_in_spring() -> VRMHELPER_WM_vrm1_spring_list_items | None:
+def get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm1_spring_list_items]:
+    """
+    SpringのUI List内でアクティブになっているアイテムを取得して返す｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm1_spring_list_items]
+        SpringのUi List内のアクティブアイテム
+
+    """
+
     if spring_group_list := get_ui_vrm1_spring_prop():
         return spring_group_list[get_vrm1_active_index_prop("SPRING")]
     else:
         return None
 
 
-def get_source_vrm1_springs() -> Generator[tuple[PropertyGroup], None, None]:
+def get_source_vrm1_springs() -> (
+    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any]]
+):
     """
-    Target ArmatureのVRM Extension内のVRM1スプリング
+    Target ArmatureのVRM Extension内のVRM1スプリングの全スプリングから
+    'spring', 'joints', 'collider_groups'を格納したタプルのジェネレーターを作成する｡
 
     Returns
     -------
-    Generator[tuple[PropertyGroup], None, None]
-
-
-
+    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any]]
+        全スプリングが持つ'spring', 'joints', 'collider_groups'の属性を格納したタプルのジェネレーター｡
     """
     # VRM Extensionの'colliders'を取得する
     springs = get_vrm_extension_property("SPRING")
