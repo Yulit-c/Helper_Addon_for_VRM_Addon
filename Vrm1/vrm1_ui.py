@@ -909,7 +909,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         row.operator(VRMHELPER_OT_collider_group_register_collider_from_bone.bl_idname)
 
 
-class VRMHELPER_UL_vrm1_collider_group_list(UIList):
+class VRMHELPER_UL_vrm1_collider_group_list(UIList, VRMHELPER_UL_base):
     """Vrm1のSpring Bone Collider Groupを表示するUI List"""
 
     def draw_item(
@@ -936,7 +936,7 @@ class VRMHELPER_UL_vrm1_collider_group_list(UIList):
 
         # Colliderの描画｡
         if item.item_type[2]:
-            row.separator(factor=2.0)
+            self.add_blank_labels(row, 2)
             row.prop_search(
                 spring1.collider_groups[item.item_indexes[0]].colliders[
                     item.item_indexes[1]
