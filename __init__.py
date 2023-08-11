@@ -3,10 +3,6 @@
 # TODO : 各OperatorのPollの確認｡
 # TODO : UI Listの表示アイテムを格納するCollection Propertyを取得する関数の返り値型ヒントが違っている
 #        Colldection Property自体はbpy_prop_collection_idpropになる
-# TODO : ExpressionのUI List上で､Bind設定されているもの/いないものが区別できるようにする｡
-# TODO : 現在の状態からExpressionをセットするコマンドはMorph･Materialを同時にできないと不便｡
-# TODO : ExpressionのMorphリセット時にShape Keyをリセットできていない｡
-# TODO : Spring作成時の設定パラメーターはアクティブアイテムがスプリング以外のときも表示されていないと不便｡
 
 bl_info = {
     "name": "Helper Addon for VRM Addon",

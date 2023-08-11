@@ -733,7 +733,7 @@ def get_all_collider_objects_from_scene() -> list[Object]:
 
 def re_link_all_collider_object2collection():
     addon_collection_dict = setting_vrm_helper_collection()
-    vrm1_collider_collection = addon_collection_dict["VRM1_Collider"]
+    vrm1_collider_collection = addon_collection_dict["VRM1_COLLIDER"]
     collider_objects = get_all_collider_objects_from_scene()
     pprint(collider_objects)
 
