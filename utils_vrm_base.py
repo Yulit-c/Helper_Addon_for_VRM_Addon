@@ -21,11 +21,8 @@ from pprint import (
     pprint,
 )
 from typing import (
-    Any,
     Literal,
-    Iterator,
-    TypedDict,
-    NamedTuple,
+    Optional,
 )
 import bpy
 from bpy.types import (
@@ -38,19 +35,35 @@ from bpy.types import (
     DampedTrackConstraint,
 )
 
-from mathutils import (
-    Color,
+
+from .addon_classes import (
+    MToon1MaterialParameters,
+    ReferenceVrm1FirstPersonPropertyGroup,
+    ReferenceVrm1ExpressionsPropertyGroup,
+    ReferenceVrm1MaterialColorBindPropertyGroup,
+    ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm1ColliderGroupPropertyGroup,
+    ReferenceSpringBone1SpringPropertyGroup,
+    ReferenceVrm0PropertyGroup,
+    ReferenceVrm1PropertyGroup,
+    ReferenceSpringBone1SpringBonePropertyGroup,
+    ReferenceNodeConstraint1NodeConstraintPropertyGroup,
+    ReferenceVrmAddonArmatureExtensionPropertyGroup,
+)
+
+from .addon_constants import (
+    MTOON_ATTRIBUTE_NAMES,
+    MTOON_DEFAULT_VALUES,
 )
 
 from .property_groups import (
-    ReferenceVrm1MaterialColorBindPropertyGroup,
-    ReferenceVrm1ColliderPropertyGroup,
-    # ----------------------------------------------------------
+    VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
-    get_addon_prop_group,
+    get_scene_basic_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_ui_vrm1_operator_bone_group_prop,
+    get_scene_vrm1_mtoon_stored_prop,
 )
 
 from .utils_common import (
@@ -60,6 +73,7 @@ from .utils_common import (
     get_bones_for_each_branch_from_source_bones,
     unlink_object_from_all_collections,
     setting_vrm_helper_collection,
+    get_addon_collection_name,
 )
 
 
@@ -76,92 +90,55 @@ logger = preparating_logger(__name__)
 
 """---------------------------------------------------------
 ------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-class MToon1ParameterNames(TypedDict):
-    texture_scale: str
-    texture_offset: str
-    lit_color: str
-    shade_color: str
-    emission_color: str
-    matcap_color: str
-    rim_color: str
-    outline_color: str
-
-
-class MToon1MaterialParameters(TypedDict, total=False):
-    texture_scale: list[float]
-    texture_offset: list[float]
-    lit_color: list[float]
-    shade_color: list[float]
-    emission_color: list[float]
-    matcap_color: list[float]
-    rim_color: list[float]
-    outline_color: list[float]
-
-
-class VrmRollConstraint:
-    pass
-
-
-class VrmAimConstraint:
-    pass
-
-
-class VrmRotationConstraint:
-    pass
-
-
-class CandidateConstraitProperties(NamedTuple):
-    type: VrmAimConstraint | VrmAimConstraint | VrmRotationConstraint  # VRMコンストレイントの種類
-    element: Object | Bone  # コンストレイントがアタッチされたデータ
-    index: int  # elementが持つコンストレイントスタックにおける対象コンストレイントのインデックス
-    is_circular_dependency: bool  # 循環依存関係が生じていることを示すフラグ
-    constraint: CopyRotationConstraint | DampedTrackConstraint  # 'element'にアタッチされたコンストレイント
-
-
-class ConstraintTypeDict(TypedDict):
-    ROLL: str
-    AIM: str
-    ROTATION: str
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-MTOON_ATTRIBUTE_NAMES: MToon1ParameterNames = {
-    "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
-    "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
-    "lit_color": "pbr_metallic_roughness.base_color_factor",
-    "shade_color": "extensions.vrmc_materials_mtoon.shade_color_factor",
-    "emission_color": "emissive_factor",
-    "matcap_color": "extensions.vrmc_materials_mtoon.matcap_factor",
-    "rim_color": "extensions.vrmc_materials_mtoon.parametric_rim_color_factor",
-    "outline_color": "extensions.vrmc_materials_mtoon.outline_color_factor",
-}
-
-MTOON_DEFAULT_VALUES: MToon1MaterialParameters = {
-    "texture_scale": [1.0, 1.0],
-    "texture_offset": [0.0, 0.0],
-    "lit_color": [1.0, 1.0, 1.0, 1.0],
-    "shade_color": [1.0, 1.0, 1.0],
-    "emission_color": [0.0, 0.0, 0.0],
-    "matcap_color": [1.0, 1.0, 1.0],
-    "rim_color": [0.0, 0.0, 0.0],
-    "outline_color": [0.0, 0.0, 0.0],
-}
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
     Function
 ------------------------------------------------------------
 ---------------------------------------------------------"""
+
+
+def evaluation_expression_morph_collection() -> bool:
+    """
+    # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Morph'のコレクションが
+    # 存在するか否かを判定する｡
+
+    Returns
+    -------
+    bool
+        条件を満たしていればTrue､そうでなければFalseを返す｡
+    """
+
+    if collection_mat := bpy.data.collections.get(
+        get_addon_collection_name("VRM1_EXPRESSION_MORPH")
+    ):
+        if collection_mat.all_objects:
+            return True
+    return False
+
+
+def evaluation_expression_material_collection() -> bool:
+    """
+    # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Material'のコレクションが
+    # 存在するか否かを判定する｡
+
+    Returns
+    -------
+    bool
+        条件を満たしていればTrue､そうでなければFalseを返す｡
+    """
+
+    if collection_mat := bpy.data.collections.get(
+        get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
+    ):
+        if collection_mat.all_objects:
+            return True
+    return False
+
+
+def set_new_value2index_prop(
+    index_root_prop: VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
+    attr_name: str,
+):
+    new_value = getattr(index_root_prop, attr_name) - 1
+    setattr(index_root_prop, attr_name, new_value)
 
 
 def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
@@ -180,7 +157,7 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
 
     """
 
-    bone_group_collection = get_ui_list_prop4custom_filter("BONE_GROUP")
+    bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
 
     target_group_index_list = [
         i.group_index for i in bone_group_collection if i.is_target
@@ -258,14 +235,38 @@ def check_addon_mode() -> str:
         "2" : Misc Tools
 
     """
-    basic_prop = get_addon_prop_group("BASIC")
+    basic_prop = get_scene_basic_prop()
 
     return basic_prop.tool_mode
 
 
+def get_vrm_extension_all_root_property() -> (
+    Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]
+):
+    """
+    Target Armatureに登録されているVRM Addonの全体のルートプロパティを取得する｡
+
+    Returns
+    -------
+    Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]
+        Armatureに登録されたVRM Addonプロパティの最上階層｡
+        Target Armatureが指定されていなければNone
+
+    """
+    if not (target_armature := get_target_armature_data()):
+        return
+
+    return target_armature.vrm_addon_extension
+
+
 def get_vrm_extension_root_property(
-    target: Literal["SPRING1"] | None = None,
-) -> PropertyGroup:
+    target: Literal["VRM", "SPRING1"],
+) -> (
+    ReferenceVrm0PropertyGroup
+    | ReferenceVrm1PropertyGroup
+    | ReferenceSpringBone1SpringBonePropertyGroup
+    | ReferenceNodeConstraint1NodeConstraintPropertyGroup
+):
     """
     選択されているUI Modeに対応したバージョンのVRM Extensionのルートプロパティを取得する｡
 
@@ -281,30 +282,39 @@ def get_vrm_extension_root_property(
         選択されているUI Modeに応じてVRM ExtensionのProperty Groupのルートを取得する｡
 
     """
-    target_armature = get_target_armature_data()
+    if not (vrm_extension := get_vrm_extension_all_root_property()):
+        return
 
-    if target is None:
-        if check_addon_mode() == "0":
-            vrm_extension = target_armature.vrm_addon_extension.vrm0
+    match target:
+        case "VRM":
+            match check_addon_mode():
+                case "0":
+                    vrm_property = vrm_extension.vrm0
 
-        if check_addon_mode() == "1":
-            vrm_extension = target_armature.vrm_addon_extension.vrm1
+                case "1":
+                    vrm_property = vrm_extension.vrm1
 
-    if target == "SPRING1":
-        vrm_extension = target_armature.vrm_addon_extension.spring_bone1
+        case "SPRING1":
+            vrm_property = vrm_extension.spring_bone1
 
-    return vrm_extension
+    return vrm_property
 
 
 def get_vrm_extension_property(
     type: Literal[
         "FIRST_PERSON",
         "EXPRESSION",
-        "SPRING",
         "COLLIDER",
         "COLLIDER_GROUP",
+        "SPRING",
     ]
-) -> ReferenceVrm1ColliderPropertyGroup | PropertyGroup:
+) -> (
+    ReferenceVrm1FirstPersonPropertyGroup
+    | ReferenceVrm1ExpressionsPropertyGroup
+    | ReferenceVrm1ColliderPropertyGroup
+    | ReferenceVrm1ColliderGroupPropertyGroup
+    | ReferenceSpringBone1SpringPropertyGroup
+):
     """
     Target ArmatureのVRM Extensionの中から引数で指定したProperty Groupを取得する｡
 
@@ -313,9 +323,9 @@ def get_vrm_extension_property(
     type : type: Literal[
         "FIRST_PERSON",
         "EXPRESSION",
-        'SPRING'
         "COLLIDER",
         'COLLIDER_GROUP'
+        'SPRING'
 
     ]
 
@@ -328,7 +338,7 @@ def get_vrm_extension_property(
 
     # Spring Bone関連のプロパティでない場合｡
     if any([type == "FIRST_PERSON", type == "EXPRESSION"]):
-        vrm_extension = get_vrm_extension_root_property()
+        vrm_extension = get_vrm_extension_root_property("VRM")
 
         if type == "FIRST_PERSON":
             return vrm_extension.first_person
@@ -379,7 +389,7 @@ def is_existing_target_armature_and_mode() -> bool:
     """
 
     context = bpy.context
-    target_armature = get_addon_prop_group("BASIC").target_armature.data
+    target_armature = get_scene_basic_prop().target_armature.data
     # アクティブオブジェクトのオブジェクトデータがTarget Armatureである｡
     if (context.active_object) and (not context.active_object.data == target_armature):
         return False
@@ -473,6 +483,7 @@ def store_mtoon1_current_values(
     for name in stored_parameter_names:
         mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES[name]
         value = attrgetter(mtoon1_attr_name)(mtoon1)
+        value = [abs(i) for i in value]
 
         setattr(target_item, name, value)
 
@@ -498,7 +509,7 @@ def get_mtoon1_default_values(
 
     stored_mtoon_parameters = None
     if stored_mtoon1_parameters_list := [
-        i for i in get_addon_prop_group("MTOON1") if i.material == source_material
+        i for i in get_scene_vrm1_mtoon_stored_prop() if i.material == source_material
     ]:
         stored_mtoon_parameters: VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters = (
             stored_mtoon1_parameters_list[0]
@@ -506,7 +517,9 @@ def get_mtoon1_default_values(
 
     if stored_mtoon_parameters:
         default_texture_scale = stored_mtoon_parameters.texture_scale
-        default_texture_offset = stored_mtoon_parameters.texture_offset
+        default_texture_offset = [
+            abs(i) for i in stored_mtoon_parameters.texture_offset
+        ]
         default_lit_factor = stored_mtoon_parameters.lit_color
         default_shade_factor = stored_mtoon_parameters.shade_color
         default_emissive_factor = stored_mtoon_parameters.emission_color
@@ -660,20 +673,24 @@ def get_mtoon_transform_current_parameters(
     current_texture_offset = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"])
     )
+    # current_texture_offset = [abs(i) for i in current_texture_offset]
     current_texture_scale = list(
         get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"])
     )
     #####################################################################################################
     # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+    default_offset = default_value_dict["texture_offset"]
     texture_offset = (
         current_texture_offset
-        if current_texture_offset != default_value_dict["texture_offset"]
+        if current_texture_offset != default_offset
+        # else default_offset
         else None
     )
-
+    default_scale = default_value_dict["texture_scale"]
     texture_scale = (
         current_texture_scale
-        if current_texture_scale != default_value_dict["texture_scale"]
+        if current_texture_scale != default_scale
+        # else default_scale
         else None
     )
     #####################################################################################################
@@ -711,7 +728,7 @@ def set_mtoon1_default_values(target_material: Material):
     if not target_material:
         return
 
-    stored_material_dict = {i.material: i for i in get_addon_prop_group("MTOON1")}
+    stored_material_dict = {i.material: i for i in get_scene_vrm1_mtoon_stored_prop()}
     source_patameters = stored_material_dict.get(target_material)
 
     mtoon1 = target_material.vrm_addon_extension.mtoon1
@@ -726,6 +743,15 @@ def set_mtoon1_default_values(target_material: Material):
 
 
 def get_all_collider_objects_from_scene() -> list[Object]:
+    """
+    Target ArmatureのVRM Extensionに登録された全てのコライダーオブジェクトのリストを返す｡
+
+    Returns
+    -------
+    list[Object]
+        コライダーを定義するEmpty Objectのリスト｡
+
+    """
     # Target ArmatureのVRM Extensionに定義された全コライダーオブジェクトを取得する｡
     colliders = get_vrm_extension_property("COLLIDER")
     collider_object_list = []
@@ -744,10 +770,17 @@ def get_all_collider_objects_from_scene() -> list[Object]:
 
 
 def re_link_all_collider_object2collection():
+    """
+    アドオンが定義するコレクション構造を構成した上で､
+    定義されている全てのコライダーオブジェクトを対応するコレクションにリンクさせる｡
+    """
+
     addon_collection_dict = setting_vrm_helper_collection()
-    vrm1_collider_collection = addon_collection_dict["VRM1_Collider"]
+    if not get_target_armature():
+        return
+
+    vrm1_collider_collection = addon_collection_dict["VRM1_COLLIDER"]
     collider_objects = get_all_collider_objects_from_scene()
-    pprint(collider_objects)
 
     for obj in collider_objects:
         unlink_object_from_all_collections(obj)

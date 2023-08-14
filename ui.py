@@ -41,7 +41,9 @@ from bpy.types import (
 )
 
 from .property_groups import (
-    get_addon_prop_group,
+    VRMHELPER_SCENE_basic_settigs,
+    get_scene_basic_prop,
+    get_target_armature_data,
 )
 
 from .utils_common import (
@@ -91,17 +93,22 @@ logger = preparating_logger(__name__)
 ---------------------------------------------------------"""
 
 
-def draw_spring_setting_box(result: UILayout, layout: UILayout) -> UILayout:
+def draw_spring_setting_box(
+    target_box: UILayout, layout: UILayout, basic_prop: VRMHELPER_SCENE_basic_settigs
+) -> UILayout:
     """
     スプリング設定ツールをグルーピングするためのboxが存在しない場合に新たに描画する｡
 
     Parameters
     ----------
-    result : UILayout
+    target_box : UILayout
         描画されるboxが既に存在するかどうかを判定するための変数｡返り値を受け取る変数でもある｡
 
     layout : UILayout
         boxを描画する対象となるUILayout
+
+    basic_prop:VRMHELPER_SCENE_basic_settigs
+        アドオンの基本設定を行なうプロパティグループ｡
 
     Returns
     -------
@@ -109,11 +116,16 @@ def draw_spring_setting_box(result: UILayout, layout: UILayout) -> UILayout:
         描画されたboxレイアウト｡
 
     """
-    if not result:
-        result = layout.box()
-        result.label(text="Spring Tool", icon="PHYSICS")
 
-    return result
+    target_armature_data = basic_prop.target_armature.data
+    vrm_extension = target_armature_data.vrm_addon_extension
+
+    if not target_box:
+        target_box = layout.box()
+        target_box.label(text="Spring Tool", icon="PHYSICS")
+        target_box.prop(vrm_extension.spring_bone1, "enable_animation")
+
+    return target_box
 
 
 """---------------------------------------------------------
@@ -181,7 +193,7 @@ class VRMHELPER_PT_ui_basic_settings(VRMHELPER_PT_Base):
     # パネルの項目の描画
     def draw(self, context):
         # Property Groupの取得｡
-        basic_prop = get_addon_prop_group("BASIC")
+        basic_prop = get_scene_basic_prop()
 
         # UI描画
         layout = self.layout
@@ -202,12 +214,17 @@ class VRMHELPER_PT_ui_basic_settings(VRMHELPER_PT_Base):
             row.scale_y = 1.4
             row.prop(basic_prop, "tool_mode", text=" ", expand=True)
 
-        match basic_prop.tool_mode:
-            case "1":
-                layout.label(text="Selected Tool:")
-                row = layout.row()
-                row.scale_y = 1.4
-                row.prop(basic_prop, "component_type", text=" ", expand=True)
+            layout.separator()
+            match basic_prop.tool_mode:
+                case "0":
+                    pass
+
+                case "1":
+                    layout.label(text="Selected Tool:")
+                    columns = 3
+
+                    grid = layout.grid_flow(row_major=True, align=True, columns=columns)
+                    grid.prop(basic_prop, "component_type", text=" ")
 
         layout.operator(VRMHELPER_OT_evaluate_addon_collections.bl_idname)
 
@@ -235,7 +252,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
     # パネルの項目の描画
     def draw(self, context):
         # プロパティグループの取得
-        basic_prop = get_addon_prop_group("BASIC")
+        basic_prop = get_scene_basic_prop()
 
         # UIの描画
         layout = self.layout
@@ -244,51 +261,57 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
         #    VRM1
         # ----------------------------------------------------------
         if basic_prop.tool_mode == "1":
-            box_spring = None
 
             def get_index(element):
                 return basic_prop.sort_order_component_type.index(element)
 
             component_types = sorted(list(basic_prop.component_type), key=get_index)
 
+            box_spring = None
             for type in component_types:
                 match type:
                     case "FIRST_PERSON":
                         box = layout.box()
-                        box.label(text="First Person Tool", icon="HIDE_OFF")
+                        box.label(text="First Person Tools", icon="HIDE_OFF")
                         box_sub = box.box()
                         draw_panel_vrm1_first_person(self, context, box_sub)
 
                     case "EXPRESSION":
                         box = layout.box()
-                        box.label(text="Expression Tool", icon="SHAPEKEY_DATA")
+                        box.label(text="Expression Tools", icon="SHAPEKEY_DATA")
                         box_sub = box.box()
                         draw_panel_vrm1_expression(self, context, box_sub)
 
                     case "COLLIDER":
-                        box_spring = draw_spring_setting_box(box_spring, layout)
+                        box_spring = draw_spring_setting_box(
+                            box_spring, layout, basic_prop
+                        )
                         box = box_spring.box()
-                        box.label(text="Collider", icon="MESH_UVSPHERE")
+                        box.label(text="Collider Tools", icon="MESH_UVSPHERE")
                         box_sub = box.box()
                         draw_panel_vrm1_collider(self, context, box_sub)
 
                     case "COLLIDER_GROUP":
-                        box_spring = draw_spring_setting_box(box_spring, layout)
+                        box_spring = draw_spring_setting_box(
+                            box_spring, layout, basic_prop
+                        )
                         box = box_spring.box()
-                        box.label(text="Collider Group", icon="OVERLAY")
+                        box.label(text="Collider Group Tools", icon="OVERLAY")
                         box_sub = box.box()
                         draw_panel_vrm1_collider_group(self, context, box_sub)
 
                     case "SPRING":
-                        box_spring = draw_spring_setting_box(box_spring, layout)
+                        box_spring = draw_spring_setting_box(
+                            box_spring, layout, basic_prop
+                        )
                         box = box_spring.box()
-                        box.label(text="Joint", icon="BONE_DATA")
+                        box.label(text="Joint Tools", icon="BONE_DATA")
                         box_sub = box.box()
                         draw_panel_vrm1_spring(self, context, box_sub)
 
                     case "CONSTRAINT":
                         box = layout.box()
-                        box.label(text="Node Constraint", icon="CONSTRAINT")
+                        box.label(text="Node Constraint Tools", icon="CONSTRAINT")
                         box_sub = box.box()
                         draw_panel_vrm1_constraint_ui_list(self, context, box_sub)
                         draw_panel_vrm1_constraint_operator(self, context, box_sub)

@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_classes",
         "utils_common",
         "utils_vrm_base",
         "utils_first_person",
@@ -15,6 +16,7 @@ if "bpy" in locals():
 
 else:
     from .Logging import preparation_logger
+    from . import addon_classes
     from . import utils_common
     from . import utils_vrm_base
     from .Vrm1 import utils_vrm1_first_person
@@ -40,22 +42,32 @@ from bpy.props import (
     EnumProperty,
 )
 
-from mathutils import (
-    Vector,
+
+from .addon_classes import (
+    ConstraintTypeDict,
 )
 
 from .property_groups import (
-    get_addon_prop_group,
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_constraint_prop,
-    get_target_armature,
-    get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_ui_vrm1_first_person_prop,
+    get_ui_vrm1_expression_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
+    get_ui_vrm1_collider_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_spring_prop,
+    get_ui_vrm1_constraint_prop,
+)
+
+from .utils_common import (
+    reset_shape_keys_value,
+    filtering_mesh_type,
 )
 
 from .utils_vrm_base import (
-    ConstraintTypeDict,
+    set_new_value2index_prop,
     re_link_all_collider_object2collection,
 )
 
@@ -134,6 +146,23 @@ class VRMHELPER_OT_evaluate_addon_collections(Operator):
     def execute(self, context):
         os.system("cls")
         re_link_all_collider_object2collection()
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_reset_shape_keys_on_selected_objects(Operator):
+    bl_idname = "vrmhelper.reset_shape_keys_on_selected_objects"
+    bl_label = "Reset Shape Keys"
+    bl_description = "Reset all shape keys on selected objects"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.selected_objects
+
+    def execute(self, context):
+        for obj in [obj for obj in context.selected_objects if obj.type == "MESH"]:
+            reset_shape_keys_value(obj.data)
+
         return {"FINISHED"}
 
 
@@ -216,7 +245,7 @@ class VRMHELPER_operator_base(Operator):
 
     def offset_active_item_index(
         self,
-        target_type: Literal[
+        component_type: Literal[
             "FIRST_PERSON",
             "EXPRESSION",
             "EXPRESSION_MORPH",
@@ -233,7 +262,7 @@ class VRMHELPER_operator_base(Operator):
 
         Parameters
         ----------
-        target_type: Literal[
+        component_type: Literal[
             "FIRST_PERSON",
             "EXPRESSION",
             "EXPRESSION_MORPH",
@@ -251,35 +280,42 @@ class VRMHELPER_operator_base(Operator):
 
         """
 
-        self.update_ui_list_prop(target_type)
+        self.update_ui_list_prop(component_type)
 
-        list_items = get_ui_list_prop4custom_filter(target_type)
         index_root_prop = get_vrm1_index_root_prop()
 
-        # 'target_type'の種類に応じて操作する属性名を定義する｡
-        match target_type:
+        # 'component_type'の種類に応じて操作する属性名を定義する｡
+        match component_type:
             case "FIRST_PERSON":
+                list_items = get_ui_vrm1_first_person_prop()
                 attr_name = "first_person"
 
             case "EXPRESSION":
+                list_items = get_ui_vrm1_expression_prop()
                 attr_name = "expression"
 
             case "EXPRESSION_MORPH":
+                list_items = get_ui_vrm1_expression_morph_prop()
                 attr_name = "expression_morph"
 
             case "EXPRESSION_MATERIAL":
+                list_items = get_ui_vrm1_expression_material_prop()
                 attr_name = "expression_material"
 
             case "COLLIDER":
+                list_items = get_ui_vrm1_collider_prop()
                 attr_name = "collider"
 
             case "COLLIDER_GROUP":
+                list_items = get_ui_vrm1_collider_group_prop()
                 attr_name = "collider_group"
 
             case "SPRING":
+                list_items = get_ui_vrm1_spring_prop()
                 attr_name = "spring"
 
             case "CONSTRAINT":
+                list_items = get_ui_vrm1_constraint_prop()
                 attr_name = "constraint"
 
         # ----------------------------------------------------------
@@ -298,17 +334,32 @@ class VRMHELPER_operator_base(Operator):
         # ----------------------------------------------------------
         #    前方にオフセットする場合の処理
         # ----------------------------------------------------------
+
+        loop_count = 0
         while True:
+            # UI Listアイテムのリストが空なら中断｡
+            if not list_items:
+                active_index = 0
+                break
+
+            # 無限ループの回避｡
+            loop_count += 1
+            if loop_count > 1000:
+                active_index = 0
+                logger.debug("Avoiding Infinite Loops")
+                break
+
             try:
-                active_index = max(get_vrm1_active_index_prop(target_type), 0)
+                active_index = max(get_vrm1_active_index_prop(component_type), 0)
                 active_item = list_items[active_index]
-                if active_index <= 0 or (active_item and active_item.name != "Blank"):
-                    setattr(index_root_prop, attr_name, active_index)
-                    return
+                if active_index <= 0 or active_item.name != "Blank":
+                    break
+                set_new_value2index_prop(index_root_prop, attr_name)
 
             except:
-                new_value = getattr(index_root_prop, attr_name) - 1
-                setattr(index_root_prop, attr_name, new_value)
+                set_new_value2index_prop(index_root_prop, attr_name)
+
+        setattr(index_root_prop, attr_name, active_index)
 
 
 """---------------------------------------------------------
@@ -371,4 +422,5 @@ CLASSES = (
     # ----------------------------------------------------------
     VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
+    VRMHELPER_OT_reset_shape_keys_on_selected_objects,
 )

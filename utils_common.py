@@ -16,13 +16,12 @@ else:
     from . import preferences
 
 
-import re, time
 from pprint import pprint
 from typing import (
-    Any,
-    Literal,
+    Optional,
     Iterator,
     TypedDict,
+    Any,
 )
 import bpy
 from bpy.types import (
@@ -31,11 +30,13 @@ from bpy.types import (
     Bone,
     Material,
     Collection,
-    CopyRotationConstraint,
-    DampedTrackConstraint,
     UILayout,
 )
 
+
+from .addon_classes import (
+    VRMHelper_Addon_Collection_Dict,
+)
 
 from .preferences import (
     get_addon_preferences,
@@ -52,37 +53,6 @@ from .Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-# ----------------------------------------------------------
-#    UI List
-# ----------------------------------------------------------
-class VRMHelper_Addon_Collection_Dict(TypedDict):
-    ROOT: Collection
-    VRM0_Root: Collection
-    VRM1_Root: Collection
-    VRM1_Collider: Collection
-    VRM1_EXPRESSION_MORPH: Collection
-    VRM1_EXPRESSION_MATERIAL: Collection
-
-
-class VRMHELPER_UL_base:
-    """
-    UI List用基底クラス
-    """
-
-    def add_blank_labels(self, layout: UILayout, count: int, factor: float = 2.0):
-        iteration_count = 0
-        while iteration_count != count:
-            layout.separator(factor=factor)
-            iteration_count += 1
 
 
 """---------------------------------------------------------
@@ -503,7 +473,7 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
         "ROOT": addon_root_collection,
         "VRM0_Root": vrm0_root_collection,
         "VRM1_Root": vrm1_root_collection,
-        "VRM1_Collider": vrm1_collider_collection,
+        "VRM1_COLLIDER": vrm1_collider_collection,
         "VRM1_EXPRESSION_MORPH": vrm1_expression_morph_collection,
         "VRM1_EXPRESSION_MATERIAL": vrm1_expression_material_collection,
     }
@@ -594,7 +564,7 @@ def filtering_mesh_type(source_object: Object) -> bool:
         return False
 
 
-def get_parent_count(source, parent_count) -> int:
+def get_parent_count(source, parent_count) -> tuple[Optional[Object], int]:
     """
     'source'で受け取ったオブジェクトかボーンの親の数を再帰的にカウントしてその総数を返す｡
 
@@ -654,3 +624,19 @@ def define_ui_list_rows(item_count: int, max_length: int = 10) -> int:
 
     """
     return max(min(item_count, max_length), 5)
+
+
+def reset_shape_keys_value(target_mesh: bpy.types.Mesh):
+    """
+    'target_mesh'に存在するすべてのシェイプキーの値を0にセットする.add()
+
+    Parameters
+    ----------
+    target_mesh : bpy.types.Mesh
+        処理対象のMesh
+
+    """
+    if sks := target_mesh.shape_keys:
+        key_blocks = sks.key_blocks
+        for key in key_blocks:
+            key.value = 0.0

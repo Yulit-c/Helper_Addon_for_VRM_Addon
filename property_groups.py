@@ -3,7 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
-        "preferences",
+        "addon_constants" "preferences",
     ]
 
     for module in reloadable_modules:
@@ -12,10 +12,13 @@ if "bpy" in locals():
 
 else:
     from .Logging import preparation_logger
+    from . import addon_constants
     from . import preferences
 
 from typing import (
     Literal,
+    Optional,
+    Any,
 )
 from pathlib import Path
 
@@ -49,6 +52,17 @@ from bpy.props import (
     CollectionProperty,
 )
 
+
+from .addon_classes import (
+    ReferenceVrm1ExpressionsPropertyGroup,
+    ReferenceVrm1CustomExpressionPropertyGroup,
+    ReferenceVrm1ColliderPropertyGroup,
+)
+
+from .addon_constants import (
+    VRM_COMPONENT_TYPES,
+)
+
 from .utils_common import (
     setting_vrm_helper_collection,
 )
@@ -70,61 +84,6 @@ logger = preparating_logger(__name__)
     Property Group
 ------------------------------------------------------------
 ---------------------------------------------------------"""
-"""---------------------------------------------------------
-    VRM Addon Reference
----------------------------------------------------------"""
-
-
-class ReferenceVrm1ExpressionPropertyGroup:
-    morph_target_binds: bpy.props.CollectionProperty()
-    material_color_binds: bpy.props.CollectionProperty()
-    texture_transform_binds: bpy.props.CollectionProperty()
-    is_binary: bpy.props.BoolProperty()
-
-    EXPRESSION_OVERRIDE_TYPE_VALUES = []
-
-    override_blink: bpy.props.EnumProperty()
-    override_look_at: bpy.props.EnumProperty()
-    override_mouth: bpy.props.EnumProperty()
-
-    show_expanded: bpy.props.BoolProperty()
-    show_expanded_morph_target_binds: bpy.props.BoolProperty()
-    show_expanded_material_color_binds: bpy.props.BoolProperty()
-    show_expanded_texture_transform_binds: bpy.props.BoolProperty()
-
-
-class ReferenceVrm1MaterialColorBindPropertyGroup:
-    material: bpy.props.PointerProperty()
-    type: Literal[
-        "color",
-        "shadeColor",
-        "emissionColor",
-        "matcapColor",
-        "rimColor",
-        "outlineColor",
-    ]
-    target_value: bpy.props.FloatVectorProperty()
-
-
-class ReferenceVrm1TextureTransformBindPropertyGroup:
-    material: bpy.props.PointerProperty()
-    scale: bpy.props.FloatVectorProperty()
-    offset: bpy.props.FloatVectorProperty()
-
-
-class ReferenceVrm1ColliderPropertyGroup:  # type: ignore[misc]
-    node: bpy.props.PointerProperty()
-    shape: bpy.props.PointerProperty()
-
-    show_expanded: bpy.props.BoolProperty()
-
-    shape_type: Literal["Sphere", "Capsule"]
-
-    bpy_object: bpy.props.PointerProperty()
-
-    uuid: bpy.props.StringProperty
-    search_one_time_uuid: bpy.props.StringProperty()
-
 
 """----------------------------------------------------------------------------
 #    Scene
@@ -182,26 +141,31 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
     )
 
     sort_order_component_type = (
+        "META",
+        "HUMANOID",
         "FIRST_PERSON",
+        "LOOK_AT",
         "EXPRESSION",
+        "CONSTRAINT",
         "COLLIDER",
         "COLLIDER_GROUP",
         "SPRING",
-        "CONSTRAINT",
-    )  # UI描画時に一定の順にソートするためのコンテナ｡
+    )  # UI描画時に一定の順にソートするためのキー｡
+
+    component_type_items = [
+        ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
+        ("EXPRESSION", "Expression", "Draw UI for setting Expression"),
+        ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
+        ("COLLIDER", "Collider", "Draw UI for setting Collider"),
+        ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
+        ("SPRING", "Spring", "Draw UI for setting Spring"),
+    ]
 
     component_type: EnumProperty(
         name="Component Type",
         description="Property for selecting the UI item to draw",
         options={"ENUM_FLAG"},
-        items=(
-            ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
-            ("EXPRESSION", "EXPRESSION", "Draw UI for setting Expression"),
-            ("COLLIDER", "Collider", "Draw UI for setting Collider"),
-            ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
-            ("SPRING", "Spring", "Draw UI for setting Spring"),
-            ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
-        ),
+        items=component_type_items,
         default=set(),
         update=update_addon_collection,
     )
@@ -252,8 +216,16 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
         name="First Person Type",
         description="Determine the First_Person annotation you wish to apply",
         items=(
-            ("auto", "Auto", "Set the value to Auto"),
-            ("both", "Both", "Set the value to Both"),
+            (
+                "auto",
+                "Auto",
+                "Set the value to Auto",
+            ),
+            (
+                "both",
+                "Both",
+                "Set the value to Both",
+            ),
             (
                 "thirdPersonOnly",
                 "Third Person Only",
@@ -266,6 +238,12 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
             ),
         ),
         default="both",
+    )
+
+    is_filtering_by_type: BoolProperty(
+        name="Filtering by Selected Type",
+        description="Filters the display of the list according to the currently selected mode",
+        default=True,
     )
 
 
@@ -283,8 +261,6 @@ class VRMHELPER_SCENE_vrm1_expression_settigs(PropertyGroup):
         items=(
             ("MORPH", "Morph Target", "Edit Morph Target Bind"),
             ("MATERIAL", "Material", "Edit Material Binds"),
-            # ("COLOR", "Color", "Edit Material Color Bind"),
-            # ("TRANSFORM", "Texture Transform", "Edit Texture Transform Bind"),
         ),
         default="MORPH",
     )
@@ -298,7 +274,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
     Colliderの設定に関するプロパティ
     """
 
-    def update_item2vrm1_collider(self, context):
+    def update_item2vrm1_collider(self, context: bpy.types.Context):
         """
         VRM1.xのSpring Bone_Colliderのリストに登録されたBone Nameが更新された際に､
         そのボーンを親とするColliderの'node.bone_name'を更新する｡
@@ -322,17 +298,82 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
             collider.node.bone_name = self.link_bone
             collider.reset_bpy_object(
                 bpy.context,
-                get_addon_prop_group("BASIC").target_armature,
+                get_target_armature(),
             )
 
             # 自身のプロパティの値を更新｡
             self.old_bone = self.link_bone
+
+    def update_active_and_selected_collider_radius(self, context: bpy.types.Context):
+        """
+        値が変更された際にリスト内のアクティブコライダー及び選択されたEmptyオブジェクトに対応したコライダーの
+        半径に同じ値を適応する｡
+        """
+
+        if self.is_updated_collider_raduis:
+            return
+
+        target_armature_data = get_target_armature_data()
+        vrm_extension = target_armature_data.vrm_addon_extension
+        colliders = vrm_extension.spring_bone1.colliders
+
+        collider_list = get_ui_vrm1_collider_prop()
+        active_index = get_vrm1_active_index_prop("COLLIDER")
+        try:
+            active_collider: VRMHELPER_WM_vrm1_collider_list_items = collider_list[
+                active_index
+            ]
+        except:
+            return
+
+        # 選択オブジェクト中のEmptyとアクティブコライダーに対応するEmptyオブジェクトの名前の集合｡
+        collider_names = {i.name for i in context.selected_objects if i.type == "EMPTY"}
+        collider_names.add(active_collider.collider_name)
+
+        is_target_collider = (
+            None,
+            None,
+        )  # [0]: Sphere or Collider Head [1]: Collidaer End
+        for collider in colliders:
+            collider: ReferenceVrm1ColliderPropertyGroup = collider
+
+            match detect_collider_shape_type(collider.shape_type):
+                case -1:  # Invailed
+                    continue
+
+                case 0:  # Sphere Collider
+                    if not collider.bpy_object.name in collider_names:
+                        continue
+                    collider.shape.sphere.radius = self.active_collider_radius
+
+                case 1:  # Capsule Collider
+                    object_names = {
+                        collider.bpy_object.name,
+                        collider.bpy_object.children[0].name,
+                    }
+                    if not object_names & collider_names:
+                        continue
+                    collider.shape.capsule.radius = self.active_collider_radius
+
+    # ---------------------------------------------------------------------------------
 
     is_updated_link_bone: BoolVectorProperty(
         name="Is Updated Link Bone",
         description="Avoid infinite recursion when updating",
         size=2,
         default=(0, 0),
+    )
+
+    is_updated_collider_raduis: BoolProperty(
+        name="Locked Active Collider Radius",
+        description="Update callback functions are locked while this flag is on",
+        default=False,
+    )
+
+    is_additive_selecting: BoolProperty(
+        name="Is Additive Selecting",
+        description="Whether to unselect the selected object when updating the active item in the list",
+        default=False,
     )
 
     collider_type: EnumProperty(
@@ -348,7 +389,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
     collider_radius: FloatProperty(
         name="Collider Radius",
         description="Radius of the collider to be created",
-        default=0.1,
+        default=0.05,
         unit="LENGTH",
     )
 
@@ -363,6 +404,15 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
         description="Description",
         default="",
         update=update_item2vrm1_collider,
+    )
+
+    active_collider_radius: FloatProperty(
+        name="Active Collider Radius",
+        description="Change the radius of the active collider in the listing",
+        default=0.05,
+        min=0.0001,
+        unit="LENGTH",
+        update=update_active_and_selected_collider_radius,
     )
 
 
@@ -438,6 +488,12 @@ class VRMHELPER_SCENE_vrm1_spring_settigs(PropertyGroup):
         default=False,
     )
 
+    is_expand_operator_parameters: BoolProperty(
+        name="Is Expand Operator Parameters",
+        description="Select whether to display operator parameters.",
+        default=True,
+    )
+
 
 # ----------------------------------------------------------
 #    Constraint
@@ -472,76 +528,126 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
     UI Listのアクティブアイテムインデックス用のIntPropertyを登録するプロパティグループ｡
     """
 
+    def update_active_collider_radius(
+        self,
+        collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs,
+        collider: ReferenceVrm1ColliderPropertyGroup,
+    ):
+        """
+        'collider_prop'の'active_collider_radius'の値を'collider'のタイプに応じた
+        'radius'と同じ値にセットする｡
+
+        Parameters
+        ----------
+        collider_prop : VRMHELPER_SCENE_vrm1_collider_settigs
+            プロパティ更新の対象となるプロパティグループ
+
+        collider : ReferenceVrm1ColliderPropertyGroup
+            'radius'の参照元となるVRM AddonのColliderプロパティ
+
+        """
+        match detect_collider_shape_type(collider.shape_type):
+            case -1:
+                return
+            case 0:
+                source_radius = collider.shape.sphere.radius
+            case 1:
+                source_radius = collider.shape.capsule.radius
+
+        collider_prop.active_collider_radius = source_radius
+
     def select_collider_object_by_ui_list(self, context: Context):
         """
         Spring Bone_ColliderのUIリストアクティブアイテムが更新された際に､
         アクティブアイテムインデックスに対応したシーン内オブジェクトを選択状態にする｡
+        また､アクティブコライダーの半径を'Active Collider Radius'に反映する｡
         """
 
         if self.is_locked_update:
             return
 
-        collider_list = get_addon_prop_group("WM").collider_list_items4custom_filter
-        active_index = get_addon_prop_group("INDEX").collider
-
-        # アクティブアイテムがラベルである
-        if (active_item := collider_list[active_index]).item_type[0]:
-            return
-
-        # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
-        colliders = (
-            get_target_armature_data().vrm_addon_extension.spring_bone1.colliders
-        )
-        current_object_in_loop = None
-        if active_item.item_type[1]:
-            collider_prop = get_addon_prop_group("COLLIDER")
-
-            if collider_prop.link_bone != active_item.name:
-                collider_prop.is_updated_link_bone[0] = True
-                collider_prop.old_bone = active_item.name
-                collider_prop.link_bone = active_item.name
-
-            if context.mode != "OBJECT":
-                return
-            bpy.ops.object.select_all(action="DESELECT")
-            [
-                (
-                    i.bpy_object.select_set(True),
-                    (current_object_in_loop := i.bpy_object),
-                )
-                for i in colliders
-                if i.node.bone_name == active_item.bone_name
-            ]
-            return
-
         if context.mode != "OBJECT":
             return
 
-        # アクティブアイテムがコライダーであればそれを選択する｡
-        bpy.ops.object.select_all(action="DESELECT")
-        if active_item.item_type[2]:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
-                True
-            )
-            current_object_in_loop = collider
+        collider_prop = get_scene_vrm1_collider_prop()
+        collider_list = get_ui_vrm1_collider_prop()
+        active_index = get_vrm1_active_index_prop("COLLIDER")
+        active_item = collider_list[active_index]
+        vrm_extension = get_target_armature_data().vrm_addon_extension
+        colliders = vrm_extension.spring_bone1.colliders
 
-        # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
-        else:
-            (collider := bpy.data.objects.get(active_item.collider_name)).select_set(
-                True
-            )
-            current_object_in_loop = collider
+        current_object_in_loop = None
+        collider_prop.is_updated_collider_raduis = True
 
+        match tuple(active_item.item_type):
+            # アクティブアイテムがラベルである
+            case (1, 0, 0, 0):
+                return
+
+            # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
+            case (0, 1, 0, 0):
+                if collider_prop.link_bone != active_item.name:
+                    collider_prop.is_updated_link_bone[0] = True
+                    collider_prop.old_bone = active_item.name
+                    collider_prop.link_bone = active_item.name
+
+                if not collider_prop.is_additive_selecting:
+                    bpy.ops.object.select_all(action="DESELECT")
+
+                [
+                    (
+                        i.bpy_object.select_set(True),
+                        (current_object_in_loop := i.bpy_object),
+                    )
+                    for i in colliders
+                    if i.node.bone_name == active_item.bone_name
+                ]
+
+            # アクティブアイテムがコライダーであればそれを選択する｡
+            case (0, 0, 1, 0):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider.select_set(True)
+                    current_object_in_loop = collider
+
+            # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
+            case (0, 0, 0, 1):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider_object := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider_object.select_set(True)
+                    current_object_in_loop = collider_object
+
+        collider_prop.is_updated_collider_raduis = False
+
+        # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
         context.view_layer.objects.active = current_object_in_loop
 
     def select_constraint_by_ui_list(self, context: Context):
+        """
+        Node ConstraintのUIリストアクティブアイテムが更新された際に､
+        アクティブアイテムインデックスに対応したコンストレイントを持つ要素を可能なら選択状態にする｡
+        """
         # 現在のインデックスからアクティブアイテムを取得する｡
-        constraint_ui_list = get_ui_list_prop4custom_filter("CONSTRAINT")
+        constraint_ui_list = get_ui_vrm1_constraint_prop()
         active_index = get_vrm1_active_index_prop("CONSTRAINT")
+        if len(constraint_ui_list) - 1 < active_index:
+            return
+
         active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
             active_index
         ]
-
         # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
         if active_item.is_blank or active_item.is_label:
             return
@@ -824,7 +930,22 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
     Expression設定･確認用UI Listに表示する候補アイテム｡
     """
 
-    expressions_list: list[IDPropertyGroup] = []  # 全エクスプレッションを格納したリスト
+    expressions_list: list[
+        ReferenceVrm1ExpressionsPropertyGroup
+        | ReferenceVrm1CustomExpressionPropertyGroup
+    ] = []  # 全エクスプレッションを格納したリスト
+
+    has_morph_bind: BoolProperty(
+        name="Has Morph Bind",
+        description="This Expression has one or more Morph Binds",
+        default=False,
+    )
+
+    has_material_bind: BoolProperty(
+        name="Has Material Bind",
+        description="This Expression has one or more Color or Texture Transform Binds",
+        default=False,
+    )
 
     custom_expression_index: IntProperty(
         name="Custom Expression Index",
@@ -913,6 +1034,23 @@ class VRMHELPER_WM_vrm1_collider_list_items(PropertyGroup):
         name="Collider Name",
         description="Name of collider object",
         default="",
+    )
+
+    collider_object: PointerProperty(
+        name="Collider Object",
+        description="Empty Object that defines vrm spring collider",
+        type=Object,
+    )
+
+    collider_type: EnumProperty(
+        name="Collider Type",
+        description="Type of VRM Spring Collider",
+        items=(
+            ("SPHERE", "Sphere", "Sphere Collider"),
+            ("CAPSULE", "Capsule", "Capsule Collidear"),
+            ("CAPSULE_END", "Capsule End", "Capsule Collidear End"),
+        ),
+        default="SPHERE",
     )
 
     parent_count: IntProperty(
@@ -1040,8 +1178,8 @@ class VRMHELPER_WM_vrm1_constraint_property(PropertyGroup):
         if self.is_locked_update:
             return
 
-        constraint_list = get_ui_list_prop4custom_filter("CONSTRAINT")
-        selected_type = get_addon_prop_group("CONSTRAINT").constraint_type
+        constraint_list = get_ui_vrm1_constraint_prop()
+        selected_type = get_scene_vrm1_constraint_prop().constraint_type
         active_index = get_vrm1_active_index_prop("CONSTRAINT")
         active_item = constraint_list[active_index]
 
@@ -1201,7 +1339,7 @@ class VRMHELPER_WM_vrm1_root_property_group(PropertyGroup):
         type=VRMHELPER_WM_vrm1_operator_spring_list_items,
     )
 
-    constraint_list4custom_filter: CollectionProperty(
+    constraint_list_items4custom_filter: CollectionProperty(
         name="Candidate Constraint List Items",
         description="Elements registered with this collection property are displayed in the UI List",
         type=VRMHELPER_WM_vrm1_constraint_list_items,
@@ -1237,6 +1375,43 @@ class VRMHELPER_WM_root_property_group(PropertyGroup):
     Function
 ------------------------------------------------------------
 ---------------------------------------------------------"""
+"""---------------------------------------------------------
+    Common
+---------------------------------------------------------"""
+
+
+def evaluation_active_index_prop(
+    source_list: Any,
+    active_index: int,
+) -> int:
+    """
+    UI Listアクティブインデックスの値がUi Listの幅を超えていないかどうかを評価する｡
+    超えている場合はアクティブインデックスをリストの幅と同値として扱う｡
+
+    Parameters
+    ----------
+    source_list : Any
+        対象となるUI List用のCollection Property
+
+    active_index : int
+        処理対象のアクティブインデックス
+
+    Returns
+    -------
+    int
+        処理結果として返すインデックスの値
+
+    """
+
+    length = max(len(source_list) - 1, 0)
+    if length < active_index:
+        active_index = length
+    return active_index
+
+
+"""---------------------------------------------------------
+    Get Common Property Group
+---------------------------------------------------------"""
 
 
 def get_wm_prop_root() -> VRMHELPER_WM_root_property_group:
@@ -1249,210 +1424,189 @@ def get_scene_prop_root() -> VRMHELPER_SCENE_root_property_group:
     return scene_root_prop
 
 
-def get_vrm0_root_prop() -> VRMHELPER_SCENE_vrm0_root_property_group:
+def get_scene_basic_prop() -> VRMHELPER_SCENE_basic_settigs:
     scene_root_prop = get_scene_prop_root()
-    vrm0_root_property = scene_root_prop.vrm0_props
-    return vrm0_root_property
+    scene_basic_prop = scene_root_prop.basic_settings
+    return scene_basic_prop
 
 
-def get_vrm1_root_prop() -> VRMHELPER_SCENE_vrm1_root_property_group:
+def get_target_armature() -> Optional[Object]:
+    """
+    Basic Prop階層下のTarget Armatureに登録されたArmature Objectを返す｡
+
+    Returns
+    -------
+    Optional[Object]
+        Target Armatureに登録されたオブジェクト｡
+
+    """
+
+    if target_armature := get_scene_basic_prop().target_armature:
+        return target_armature
+
+
+def get_target_armature_data() -> Optional[Armature]:
+    """
+    Basic Prop階層下のTarget Armatureに登録されたArmature ObjectにリンクされたObject Dataを返す｡
+
+    Returns
+    -------
+    Optional[Armature]
+        Target ArmatureにリンクされたData Object
+
+    """
+
+    if target_armature := get_target_armature():
+        return target_armature.data
+
+
+def get_scene_misc_prop() -> VRMHELPER_SCENE_misc_tools_settigs:
     scene_root_prop = get_scene_prop_root()
-    vrm1_root_property = scene_root_prop.vrm1_props
-    return vrm1_root_property
+    scene_misc_prop = scene_root_prop.misc_settings
+    return scene_misc_prop
+
+
+"""---------------------------------------------------------
+    Get VRM0 Property Group
+---------------------------------------------------------"""
+
+
+def get_vrm0_scene_root_prop() -> VRMHELPER_SCENE_vrm0_root_property_group:
+    scene_root_prop = get_scene_prop_root()
+    vrm0_scene_root_property = scene_root_prop.vrm0_props
+    return vrm0_scene_root_property
+
+
+def get_vrm0_wm_root_prop() -> VRMHELPER_WM_vrm0_root_property_group:
+    wm_root_prop = get_wm_prop_root()
+    vrm0_wm_root_prop = wm_root_prop.vrm0_props
+
+    return vrm0_wm_root_prop
+
+
+"""---------------------------------------------------------
+    Get VRM1 Property Group
+---------------------------------------------------------"""
+
+
+# ----------------------------------------------------------
+#    Window Manager
+# ----------------------------------------------------------
+def get_vrm1_wm_root_prop() -> VRMHELPER_WM_vrm1_root_property_group:
+    wm_root_prop = get_wm_prop_root()
+    vrm1_wm_root_prop = wm_root_prop.vrm1_props
+
+    return vrm1_wm_root_prop
+
+
+def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    constraint_prop = wm_vrm1_prop.constraint_prop
+    return constraint_prop
+
+
+def get_ui_vrm1_first_person_prop() -> VRMHELPER_WM_vrm1_first_person_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    first_person_filter = wm_vrm1_root_prop.first_person_list_items4custom_filter
+    return first_person_filter
+
+
+def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_filter = wm_vrm1_root_prop.expression_list_items4custom_filter
+    return expression_filter
+
+
+def get_ui_vrm1_expression_morph_prop() -> (
+    VRMHELPER_WM_vrm1_expression_morph_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_morph_filter = (
+        wm_vrm1_root_prop.expression_morph_list_items4custom_filter
+    )
+    return expression_morph_filter
+
+
+def get_ui_vrm1_expression_material_prop() -> (
+    VRMHELPER_WM_vrm1_expression_material_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_material_filter = (
+        wm_vrm1_root_prop.expression_material_list_items4custom_filter
+    )
+    return expression_material_filter
+
+
+def get_ui_vrm1_collider_prop() -> VRMHELPER_WM_vrm1_collider_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_filter = wm_vrm1_root_prop.collider_list_items4custom_filter
+    return collider_filter
+
+
+def get_ui_vrm1_collider_group_prop() -> VRMHELPER_WM_vrm1_collider_group_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list_items4custom_filter
+    return collider_group_filter
+
+
+def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list_items4custom_filter
+    return spring_filter
+
+
+def get_ui_vrm1_operator_bone_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
+    return bone_group_filter
+
+
+def get_ui_vrm1_operator_collider_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
+    return collider_group_filter
+
+
+def get_ui_vrm1_operator_spring_prop() -> VRMHELPER_WM_vrm1_operator_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list4operator
+    return spring_filter
+
+
+def get_ui_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    constraint_filter = wm_vrm1_root_prop.constraint_list_items4custom_filter
+    return constraint_filter
+
+
+# ----------------------------------------------------------
+#    Scene
+# ----------------------------------------------------------
+def get_vrm1_scene_root_prop() -> VRMHELPER_SCENE_vrm1_root_property_group:
+    scene_root_prop = get_scene_prop_root()
+    vrm1_scene_root_property = scene_root_prop.vrm1_props
+    return vrm1_scene_root_property
 
 
 def get_vrm1_index_root_prop() -> VRMHELPER_SCENE_vrm1_ui_list_active_indexes:
-    vrm1_root_property = get_vrm1_root_prop()
+    vrm1_root_property = get_vrm1_scene_root_prop()
     vrm1_index_root_prop = vrm1_root_property.active_indexes
     return vrm1_index_root_prop
 
 
-def get_addon_prop_group(
-    type: Literal[
-        "WM",
-        "WM_VRM0",
-        "WM_VRM1",
-        "SCENE",
-        "BASIC",
-        "VRM0",
-        "VRM1",
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        "CONSTRAINT",
-        "INDEX",
-        "MTOON1",
-    ]
-) -> (
-    VRMHELPER_WM_root_property_group
-    | VRMHELPER_WM_vrm0_root_property_group
-    | VRMHELPER_WM_vrm1_root_property_group
-    | VRMHELPER_SCENE_root_property_group
-    | VRMHELPER_SCENE_basic_settigs
-    | VRMHELPER_SCENE_misc_tools_settigs
-    | VRMHELPER_SCENE_vrm0_root_property_group
-    | VRMHELPER_SCENE_vrm1_root_property_group
-    | VRMHELPER_SCENE_vrm1_first_person_settigs
-    | VRMHELPER_SCENE_vrm1_expression_settigs
-    | VRMHELPER_SCENE_vrm1_collider_settigs
-    | VRMHELPER_SCENE_vrm1_collider_group_settigs
-    | VRMHELPER_SCENE_vrm1_spring_settigs
-    | VRMHELPER_SCENE_vrm1_constraint_settigs
-    | VRMHELPER_SCENE_vrm1_ui_list_active_indexes
-    | VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters
-):
-    """
-    引数'type'に応じて､アドオンが管理するProperty Groupを取得して返す｡
-
-    Parameters
-    ----------
-    type : type:
-        Literal[
-        'WM',
-        "WM_VRM0",
-        "WM_VRM1",
-        'SCENE'
-        "BASIC",
-        "VRM0",
-        "VRM1",
-        "FIRST_PERSON",
-        'EXPRESSION',
-        'COLLIDER'
-        'COLLIDER_GROUP',
-        "SPRING",
-        "CONSTRAINT",
-        "INDEX",
-        "MTOON1",
-        ]
-
-    Returns
-    -------
-    PropertyGroup
-        引数に対応するProperty Group
-
-    """
-
-    # ----------------------------------------------------------
-    #    Window Manager
-    # ----------------------------------------------------------
-    wm_prop: VRMHELPER_WM_root_property_group = bpy.context.window_manager.vrm_helper
-    sn_prop: VRMHELPER_SCENE_root_property_group = bpy.context.scene.vrm_helper
-    basic_settings: VRMHELPER_SCENE_basic_settigs = sn_prop.basic_settings
-    result = None
-
-    match type:
-        # ----------------------------------------------------------
-        #    Window Manager
-        # ----------------------------------------------------------
-        case "WM":
-            result = wm_prop
-
-        case "WM_VRM0":
-            result = wm_prop.vrm0_props
-
-        case "WM_VRM1":
-            result = wm_prop.vrm1_props
-
-        # ----------------------------------------------------------
-        #    Scene
-        # ----------------------------------------------------------
-
-        case "SCENE":
-            result = sn_prop
-
-        case "BASIC":
-            result = basic_settings
-
-    if result:
-        return result
-
-    # VRM0用プロパティ
-    match basic_settings.tool_mode:
-        case "0":
-            vrm0_prop: VRMHELPER_SCENE_vrm0_root_property_group = sn_prop.vrm0_props
-
-        # VRM1用プロパティ
-        case "1":
-            vrm1_prop: VRMHELPER_SCENE_vrm1_root_property_group = sn_prop.vrm1_props
-
-            match type:
-                case "VRM1":
-                    result = vrm1_prop
-
-                case "INDEX":
-                    result = vrm1_prop.active_indexes
-
-                case "MTOON1":
-                    result = vrm1_prop.mtoon1_stored_parameters
-
-                case "FIRST_PERSON":
-                    result = vrm1_prop.first_person_settings
-
-                case "EXPRESSION":
-                    result = vrm1_prop.expression_settings
-
-                case "COLLIDER":
-                    result = vrm1_prop.collider_settings
-
-                case "COLLIDER_GROUP":
-                    result = vrm1_prop.collider_group_settings
-
-                case "SPRING":
-                    result = vrm1_prop.spring_settings
-
-                case "CONSTRAINT":
-                    result = vrm1_prop.constraint_settings
-
-    return result
-
-
-def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settigs:
-    scene_vrm1_prop: VRMHELPER_SCENE_vrm1_root_property_group = (
-        get_scene_prop_root().vrm1_props
-    )
-    constraint_prop = scene_vrm1_prop.constraint_settings
-
-    return constraint_prop
-
-
-def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
-    wm_vrm1_prop: VRMHELPER_WM_vrm1_root_property_group = get_wm_prop_root().vrm1_props
-    constraint_prop = wm_vrm1_prop.constraint_prop
-
-    return constraint_prop
-
-
-def get_vrm1_active_index_prop(
-    type: Literal[
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "EXPRESSION_MORPH",
-        "EXPRESSION_MATERIAL",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        "CONSTRAINT",
-    ],
-) -> int:
+def get_vrm1_active_index_prop(component_type: VRM_COMPONENT_TYPES) -> int:
     """
     引数'type'に対応したアクティブインデックスのプロパティを
     'VRMHELPER_SCENE_vrm1_ui_list_active_indexes'から取得する｡
 
     Parameters
     ----------
-    type: Literal[
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "EXPRESSION_MORPH",
-        "EXPRESSION_MATERIAL",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        'CONSTRAINT',
-    ]
-        取得対象となるアクティブアイテムインデックスのプロパティ｡
+    component_type: VRM_COMPONENT_TYPES
+        UI Listアクティブインデックスを取得したいVRMコンポーネントの種類｡
 
     Returns
     -------
@@ -1461,167 +1615,142 @@ def get_vrm1_active_index_prop(
 
     """
     vrm1_index_prop = get_vrm1_index_root_prop()
-    length = max(len(get_ui_list_prop4custom_filter(type)) - 1, 0)
 
-    match type:
+    match component_type:
         case "FIRST_PERSON":
+            list_items = get_ui_vrm1_first_person_prop()
             index = vrm1_index_prop.first_person
 
         case "EXPRESSION":
+            list_items = get_ui_vrm1_expression_prop()
             index = vrm1_index_prop.expression
 
         case "EXPRESSION_MORPH":
+            list_items = get_ui_vrm1_expression_morph_prop()
             index = vrm1_index_prop.expression_morph
 
         case "EXPRESSION_MATERIAL":
+            list_items = get_ui_vrm1_expression_material_prop()
             index = vrm1_index_prop.expression_material
 
         case "COLLIDER":
+            list_items = get_ui_vrm1_collider_prop()
             index = vrm1_index_prop.collider
 
         case "COLLIDER_GROUP":
+            list_items = get_ui_vrm1_collider_group_prop()
             index = vrm1_index_prop.collider_group
 
         case "SPRING":
+            list_items = get_ui_vrm1_spring_prop()
             index = vrm1_index_prop.spring
 
         case "CONSTRAINT":
+            list_items = get_ui_vrm1_constraint_prop()
             index = vrm1_index_prop.constraint
 
-    if length < index:
-        index = length
-    return index
+    active_index = evaluation_active_index_prop(list_items, index)
+    return active_index
 
 
-def get_target_armature() -> Object | None:
+def get_scene_vrm1_first_person_prop() -> VRMHELPER_SCENE_vrm1_first_person_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    first_person_prop = scene_vrm1_prop.first_person_settings
+    return first_person_prop
+
+
+def get_scene_vrm1_expression_prop() -> VRMHELPER_SCENE_vrm1_expression_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    expression_prop = scene_vrm1_prop.expression_settings
+    return expression_prop
+
+
+def get_scene_vrm1_collider_prop() -> VRMHELPER_SCENE_vrm1_collider_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    collider_prop = scene_vrm1_prop.collider_settings
+    return collider_prop
+
+
+def detect_collider_shape_type(shape_type: str) -> int:
     """
-    Basic Prop階層下のTarget Armatureに登録されたArmature Objectを返す｡
-
-    Returns
-    -------
-    Armature | None
-        Target Armatureに登録されたオブジェクト｡
-
-    """
-
-    if target_armature := get_addon_prop_group("BASIC").target_armature:
-        return target_armature
-
-
-def get_target_armature_data() -> Armature | None:
-    """
-    Basic Prop階層下のTarget Armatureに登録されたArmature ObjectにリンクされたObject Dataを返す｡
-
-    Returns
-    -------
-    Armature | None
-        Target ArmatureにリンクされたData Object
-
-    """
-
-    if target_armature := get_addon_prop_group("BASIC").target_armature:
-        return target_armature.data
-
-
-def get_ui_list_prop4custom_filter(
-    type: Literal[
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "EXPRESSION_MORPH",
-        "EXPRESSION_MATERIAL",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        "BONE_GROUP",
-        "COLLIDER_GROUP_OPERATOR",
-        "SPRING_OPERATOR",
-        "CONSTRAINT",
-    ]
-) -> (
-    VRMHELPER_WM_vrm1_first_person_list_items
-    | VRMHELPER_WM_vrm1_expression_list_items
-    | VRMHELPER_WM_vrm1_expression_morph_list_items
-    | VRMHELPER_WM_vrm1_expression_material_list_items
-    | VRMHELPER_WM_vrm1_collider_list_items
-    | VRMHELPER_WM_vrm1_collider_group_list_items
-    | VRMHELPER_WM_vrm1_spring_list_items
-    | VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
-    | VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
-    | VRMHELPER_WM_vrm1_operator_spring_list_items
-    | VRMHELPER_WM_vrm1_constraint_list_items
-):
-    """
-    UI List用のアイテムを格納するプロパティグループを引数に応じて取得する
+    引数'shape_type'に応じてint型のステータスを返す｡
 
     Parameters
     ----------
-    type: Literal[
-        "FIRST_PERSON",
-        "EXPRESSION",
-        "EXPRESSION_MORPH",
-        "EXPRESSION_COLOR",
-        "EXPRESSION_TRANSFORM",
-        "EXPRESSION_MATERIAL",
-        "COLLIDER",
-        "COLLIDER_GROUP",
-        "SPRING",
-        "BONE_GROUP"
-        "COLLIDER_GROUP_OPERATOR",
-        "SPRING_OPERATOR",
-        "CONSTRAINT",
-    ]
-        取得するプロパティグループの種類
+    shape_type : str
+        判定を行なうコライダーのシェイプタイプ｡
 
     Returns
     -------
-    PropertyGroup
-        取得されたプロパティグループ
+    int
+        コライダーのシェイプに応じたステータス｡
+        -1 : Error
+         0 : Sphere
+         1 : Capsule
 
     """
-    tool_mode = get_addon_prop_group("BASIC").tool_mode
+    match shape_type:
+        case "Sphere":
+            return 0
 
-    match tool_mode:
-        case "0":
-            vrm_prop = get_addon_prop_group("WM_VRM0").vrm0_props
+        case "Capsule":
+            return 1
 
-        case "1":
-            vrm_prop = get_addon_prop_group("WM_VRM1")
+        case _:
+            logger.debug("Invailed Shape Type")
+            return -1
 
-            match type:
-                case "FIRST_PERSON":
-                    ui_list_prop = vrm_prop.first_person_list_items4custom_filter
 
-                case "EXPRESSION":
-                    ui_list_prop = vrm_prop.expression_list_items4custom_filter
+def find_collider_from_empty_name(
+    colliders: Any, empty_name: str
+) -> Optional[ReferenceVrm1ColliderPropertyGroup]:
+    """
+    'colliders'で受け取ったVRM Addonのコライダーコレクションプロパティグループのうち､
+    参照オブジェクトの名前が引数'empty_name'と一致するものを判定してそれを返す｡
 
-                case "EXPRESSION_MORPH":
-                    ui_list_prop = vrm_prop.expression_morph_list_items4custom_filter
+    Parameters
+    ----------
+    colliders : Any
+        処理対象のColliderコレクションプロパティ｡
 
-                case "EXPRESSION_MATERIAL":
-                    ui_list_prop = vrm_prop.expression_material_list_items4custom_filter
+    empty_name : str
+        判定のソースとなる文字列
 
-                case "COLLIDER":
-                    ui_list_prop = vrm_prop.collider_list_items4custom_filter
+    Returns
+    -------
+    Optional[ReferenceVrm1ColliderPropertyGroup]
+        名前が一致したコライダーが存在すればそれを返す｡
+    """
 
-                case "COLLIDER_GROUP":
-                    ui_list_prop = vrm_prop.collider_group_list_items4custom_filter
+    if not (temp := [i for i in colliders if i.bpy_object.name == empty_name]):
+        return
 
-                case "SPRING":
-                    ui_list_prop = vrm_prop.spring_list_items4custom_filter
+    collider = temp[0]
+    return collider
 
-                case "BONE_GROUP":
-                    ui_list_prop = vrm_prop.bone_group_list4operator
 
-                case "COLLIDER_GROUP_OPERATOR":
-                    ui_list_prop = vrm_prop.collider_group_list4operator
+def get_scene_vrm1_collider_group_prop() -> VRMHELPER_SCENE_vrm1_collider_group_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    collider_group_prop = scene_vrm1_prop.collider_group_settings
+    return collider_group_prop
 
-                case "SPRING_OPERATOR":
-                    ui_list_prop = vrm_prop.spring_list4operator
 
-                case "CONSTRAINT":
-                    ui_list_prop = vrm_prop.constraint_list4custom_filter
+def get_scene_vrm1_spring_prop() -> VRMHELPER_SCENE_vrm1_spring_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    spring_prop = scene_vrm1_prop.spring_settings
+    return spring_prop
 
-    return ui_list_prop
+
+def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settigs:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    constraint_prop = scene_vrm1_prop.constraint_settings
+    return constraint_prop
+
+
+def get_scene_vrm1_mtoon_stored_prop() -> VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters:
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    mtoon_stored_prop = scene_vrm1_prop.mtoon1_stored_parameters
+    return mtoon_stored_prop
 
 
 """---------------------------------------------------------

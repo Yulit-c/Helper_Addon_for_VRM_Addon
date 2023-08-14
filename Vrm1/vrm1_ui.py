@@ -4,13 +4,13 @@ if "bpy" in locals():
     reloadable_modules = [
         "preparation_logger",
         "property_groups",
-        "operators",
-        "vrm1_operators",
         "utils_common",
         "utils_vrm1_first_person",
         "utils_vrm1_expression",
         "utils_vrm1_spring",
         "utils_vrm1_constraint",
+        "operators",
+        "vrm1_operators",
     ]
 
     for module in reloadable_modules:
@@ -41,17 +41,39 @@ from bpy.types import (
     UILayout,
 )
 
+
+from ..addon_classes import (
+    VRMHELPER_UL_base,
+)
+
+from ..addon_constants import (
+    JOINT_PROP_NAMES,
+)
+
 from ..property_groups import (
+    VRMHELPER_SCENE_vrm1_collider_settigs,
+    VRMHELPER_SCENE_vrm1_spring_settigs,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
+    VRMHELPER_WM_vrm1_expression_list_items,
+    VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
-    get_addon_prop_group,
+    get_vrm1_wm_root_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_vrm1_scene_root_prop,
+    get_vrm1_index_root_prop,
+    get_vrm1_active_index_prop,
+    get_ui_vrm1_first_person_prop,
+    get_ui_vrm1_expression_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
+    get_ui_vrm1_collider_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_spring_prop,
+    get_ui_vrm1_constraint_prop,
 )
 
 from ..utils_common import (
-    VRMHELPER_UL_base,
     get_properties_to_dict,
     define_ui_list_rows,
     set_properties_to_from_dict,
@@ -90,6 +112,10 @@ from .utils_vrm1_constraint import (
     draw_rotation_constraint,
 )
 
+from ..operators import (
+    VRMHELPER_OT_reset_shape_keys_on_selected_objects,
+)
+
 from .vrm1_operators import (
     # ----------------------------------------------------------
     #    First Person
@@ -116,12 +142,14 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_expression_material_create_transform,
     VRMHELPER_OT_vrm1_expression_material_remove_transform,
     VRMHELPER_OT_vrm1_expression_material_clear_transforms,
+    VRMHELPER_OT_vrm1_expression_change_bind_material,
     VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene,
     VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
-    VRMHELPER_OT_vrm1_expression_change_bind_material,
+    VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
+    VRMHELPER_OT_vrm1_expression_restore_initial_values,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -173,20 +201,6 @@ from ..Logging.preparation_logger import preparating_logger
 logger = preparating_logger(__name__)
 #######################################################
 
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-JOINT_PROP_NAMES = (
-    "hit_radius",
-    "stiffness",
-    "drag_force",
-    "gravity_power",
-    "gravity_dir",
-    "damping_ratio",
-)
-
 
 """---------------------------------------------------------
     First Person
@@ -199,9 +213,9 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
-    first_person_prop = vrm1_prop.first_person_settings
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_scene_vrm1_prop = get_vrm1_scene_root_prop()
+    first_person_prop = scene_scene_vrm1_prop.first_person_settings
 
     # ----------------------------------------------------------
     #    UI描画
@@ -209,6 +223,10 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2annotation_ui_list()
 
+    row = layout.row()
+    row.prop(
+        first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type"
+    )
     row = layout.row()
     row.scale_y = 1.4
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
@@ -218,14 +236,11 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
         "",
         wm_vrm1_prop,
         "first_person_list_items4custom_filter",
-        vrm1_prop.active_indexes,
+        scene_scene_vrm1_prop.active_indexes,
         "first_person",
         rows=define_ui_list_rows(rows),
     )
     col = row.column()
-    col.operator(
-        VRMHELPER_OT_vrm1_first_person_set_annotation.bl_idname, text="", icon="ADD"
-    )
     col.operator(
         VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list.bl_idname,
         text="",
@@ -237,9 +252,17 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
         icon="PANEL_CLOSE",
     )
 
-    row = layout.row()
-    row.operator(
-        VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects.bl_idname
+    layout.separator()
+    col = layout.column(align=True)
+    col.operator(
+        VRMHELPER_OT_vrm1_first_person_set_annotation.bl_idname,
+        text="Set from Selected Objects",
+        icon="IMPORT",
+    )
+    col.operator(
+        VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects.bl_idname,
+        text="Remove by Selected Objects",
+        icon="EXPORT",
     )
 
 
@@ -269,10 +292,10 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
-    active_indexes = vrm1_prop.active_indexes
-    expression_prop = vrm1_prop.expression_settings
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_scene_vrm1_prop = get_vrm1_scene_root_prop()
+    active_indexes = scene_scene_vrm1_prop.active_indexes
+    expression_prop = scene_scene_vrm1_prop.expression_settings
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2expression_ui_list()
@@ -356,12 +379,8 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         )
 
         # アクティブアイテムのMorph Target設定用フォーム
-        if morph_target_binds := get_ui_list_prop4custom_filter("EXPRESSION_MORPH"):
+        if morph_target_binds := get_ui_vrm1_expression_morph_prop():
             current_index = active_indexes.expression_morph
-            # if len(morph_target_binds) < current_index + 1:
-            #     active_bind = morph_target_binds[-1]
-            # else:
-            # active_bind = morph_target_binds[current_index]
             active_bind = morph_target_binds[current_index]
 
             if active_bind.item_type[1]:
@@ -379,13 +398,6 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
                     icon="OUTLINER_OB_MESH",
                 )
 
-        # オペレーターの描画
-        box.separator()
-        col = box.column(align=True)
-        col.operator(
-            VRMHELPER_OT_vrm1_expression_set_morph_from_scene.bl_idname,
-            text="Set from Collection",
-        )
     ##################################
     # Material Bind
     ##################################
@@ -439,11 +451,11 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         )
 
         # アクティブなMaterial BindsのTarget Material設定用フォーム
-        if material_binds_list := get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL"):
+        if material_binds_list := get_ui_vrm1_expression_material_prop():
             current_index = active_indexes.expression_material
             active_item = material_binds_list[current_index]
 
-            # アクティブアイテムが 'Blank'以外のラベル/Color Bind/Transform Bindであるかを判定する｡
+            # アクティブアイテムが 'Blank'以外のラベル､Color Bind､Transform Bindであるかを判定する｡
             match tuple(active_item.item_type):
                 case (1, 0, 0) if active_item.name != "Blank":  # Label Exclude 'Blank'
                     ui_draw_flag = "Material"
@@ -470,10 +482,10 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
                     box_bind_material.label(
                         text=f"Binded Material : {active_item.bind_material_name}"
                     )
-                    # TODO : オペレーターで対象マテリアル全部入れ替える処理を作る
                     box_bind_material.operator(
                         VRMHELPER_OT_vrm1_expression_change_bind_material.bl_idname,
                         text="Change Bind Material",
+                        icon="MATERIAL",
                     )
 
                 case "Material_Color_Bind" | "Texture_Transform_Bind":
@@ -492,30 +504,44 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
 
     # オペレーターの描画
     box.separator()
-    col = box.column()
+    box_op_mtoon = box.box()
+    col = box_op_mtoon.column(align=True)
     col.scale_y = 1.2
     col.operator(
         VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters.bl_idname,
         text="Store MToon Current Value",
+        icon="IMPORT",
     )
     col.operator(
         VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters.bl_idname,
         text="Discard stored MToon Value",
+        icon="EXPORT",
     )
 
+    box_op_bottom = box.box()
+    col = box_op_bottom.column(align=True)
+    col.scale_y = 1.2
+    col.operator(
+        VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene.bl_idname,
+        text="Set Binds from Scene",
+    )
+
+    col = box_op_bottom.column(align=True)
+    col.scale_y = 1.2
+    col.operator(
+        VRMHELPER_OT_reset_shape_keys_on_selected_objects.bl_idname,
+        text="Reset Shape Kye on Selected",
+        icon="SHAPEKEY_DATA",
+    )
     col.operator(
         VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters.bl_idname,
-        text="Restore MToon Initial Value",
-    )
-
-    col.separator()
-    col.operator(
-        VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene.bl_idname,
-        text="Set from Collection",
+        text="Restore MToon Initial Values",
+        icon="NODE_MATERIAL",
     )
     col.operator(
-        VRMHELPER_OT_vrm1_expression_assign_expression_to_scene.bl_idname,
-        text="Assign to Scene",
+        VRMHELPER_OT_vrm1_expression_restore_initial_values.bl_idname,
+        text="Reset Bind's All Values",
+        icon="RECOVER_LAST",
     )
 
 
@@ -523,26 +549,51 @@ class VRMHELPER_UL_expression_list(UIList):
     """Expressionを表示するUI List"""
 
     def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
+        self,
+        context,
+        layout: UILayout,
+        data,
+        item: VRMHELPER_WM_vrm1_expression_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
     ):
         expression = item.expressions_list[index]
 
-        # row = layout.row(align=False)
-        sp = layout.split(factor=0.35)
-
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
+        sp = layout.split(factor=0.25)
+        row = sp.row(align=True)
         if item.custom_expression_index < 0:
-            sp.label(text=item.name)
+            row.label(text=item.name)
         else:
             custom_expression = get_vrm_extension_property("EXPRESSION").custom[
                 item.custom_expression_index
             ]
-            sp.prop(custom_expression, "custom_name", text="", emboss=False)
-        sp = sp.split(factor=0.1)
-        sp.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
-        sp.prop(expression, "override_blink", text="", icon="HIDE_ON")
-        sp.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
-        sp.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
+            row.prop(custom_expression, "custom_name", text="", emboss=False)
+
+        # 各種バインドを持つ場合はアイコンを描画する｡
+        sp = sp.split(factor=0.15)
+        row = sp.row(align=False)
+        row.alignment = "RIGHT"
+
+        if item.has_morph_bind:
+            row.label(text="", icon="MESH_DATA")
+        else:
+            row.label(text="")
+
+        if item.has_material_bind:
+            row.label(text="", icon="MATERIAL")
+        else:
+            row.label(text="")
+
+        # エクスプレッションが持つ各パラメーターの描画
+        row = sp.row(align=True)
+        row.alignment = "RIGHT"
+        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
+        row.prop(expression, "override_blink", text="", icon="HIDE_ON")
+        row.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
+        row.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
 
 
 class VRMHELPER_UL_expressin_morph_list(UIList):
@@ -646,30 +697,34 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
-    active_index = vrm1_prop.active_indexes.collider
-    collider_prop = vrm1_prop.collider_settings
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    # active_index = get_vrm1_active_index_prop("COLLIDER")
+    active_index = scene_vrm1_prop.active_indexes.collider
+    collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs = (
+        scene_vrm1_prop.collider_settings
+    )
 
     # UI描画
-    row = layout.row()
+    layout.prop(collider_prop, "is_additive_selecting")
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2collider_ui_list()
 
+    row = layout.row()
     row.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
         "",
         wm_vrm1_prop,
         "collider_list_items4custom_filter",
-        vrm1_prop.active_indexes,
+        scene_vrm1_prop.active_indexes,
         "collider",
         rows=define_ui_list_rows(rows),
     )
     row = layout.row()
     row.prop(collider_prop, "collider_type", text=" ", expand=True)
     row = layout.row()
-    row.prop(collider_prop, "collider_radius", text="Radius")
+    row.prop(collider_prop, "collider_radius", text="Generated Collider Radius")
     row = layout.row()
 
     op = row.operator(VRMHELPER_OT_collider_create_from_bone.bl_idname)
@@ -679,24 +734,52 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     op = row.operator(VRMHELPER_OT_collider_remove_from_empty.bl_idname)
 
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
-    if (active_item := get_ui_list_prop4custom_filter("COLLIDER")) and active_item[
-        active_index
-    ].item_type[1]:
-        row = layout.row()
-        row.prop_search(
-            collider_prop,
-            "link_bone",
-            get_target_armature_data(),
-            "bones",
-            text="Parent Bone",
-        )
+    if items_list := get_ui_vrm1_collider_prop():
+        active_item: VRMHELPER_WM_vrm1_collider_list_items = items_list[active_index]
+        layout.separator()
+        box = layout.box()
+        row = box.row(align=True)
+
+        match tuple(active_item.item_type):
+            case (0, 1, 0, 0):
+                row.prop_search(
+                    collider_prop,
+                    "link_bone",
+                    get_target_armature_data(),
+                    "bones",
+                    text="Parent Bone",
+                )
+
+            case (0, 0, 1, 0) | (0, 0, 0, 1):
+                match active_item.collider_type:
+                    case "SPHERE":
+                        collider_icon = "SPHERE"
+                    case "CAPSULE" | "CAPSULE_END":
+                        collider_icon = "META_CAPSULE"
+
+                row.label(text="Selected Collider:")
+                row.prop(active_item, "collider_name", text="", icon=collider_icon)
+                row = box.row(align=True)
+                row.prop(
+                    collider_prop,
+                    "active_collider_radius",
+                    text="Active Collider Radius",
+                )
 
 
 class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
     """Vrm1のSpring Bone Colliderを表示するUI List"""
 
     def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
+        self,
+        context,
+        layout,
+        data,
+        item: VRMHELPER_WM_vrm1_collider_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
     ):
         # リスト内の項目のレイアウトを定義する｡
         row = layout.row(align=True)
@@ -714,13 +797,16 @@ class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
             return
 
         # Colliderの描画｡
-        if not (collider := get_vrm_extension_property("COLLIDER")):
+        if not (colliders := get_vrm_extension_property("COLLIDER")):
             return
 
-        collider = collider[item.item_index]
-        collider_icon = "SPHERE"
-        if collider.shape_type == "Capsule":
-            collider_icon = "META_CAPSULE"
+        collider = colliders[item.item_index]
+        match item.collider_type:
+            case "SPHERE":
+                collider_icon = "SPHERE"
+
+            case "CAPSULE" | "CAPSULE_END":
+                collider_icon = "META_CAPSULE"
 
         # ColliderがSphereあるいはCapsuleのHeadの場合｡
         if item.item_type[2]:
@@ -764,8 +850,8 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
 
     # UI描画
     row = layout.row()
@@ -782,7 +868,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
             "",
             wm_vrm1_prop,
             "collider_group_list_items4custom_filter",
-            vrm1_prop.active_indexes,
+            scene_vrm1_prop.active_indexes,
             "collider_group",
             rows=define_ui_list_rows(rows),
         )
@@ -821,10 +907,9 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         # UI List下に描画
         row = layout.row(align=True)
         row.operator(VRMHELPER_OT_collider_group_register_collider_from_bone.bl_idname)
-        row.operator(VRMHELPER_OT_empty_operator.bl_idname)
 
 
-class VRMHELPER_UL_vrm1_collider_group_list(UIList):
+class VRMHELPER_UL_vrm1_collider_group_list(UIList, VRMHELPER_UL_base):
     """Vrm1のSpring Bone Collider Groupを表示するUI List"""
 
     def draw_item(
@@ -851,7 +936,7 @@ class VRMHELPER_UL_vrm1_collider_group_list(UIList):
 
         # Colliderの描画｡
         if item.item_type[2]:
-            row.separator(factor=2.0)
+            self.add_blank_labels(row, 2)
             row.prop_search(
                 spring1.collider_groups[item.item_indexes[0]].colliders[
                     item.item_indexes[1]
@@ -875,9 +960,11 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
-    spring_settings = vrm1_prop.spring_settings
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    spring_settings: VRMHELPER_SCENE_vrm1_spring_settigs = (
+        scene_vrm1_prop.spring_settings
+    )
     joint_properties = get_properties_to_dict(spring_settings, JOINT_PROP_NAMES)
 
     # UI描画
@@ -896,7 +983,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             "",
             wm_vrm1_prop,
             "spring_list_items4custom_filter",
-            vrm1_prop.active_indexes,
+            scene_vrm1_prop.active_indexes,
             "spring",
             rows=define_ui_list_rows(rows, max_length=20),
         )
@@ -971,17 +1058,6 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     box_sub.prop(joint, "gravity_power", slider=True)
                     box_sub.prop(joint, "gravity_dir")
 
-                # ジョイント作成用/調整用プロパティ､オペレーター
-                if active_item.name == "Joint":
-                    box_sub.label(text="Operator Settings")
-                    box_sub.prop(spring_settings, "hit_radius", slider=True)
-                    box_sub.prop(spring_settings, "stiffness", slider=True)
-                    box_sub.prop(spring_settings, "drag_force", slider=True)
-                    box_sub.prop(spring_settings, "gravity_power", slider=True)
-                    box_sub.prop(spring_settings, "gravity_dir")
-                    box_sub.separator(factor=0.5)
-                    box_sub.prop(spring_settings, "damping_ratio", slider=True)
-
             # アクティブアイテムがCollider Groupの場合｡
             if active_item.item_type[3] or active_item.name == "Collider Group":
                 col_side.label(icon="OVERLAY")
@@ -1011,7 +1087,33 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         #    ジョイントの自動作成｡
         # ----------------------------------------------------------
         box = layout.box()
+        # オペレーター用ジョイントパラメーターの描画
+        box_sub = box.box()
+        if spring_settings.is_expand_operator_parameters:
+            expand_icon = "TRIA_DOWN"
+        else:
+            expand_icon = "TRIA_RIGHT"
+
+        row = box_sub.row(align=False)
+        row.prop(
+            spring_settings,
+            "is_expand_operator_parameters",
+            icon=expand_icon,
+            icon_only=True,
+        )
+        row.label(text="Operator Settings")
+        if spring_settings.is_expand_operator_parameters:
+            box_sub.prop(spring_settings, "hit_radius", slider=True)
+            box_sub.prop(spring_settings, "stiffness", slider=True)
+            box_sub.prop(spring_settings, "drag_force", slider=True)
+            box_sub.prop(spring_settings, "gravity_power", slider=True)
+            box_sub.prop(spring_settings, "gravity_dir")
+            box_sub.separator(factor=0.5)
+            box_sub.prop(spring_settings, "damping_ratio", slider=True)
+
+        # ジョイント作成オペレーターの描画
         col = box.column(align=True)
+        col.scale_y = 1.2
         op = col.operator(
             VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
             text="Create from Selected",
@@ -1028,11 +1130,12 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         #    既存ジョイントのパラメーター調整
         # ----------------------------------------------------------
-        col.separator()
+        col.separator(factor=2.0)
         op = col.operator(
             VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
             text="Adust Active Joint",
         )
+        op.source_type = "SINGLE"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
@@ -1079,7 +1182,7 @@ class VRMHELPER_UL_vrm1_spring_list(UIList, VRMHELPER_UL_base):
 
         # Jointの描画
         if item.item_type[2]:
-            armature = get_addon_prop_group("BASIC").target_armature.data
+            armature = get_target_armature_data()
             self.add_blank_labels(row, 2)
             row.prop_search(
                 spring[item.item_indexes[0]].joints[item.item_indexes[1]].node,
@@ -1117,9 +1220,9 @@ def draw_panel_vrm1_constraint_ui_list(self, context: Context, layout: UILayout)
     """
 
     # Property Groupの取得｡
-    wm_vrm1_prop = get_addon_prop_group("WM_VRM1")
-    vrm1_prop = get_addon_prop_group("VRM1")
-    constraint_prop = vrm1_prop.constraint_settings
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    constraint_prop = scene_vrm1_prop.constraint_settings
 
     # ----------------------------------------------------------
     #    UI描画
@@ -1135,14 +1238,14 @@ def draw_panel_vrm1_constraint_ui_list(self, context: Context, layout: UILayout)
         "VRMHELPER_UL_vrm1_constraint_list",
         "",
         wm_vrm1_prop,
-        "constraint_list4custom_filter",
-        vrm1_prop.active_indexes,
+        "constraint_list_items4custom_filter",
+        scene_vrm1_prop.active_indexes,
         "constraint",
         rows=define_ui_list_rows(rows),
     )
 
-    constraint_list = wm_vrm1_prop.constraint_list4custom_filter
-    active_index = get_addon_prop_group("INDEX").constraint
+    constraint_list = wm_vrm1_prop.constraint_list_items4custom_filter
+    active_index = get_vrm1_index_root_prop().constraint
     active_item = None
     if constraint_list:
         active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_list[

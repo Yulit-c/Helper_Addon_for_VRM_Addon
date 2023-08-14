@@ -3,7 +3,8 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
-        "utils_common",
+        "addon_classes",
+        "addon_constants" "utils_common",
         "utils_vrm_base",
     ]
 
@@ -13,13 +14,20 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_classes
+    from .. import addon_constants
     from .. import utils_common
     from .. import utils_vrm_base
 
 from operator import (
     attrgetter,
 )
-from pprint import pprint
+
+from typing import (
+    Optional,
+    Any,
+)
+
 import bpy
 from bpy.types import (
     Object,
@@ -29,22 +37,40 @@ from bpy.types import (
     bpy_prop_collection,
 )
 
-from ..property_groups import (
-    ReferenceVrm1ExpressionPropertyGroup,
+
+from ..addon_classes import (
+    ReferenceVrm1ExpressionsPropertyGroup,
+    ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1TextureTransformBindPropertyGroup,
+    ReferenceVrm1MorphTargetBindPropertyGroup,
+    ExpressionCandidateUIList,
+)
+
+from ..addon_constants import (
+    PRESET_EXPRESSION_NAME_DICT,
+)
+
+from ..preferences import (
+    get_addon_collection_name,
+)
+
+from ..property_groups import (
     VRMHELPER_WM_vrm1_expression_material_list_items,
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm1_expression_list_items,
-    get_addon_prop_group,
+    get_ui_vrm1_expression_prop,
+    get_ui_vrm1_expression_morph_prop,
+    get_ui_vrm1_expression_material_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_vrm1_active_index_prop,
 )
 
 from ..utils_common import (
     get_attr_from_strings,
     set_attr_from_strings,
+    reset_shape_keys_value,
 )
 
 from ..utils_vrm_base import (
@@ -67,31 +93,6 @@ from ..Logging.preparation_logger import preparating_logger
 logger = preparating_logger(__name__)
 #######################################################
 
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Constant
-------------------------------------------------------------
----------------------------------------------------------"""
-PRESET_EXPRESSION_NAME_DICT = {
-    "happy": "Happy",
-    "angry": "Angry",
-    "sad": "Sad",
-    "relaxed": "Relaxed",
-    "surprised": "Suprised",
-    "neutral": "Neutral",
-    "aa": "Aa",
-    "ih": "Ih",
-    "ou": "Ou",
-    "ee": "Ee",
-    "oh": "Oh",
-    "blink": "Blink",
-    "blink_left": "Blink Left",
-    "blink_right": "Blink Right",
-    "look_up": "Look Up",
-    "look_down": "Look Down",
-    "look_left": "Look Left",
-    "look_right": "Look Right",
-}
 
 """---------------------------------------------------------
 ------------------------------------------------------------
@@ -103,18 +104,17 @@ PRESET_EXPRESSION_NAME_DICT = {
 # ----------------------------------------------------------
 #    Expressions
 # ----------------------------------------------------------
-def get_active_list_item_in_expression() -> VRMHELPER_WM_vrm1_expression_list_items | None:
-    if expressions_list := get_ui_list_prop4custom_filter("EXPRESSION"):
-        return expressions_list[get_addon_prop_group("INDEX").expression]
+def get_active_list_item_in_expression() -> (
+    Optional[VRMHELPER_WM_vrm1_expression_list_items]
+):
+    if expressions_list := get_ui_vrm1_expression_prop():
+        return expressions_list[get_vrm1_active_index_prop("EXPRESSION")]
     else:
         return None
 
 
 def get_source_vrm1_expression4ui_list() -> (
-    tuple[
-        dict[str, PropertyGroup],
-        dict[str, PropertyGroup],
-    ]
+    tuple[list[ExpressionCandidateUIList], list[ExpressionCandidateUIList]]
 ):
     """
     Target Armatureに登録されたプリセットエクスプレッションのリストと
@@ -122,24 +122,72 @@ def get_source_vrm1_expression4ui_list() -> (
 
     Returns
     -------
-    tuple[
-        dict[str, VRM_Addon_for_Blender.editor.vrm1.property_group.Vrm1ExpressionPropertyGroup],
-        dict[str, VRM_Addon_for_Blender.editor.vrm1.property_group.Vrm1ExpressionPropertyGroup],
-    ]
-        Target Armatureが持つプリセットエクスプレッションを格納した辞書と
-        カスタムエクスプレションを格納した辞書を格納したタプル｡
+    tuple[list[ExpressionCandidateUIList], list[ExpressionCandidateUIList]]
+        Target Armatureが持つプリセットエクスプレッション･カスタムエクスプレションそれぞれの
+        情報を持つ辞書を格納したリストのタプル｡
+
 
     """
     expressions = get_vrm_extension_property("EXPRESSION")
 
-    preset_expressions_dict = {}
-    # UI Listに表示する対象オブジェクトをリストに格納する
+    # ----------------------------------------------------------
+    #    Preset Expression
+    # ----------------------------------------------------------
+    candidate_preset_expressions = []
+    # UI Listに表示する対象オブジェクトをリストに格納する｡
     for data_name, display_name in PRESET_EXPRESSION_NAME_DICT.items():
-        preset_expressions_dict[display_name] = attrgetter(data_name)(expressions)
+        # 'expressionsから表示名を用いてプリセットのエクスプレッションを取得する｡
+        preset_expression: ReferenceVrm1ExpressionsPropertyGroup = attrgetter(
+            data_name
+        )(expressions)
+        # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
+        has_any_morph_bind = True if preset_expression.morph_target_binds else False
+        has_any_material_bind = (
+            True
+            if (
+                preset_expression.material_color_binds
+                or preset_expression.texture_transform_binds
+            )
+            else False
+        )
 
-    custom_expressions_dict = {i.custom_name: i.expression for i in expressions.custom}
+        # 取得した情報を格納した辞書を作成し､Preset Expressionのリストに加える｡
+        preset_expression_info: ExpressionCandidateUIList = {
+            "name": display_name,
+            "preset_expression": preset_expression,
+            "has_morph_bind": has_any_morph_bind,
+            "has_material_bind": has_any_material_bind,
+        }
+        candidate_preset_expressions.append(preset_expression_info)
 
-    return preset_expressions_dict, custom_expressions_dict
+    # ----------------------------------------------------------
+    #    Custom Expression
+    # ----------------------------------------------------------
+    candidate_custom_expressions = []
+    for i in expressions.custom:
+        custom_exp: ReferenceVrm1CustomExpressionPropertyGroup = i
+        # custom_expressions_dict[custom_exp.name] = custom_exp.expression
+        # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
+        has_any_morph_bind = True if custom_exp.expression.morph_target_binds else False
+        has_any_material_bind = (
+            True
+            if (
+                custom_exp.expression.material_color_binds
+                or custom_exp.expression.texture_transform_binds
+            )
+            else False
+        )
+
+        # 取得した情報を格納した辞書を作成し､Custom Expressionのリストに加える｡
+        custom_expression_info: ExpressionCandidateUIList = {
+            "name": custom_exp.name,
+            "custom_expression": custom_exp.expression,
+            "has_morph_bind": has_any_morph_bind,
+            "has_material_bind": has_any_material_bind,
+        }
+        candidate_custom_expressions.append(custom_expression_info)
+
+    return candidate_preset_expressions, candidate_custom_expressions
 
 
 def add_items2expression_ui_list() -> int:
@@ -154,28 +202,41 @@ def add_items2expression_ui_list() -> int:
 
     """
 
-    preset_expressions_dict, custom_expressions_dict = get_source_vrm1_expression4ui_list()
+    (
+        candidate_preset_expressions,
+        candidate_custom_expressions,
+    ) = get_source_vrm1_expression4ui_list()
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION")
+    items = get_ui_vrm1_expression_prop()
     # Pyhon標準のリストに格納した値はコレクションの全要素で共有されるので､2回目以降の処理ではリセットが必要｡
     if items:
         items[0].expressions_list.clear()
     items.clear()
 
     # プリセットエクスプレッションの情報を追加
-    for display_name in preset_expressions_dict.keys():
-        new_item = items.add()
-        new_item.name = display_name
+    preset_expressions = []
+    for preset_exp_info in candidate_preset_expressions:
+        new_item: VRMHELPER_WM_vrm1_expression_list_items = items.add()
+        new_item.name = preset_exp_info["name"]
+        new_item.has_morph_bind = preset_exp_info["has_morph_bind"]
+        new_item.has_material_bind = preset_exp_info["has_material_bind"]
 
-    new_item.expressions_list.extend(preset_expressions_dict.values())
+        preset_expressions.append(preset_exp_info["preset_expression"])
+
+    new_item.expressions_list.extend(preset_expressions)
 
     # カスタムエクスプレッションの情報を追加
-    for n, custom_name in enumerate(custom_expressions_dict.keys()):
-        new_item = items.add()
-        new_item.name = custom_name
+    custom_expressions = []
+    for n, custom_exp_info in enumerate(candidate_custom_expressions):
+        new_item: VRMHELPER_WM_vrm1_expression_list_items = items.add()
+        new_item.name = custom_exp_info["name"]
+        new_item.has_morph_bind = custom_exp_info["has_morph_bind"]
+        new_item.has_material_bind = custom_exp_info["has_material_bind"]
         new_item.custom_expression_index = n
 
-    new_item.expressions_list.extend(custom_expressions_dict.values())
+        custom_expressions.append(custom_exp_info["custom_expression"])
+
+    new_item.expressions_list.extend(custom_expressions)
 
     return len(items)
 
@@ -185,19 +246,19 @@ def add_items2expression_ui_list() -> int:
 # ----------------------------------------------------------
 
 
-def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
+def get_active_expression() -> Optional[ReferenceVrm1ExpressionsPropertyGroup]:
     """
     エクスプレッションリストでアクティブになっているエクスプレッションを取得する｡
     エラーになる場合はオフセットしてエラーを回避する｡
 
     Returns
     -------
-    ReferenceVrm1ExpressionPropertyGroup
+    Optional[ReferenceVrm1ExpressionsPropertyGroup]
         リスト内でアクティブになっているエクスプレッションのプロパティグループ｡
 
     """
-    active_index = get_addon_prop_group("INDEX").expression
-    if not (expressions_list := get_ui_list_prop4custom_filter("EXPRESSION")):
+    active_index = get_vrm1_active_index_prop("EXPRESSION")
+    if not (expressions_list := get_ui_vrm1_expression_prop()):
         return
     expressions_list = expressions_list[0].expressions_list
     if len(expressions_list) < active_index + 1:
@@ -207,13 +268,15 @@ def get_active_expression() -> ReferenceVrm1ExpressionPropertyGroup | None:
     return active_item
 
 
-def get_source_vrm1_expression_morph4ui_list() -> dict[str, list[tuple[PropertyGroup, int]]]:
+def get_source_vrm1_expression_morph4ui_list() -> (
+    dict[str, list[tuple[ReferenceVrm1MorphTargetBindPropertyGroup, int]]]
+):
     """
     UI Listでアクティブになっているエクスプレションに登録されているMorph Target Bindの情報を取得する｡
 
     Returns
     -------
-    dict[str, list[tuple[VrmAddon.Vrm1MorphTargetBindPropertyGroup, int]]]
+    dict[str, list[tuple[ReferenceVrm1MorphTargetBindPropertyGroup, int]]]
         エクスプレッションに登録されたMorph Target Bindとインデックスのペアを格納したタプルのリストを
         対応するオブジェクト名をキーとして格納した辞書｡
 
@@ -223,7 +286,9 @@ def get_source_vrm1_expression_morph4ui_list() -> dict[str, list[tuple[PropertyG
     active_item = get_active_expression()
     morph_target_binds_dict = {}
     for n, morph_bind in enumerate(active_item.morph_target_binds):
-        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append((morph_bind, n))
+        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append(
+            (morph_bind, n)
+        )
 
     return morph_target_binds_dict
 
@@ -240,7 +305,7 @@ def add_items2expression_morph_ui_list() -> int:
 
     """
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION_MORPH")
+    items = get_ui_vrm1_expression_morph_prop()
     source_morph_binds_dict = get_source_vrm1_expression_morph4ui_list()
     items.clear()
 
@@ -259,8 +324,9 @@ def add_items2expression_morph_ui_list() -> int:
     return len(items)
 
 
-# Vrm1MorphTargetBindPropertyGroup
-def get_same_value_existing_morph_bind(obj_name: str, shape_key_name: str) -> PropertyGroup | None:
+def get_same_value_existing_morph_bind(
+    obj_name: str, shape_key_name: str
+) -> Optional[ReferenceVrm1MorphTargetBindPropertyGroup]:
     """
     アクティブエクスプレションのMorph Target Bindの中から
     2つの引数と同じ値が設定されたものを走査して取得する｡
@@ -274,13 +340,16 @@ def get_same_value_existing_morph_bind(obj_name: str, shape_key_name: str) -> Pr
 
     Returns
     -------
-    VRM_Addon.Vrm1MorphTargetBindPropertyGroup | None
+    Optional[ReferenceVrm1MorphTargetBindPropertyGroup]
         'mesh_object_name'と'indes'の値が引数と同じMorpht Target Bind｡
         該当データがなければNone｡
     """
 
     for morph_bind in get_active_expression().morph_target_binds:
-        if morph_bind.node.mesh_object_name == obj_name and morph_bind.index == shape_key_name:
+        if (
+            morph_bind.node.mesh_object_name == obj_name
+            and morph_bind.index == shape_key_name
+        ):
             return morph_bind
     return None
 
@@ -310,7 +379,9 @@ def search_existing_morph_bind_and_update(
         該当するMorph Bindが存在した場合はTrue,存在しなかった場合はFalse｡
     """
 
-    if morph_bind := get_same_value_existing_morph_bind(source_object.name, source_shape_key.name):
+    if morph_bind := get_same_value_existing_morph_bind(
+        source_object.name, source_shape_key.name
+    ):
         if source_shape_key.value == 0:
             logger.debug(f"Remove 0 Value morph_Bind : {morph_bind.index}")
             morph_target_binds.remove(list(morph_target_binds).index(morph_bind))
@@ -327,6 +398,22 @@ def search_existing_morph_bind_and_update(
         return True
 
     return False
+
+
+def reset_shape_keys_value_in_morpth_binds(source_morph_binds: Any):
+    """
+    'source_morph_binds'内に登録されているオブジェクトに存在する全てのシェイプキーの値を0にセットする｡
+
+    Parameters
+    ----------
+    source_morph_binds : Any
+        処理対象のMorph Target Binds
+
+    """
+
+    for bind_object_name in {bind.node.mesh_object_name for bind in source_morph_binds}:
+        if target_object := bpy.data.objects.get(bind_object_name):
+            reset_shape_keys_value(target_object.data)
 
 
 # ----------------------------------------------------------
@@ -371,7 +458,7 @@ def add_items2expression_material_ui_list() -> int:
 
     """
 
-    items = get_ui_list_prop4custom_filter("EXPRESSION_MATERIAL")
+    items = get_ui_vrm1_expression_material_prop()
     source_material_binds_dict = get_source_vrm1_expression_material4ui_list()
     items.clear()
 
@@ -499,7 +586,11 @@ def search_existing_material_color_bind_and_update(
     # 既に登録されているMaterial Color Bindがある場合は値の更新/削除を行なう｡
     for bind_type in mtoon_parameters_dict.keys():
         converted_bind_type = convert_str2color_bind_type(bind_type)
-        if not (same_type_bind := get_same_type_material_color_bind(source_material, converted_bind_type)):
+        if not (
+            same_type_bind := get_same_type_material_color_bind(
+                source_material, converted_bind_type
+            )
+        ):
             continue
 
         # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
@@ -522,21 +613,39 @@ def search_existing_material_color_bind_and_update(
             if list(target_value) == current_value:
                 logger.debug(f"Same Value : {same_type_bind}")
             else:
-                logger.debug(f"Updated : {source_material} : {list(target_value)} -->> {current_value}")
+                logger.debug(
+                    f"Updated : {source_material} : {list(target_value)} -->> {current_value}"
+                )
                 setattr(same_type_bind, attr_name, current_value)
             mtoon_parameters_dict[bind_type] = None
 
     return mtoon_parameters_dict
 
 
-########################################################################################################################
 def convert_str2transform_bind_type(source_name: str) -> str:
+    """
+    MToonのパラメーター名を表す文字列をコード上の定義に即したものに変換する｡
+
+    Parameters
+    ----------
+    source_name : str
+        処理対象の文字列
+
+    Returns
+    -------
+    str
+        処理結果の文字列
+
+    """
     match source_name:
         case "texture_scale":
             return "scale"
 
         case "texture_offset":
             return "offset"
+
+        case _:
+            return source_name
 
 
 def get_same_material_texture_transform_bind(
@@ -596,11 +705,16 @@ def search_existing_texture_transform_bind_and_update(
     logger.debug(mtoon_parameters_dict)
 
     # 既に登録されているTexture Transform Bindがある場合は値の更新/削除を行なう｡
-    if not (same_material_bind := get_same_material_texture_transform_bind(source_material)):
+    if not (
+        same_material_bind := get_same_material_texture_transform_bind(source_material)
+    ):
         return mtoon_parameters_dict
 
     # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
-    if not (mtoon_parameters_dict["texture_scale"] or mtoon_parameters_dict["texture_offset"]):
+    if not (
+        mtoon_parameters_dict["texture_scale"]
+        or mtoon_parameters_dict["texture_offset"]
+    ):
         logger.debug(f"Remove Texture Transform Bind : {source_material.name}")
         remove_target_index = list(texture_transform_binds).index(same_material_bind)
         texture_transform_binds.remove(remove_target_index)
@@ -619,7 +733,9 @@ def search_existing_texture_transform_bind_and_update(
                 continue
 
             converted_parameter_name = convert_str2transform_bind_type(parameter)
-            logger.debug(f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}")
+            logger.debug(
+                f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}"
+            )
             setattr(same_material_bind, converted_parameter_name, new_value)
 
         mtoon_parameters_dict = None
@@ -671,6 +787,10 @@ def set_mtoon1_texture_transform_from_bind(
     if not (target_material := transform_bind.material):
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1
+    # offset_value = [i * -1 for i in transform_bind.offset]
+    offset_value = transform_bind.offset
 
-    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale)
-    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], transform_bind.offset)
+    set_attr_from_strings(
+        mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
+    )
+    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], offset_value)

@@ -18,30 +18,48 @@ else:
 
 
 from pprint import pprint
+
 from typing import (
+    Optional,
     Literal,
     Generator,
+    Any,
 )
 import bpy
 from bpy.types import (
-    Context,
     Object,
     PoseBone,
     PropertyGroup,
-    bpy_prop_collection,
 )
 from mathutils import (
     Vector,
     Matrix,
 )
 
+from ..addon_classes import (
+    ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm1ColliderGroupPropertyGroup,
+    ReferenceSpringBone1SpringPropertyGroup,
+)
+
+from ..preferences import (
+    get_addon_preferences,
+)
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm1_collider_list_items,
+    VRMHELPER_WM_vrm1_collider_group_list_items,
     VRMHELPER_WM_vrm1_spring_list_items,
-    get_addon_prop_group,
+    get_ui_vrm1_collider_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_operator_collider_group_prop,
+    get_ui_vrm1_spring_prop,
+    get_ui_vrm1_operator_bone_group_prop,
+    get_ui_vrm1_operator_spring_prop,
+    # ----------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
-    get_ui_list_prop4custom_filter,
+    get_vrm1_active_index_prop,
 )
 
 
@@ -85,13 +103,15 @@ def get_pose_bone_by_name(bone_name: str) -> PoseBone:
 ---------------------------------------------------------"""
 
 
-def get_source_vrm1_colliders() -> dict[str, list[tuple[int, PropertyGroup]]]:
+def get_source_vrm1_colliders() -> (
+    dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
+):
     """
     Target ArmatureのVRM Extension内のVRM1のコライダーと対応ボーンの情報を格納した辞書を返す｡
 
     Returns
     -------
-    dict[str, list[tuple[int,PropertyGroup]]]
+    dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
         コライダーとインデックスを格納したタプルのリストを､対応するボーン名をキーとして格納した辞書｡
 
     """
@@ -105,7 +125,11 @@ def get_source_vrm1_colliders() -> dict[str, list[tuple[int, PropertyGroup]]]:
         colliders_dict.setdefault(collider.node.bone_name, [])
         colliders_dict[collider.node.bone_name].append((n, collider))
 
-    sort_order = [i.name for i in get_target_armature_data().bones if i.name in colliders_dict.keys()]
+    sort_order = [
+        i.name
+        for i in get_target_armature_data().bones
+        if i.name in colliders_dict.keys()
+    ]
 
     def get_index(element):
         if element[0] == "":
@@ -134,7 +158,7 @@ def add_items2collider_ui_list() -> int:
 
     # wm_prop = get_addon_prop_group("WM")
     # items = wm_prop.collider_list_items4custom_filter
-    items = get_ui_list_prop4custom_filter("COLLIDER")
+    items = get_ui_vrm1_collider_prop()
 
     source_collider_dict = get_source_vrm1_colliders()
     bones = get_target_armature_data().bones
@@ -147,7 +171,7 @@ def add_items2collider_ui_list() -> int:
     label.item_type[0] = True
     for k in source_collider_dict.keys():
         # ボーン名をコレクションプロパティに追加する｡
-        new_item = items.add()
+        new_item: VRMHELPER_WM_vrm1_collider_list_items = items.add()
         new_item.item_type[1] = True
         # colliderの'node.bone_name'が空文字であれば次のキーに移行｡
         if not k:
@@ -165,17 +189,23 @@ def add_items2collider_ui_list() -> int:
             new_item.name = f"{k} {object_name}"
             new_item.bone_name = k
             new_item.collider_name = object_name
-            new_item.parent_count = (parent_count := parent_count + 1)
+            new_item.collider_object = collider.bpy_object
+            new_item.collider_type = collider.shape_type.upper()
+            new_item.parent_count = parent_count + 1
             new_item.item_index = n
             # タイプがカプセルであれば子Emptyオブジェクトもコレクションプロパティに追加する｡
             if collider.shape_type == "Capsule":
-                child_object_name = collider.bpy_object.children[0].name if collider.bpy_object else ""
+                child_object_name = (
+                    collider.bpy_object.children[0].name if collider.bpy_object else ""
+                )
                 new_item = items.add()
                 new_item.item_type[3] = True
                 new_item.name = f"{k} {child_object_name}"
                 new_item.bone_name = k
                 new_item.collider_name = child_object_name
-                new_item.parent_count = parent_count
+                new_item.collider_object = collider.bpy_object
+                new_item.collider_type = "CAPSULE_END"
+                new_item.parent_count = parent_count + 2
                 new_item.item_index = n
 
     return len(list(items))
@@ -214,7 +244,10 @@ def remove_vrm1_collider_by_selected_object(source_object: Object) -> str:
 
         # 'source_object'を削除する｡子が存在すればそれを先に削除する｡
         if source_object.children:
-            [bpy.data.objects.remove(obj, do_unlink=True) for obj in source_object.children]
+            [
+                bpy.data.objects.remove(obj, do_unlink=True)
+                for obj in source_object.children
+            ]
 
         bpy.data.objects.remove(source_object, do_unlink=True)
 
@@ -255,8 +288,12 @@ def generate_tail_collider_position(bone: PoseBone, tail: Vector) -> Matrix:
         親ボーンのテールを基に生成されたマトリックス｡
 
     """
-    armature_object = get_addon_prop_group("BASIC").target_armature
-    return armature_object.matrix_world.inverted() @ bone.matrix.inverted() @ Matrix.Translation(tail)
+    armature_object = get_target_armature()
+    return (
+        armature_object.matrix_world.inverted()
+        @ bone.matrix.inverted()
+        @ Matrix.Translation(tail)
+    )
 
 
 # -----------------------------------------------------
@@ -284,7 +321,9 @@ def is_existing_collider_group() -> bool:
         return False
 
 
-def get_active_list_item_in_collider_group() -> PropertyGroup | None:
+def get_active_list_item_in_collider_group() -> (
+    VRMHELPER_WM_vrm1_collider_group_list_items | None
+):
     """
     UIリストのアクティブインデックスに対応したコライダーグループを取得する｡
 
@@ -294,19 +333,21 @@ def get_active_list_item_in_collider_group() -> PropertyGroup | None:
         取得されたコライダーグループ｡取得できなければNone｡
 
     """
-    if collider_group_list := get_ui_list_prop4custom_filter("COLLIDER_GROUP"):
-        return collider_group_list[get_addon_prop_group("INDEX").collider_group]
+    if collider_group_list := get_ui_vrm1_collider_group_prop():
+        return collider_group_list[get_vrm1_active_index_prop("COLLIDER_GROUP")]
     else:
         return None
 
 
-def get_source_vrm1_collider_groups() -> Generator[tuple[PropertyGroup], None, None]:
+def get_source_vrm1_collider_groups() -> (
+    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any], None, None]]
+):
     """
     Target ArmatureのVRM Extension内のVRM1コライダーグループと登録されたコライダーの情報を格納した辞書を返す｡
 
     Returns
     -------
-    Generator[tuple[PropertyGroup], None, None]
+    Optional[Generator[tuple[ReferenceVrm1ColliderGroupPropertyGroup, Any]]]
         VRM Extensionに登録されたコライダーグループと､
         グループに登録されたコライダーを格納したタプルを出力するジェネレーター
 
@@ -327,7 +368,7 @@ def get_operator_target_collider_group() -> list[str]:
         ターゲットコライダーグループの名前を格納したリスト｡
 
     """
-    collider_group_collection = get_ui_list_prop4custom_filter("COLLIDER_GROUP_OPERATOR")
+    collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
     target_name_list = [i.name for i in collider_group_collection if i.is_target]
     return target_name_list
 
@@ -345,7 +386,7 @@ def add_items2collider_group_ui_list() -> int:
     """
     # wm_prop = get_addon_prop_group("WM")
     # items = wm_prop.collider_group_list_items4custom_filter
-    items = get_ui_list_prop4custom_filter("COLLIDER_GROUP")
+    items = get_ui_vrm1_collider_group_prop()
 
     # コレクションプロパティの初期化処理｡
     items.clear()
@@ -405,7 +446,9 @@ def cleanup_empty_collider_group():
     for collider_group in collider_groups:
         if not collider_group.colliders:
             logger.debug(f"Colliders is empty : {collider_group.name}")
-            remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group.name)
+            remove_vrm1_spring_collider_group_when_removed_collider_group(
+                collider_group.name
+            )
             candidate_remove_target_group_uuid.append(collider_group.uuid)
 
     if candidate_remove_target_group_uuid:
@@ -421,23 +464,34 @@ def cleanup_empty_collider_group():
 ---------------------------------------------------------"""
 
 
-def get_active_list_item_in_spring() -> VRMHELPER_WM_vrm1_spring_list_items | None:
-    if spring_group_list := get_ui_list_prop4custom_filter("SPRING"):
-        return spring_group_list[get_addon_prop_group("INDEX").spring]
+def get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm1_spring_list_items]:
+    """
+    SpringのUI List内でアクティブになっているアイテムを取得して返す｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm1_spring_list_items]
+        SpringのUi List内のアクティブアイテム
+
+    """
+
+    if spring_group_list := get_ui_vrm1_spring_prop():
+        return spring_group_list[get_vrm1_active_index_prop("SPRING")]
     else:
         return None
 
 
-def get_source_vrm1_springs() -> Generator[tuple[PropertyGroup], None, None]:
+def get_source_vrm1_springs() -> (
+    Generator[tuple[ReferenceSpringBone1SpringPropertyGroup, Any, Any], None, None]
+):
     """
-    Target ArmatureのVRM Extension内のVRM1スプリング
+    Target ArmatureのVRM Extension内のVRM1スプリングの全スプリングから
+    'spring', 'joints', 'collider_groups'を格納したタプルのジェネレーターを作成する｡
 
     Returns
     -------
-    Generator[tuple[PropertyGroup], None, None]
-
-
-
+    Generator[tuple[ReferenceSpringBone1SpringPropertyGroup, Any, Any]]
+        全スプリングが持つ'spring', 'joints', 'collider_groups'の属性を格納したタプルのジェネレーター｡
     """
     # VRM Extensionの'colliders'を取得する
     springs = get_vrm_extension_property("SPRING")
@@ -458,7 +512,7 @@ def add_items2spring_ui_list() -> int:
     """
     # wm_prop = get_addon_prop_group("WM")
     # items = wm_prop.spring_list_items4custom_filter
-    items = get_ui_list_prop4custom_filter("SPRING")
+    items = get_ui_vrm1_spring_prop()
 
     # コレクションプロパティの初期化処理｡
     items.clear()
@@ -515,7 +569,9 @@ def add_items2spring_ui_list() -> int:
     return len(list(items))
 
 
-def remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group_name: str):
+def remove_vrm1_spring_collider_group_when_removed_collider_group(
+    collider_group_name: str,
+):
     """
     VRM1のコライダーグループが削除され時に､それを参照しているスプリングのコライダーグループの値を更新する｡
 
@@ -544,9 +600,10 @@ def add_list_item2bone_group_list4operator():
     オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
 
-    filtering_word = "spb"
+    addon_pref = get_addon_preferences()
+    filtering_word = addon_pref.bone_group_filter_name
 
-    bone_group_collection = get_ui_list_prop4custom_filter("BONE_GROUP")
+    bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
     bone_group_collection.clear()
     for n, group in enumerate(get_target_armature().pose.bone_groups):
         new_item = bone_group_collection.add()
@@ -562,7 +619,7 @@ def add_list_item2collider_group_list4operator():
     オペレーターの処理対象コライダーグループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
 
-    collider_group_collection = get_ui_list_prop4custom_filter("COLLIDER_GROUP_OPERATOR")
+    collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
     collider_group_collection.clear()
     for group in get_vrm_extension_property("COLLIDER_GROUP"):
         new_item = collider_group_collection.add()
@@ -576,7 +633,7 @@ def add_list_item2joint_list4operator():
     オペレーターの処理対象ジョインツを定義するためのコレクションプロパティにアイテムを登録する｡
     """
 
-    spring_collection = get_ui_list_prop4custom_filter("SPRING_OPERATOR")
+    spring_collection = get_ui_vrm1_operator_spring_prop()
     spring_collection.clear()
     for n, spring in enumerate(get_vrm_extension_property("SPRING")):
         new_item = spring_collection.add()

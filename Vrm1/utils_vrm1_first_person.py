@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_constants",
         "utils_common",
     ]
 
@@ -12,19 +13,24 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_constants
     from .. import utils_common
 
 import re
 from typing import Literal
 import bpy
 from bpy.types import (
-    Object,
     PropertyGroup,
 )
 
+
+from ..addon_constants import (
+    FIRST_PERSON_ANNOTATION_TYPES,
+)
+
 from ..property_groups import (
-    get_addon_prop_group,
-    get_ui_list_prop4custom_filter,
+    get_scene_vrm1_first_person_prop,
+    get_ui_vrm1_first_person_prop,
 )
 
 from ..utils_vrm_base import (
@@ -63,19 +69,24 @@ def get_source_vrm1_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
 
     """
     # VRM ExtensionのFirst Personのプロパティと現在のUI Listのモードを取得する｡
-    annotation_type = get_addon_prop_group("FIRST_PERSON").annotation_type
-    first_person = get_vrm_extension_property("FIRST_PERSON")
+    first_person_prop = get_scene_vrm1_first_person_prop()
+    annotation_type_filter = {first_person_prop.annotation_type}
+    # 選択タイプによるフィルタリングの有無｡
+    if not first_person_prop.is_filtering_by_type:
+        annotation_type_filter |= FIRST_PERSON_ANNOTATION_TYPES
+
+    ext_first_person = get_vrm_extension_property("FIRST_PERSON")
 
     # UI Listに表示する対象オブジェクトをリストに格納する
     if mode == "UI":
         source_annotation_list = [
             i
-            for i in first_person.mesh_annotations
-            if i.type == annotation_type and not i.node.mesh_object_name == ""
+            for i in ext_first_person.mesh_annotations
+            if i.type in annotation_type_filter and not i.node.mesh_object_name == ""
         ]
 
     if mode == "OPERATOR":
-        source_annotation_list = [i for i in first_person.mesh_annotations]
+        source_annotation_list = [i for i in ext_first_person.mesh_annotations]
 
     return source_annotation_list
 
@@ -91,7 +102,7 @@ def add_items2annotation_ui_list() -> int:
         リストに表示するアイテム数｡
 
     """
-    items = get_ui_list_prop4custom_filter("FIRST_PERSON")
+    items = get_ui_vrm1_first_person_prop()
 
     # Current Sceneに存在するオブジェクトから対象オブジェクトを取得する｡
     source_annotation_list = get_source_vrm1_annotation("UI")
@@ -122,7 +133,9 @@ def search_same_name_mesh_annotation(object_name: str) -> PropertyGroup:
 
     """
     if annotations := [
-        i for i in get_source_vrm1_annotation("OPERATOR") if i.node.mesh_object_name == object_name
+        i
+        for i in get_source_vrm1_annotation("OPERATOR")
+        if i.node.mesh_object_name == object_name
     ]:
         return annotations[0]
 
@@ -140,7 +153,9 @@ def remove_mesh_annotation(source_object_name: str):
     mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
     try:
         mesh_annotations.remove(
-            [i.node.mesh_object_name for i in mesh_annotations].index(source_object_name)
+            [i.node.mesh_object_name for i in mesh_annotations].index(
+                source_object_name
+            )
         )
         logger.debug(f"Remove Mesh Annotation : {source_object_name}")
     except:
@@ -159,7 +174,8 @@ def sort_mesh_annotations():
     current_annotations_list = [
         (i.node.mesh_object_name, i.type)
         for i in mesh_annotations
-        if i.node.mesh_object_name not in seen and not seen.append(i.node.mesh_object_name)
+        if i.node.mesh_object_name not in seen
+        and not seen.append(i.node.mesh_object_name)
     ]
     current_annotations_list.sort(key=lambda x: (x[1], x[0]))
 
