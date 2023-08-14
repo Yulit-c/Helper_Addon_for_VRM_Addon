@@ -141,7 +141,10 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
     )
 
     sort_order_component_type = (
+        "META",
+        "HUMANOID",
         "FIRST_PERSON",
+        "LOOK_AT",
         "EXPRESSION",
         "CONSTRAINT",
         "COLLIDER",
@@ -149,18 +152,20 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
         "SPRING",
     )  # UI描画時に一定の順にソートするためのキー｡
 
+    component_type_items = [
+        ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
+        ("EXPRESSION", "Expression", "Draw UI for setting Expression"),
+        ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
+        ("COLLIDER", "Collider", "Draw UI for setting Collider"),
+        ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
+        ("SPRING", "Spring", "Draw UI for setting Spring"),
+    ]
+
     component_type: EnumProperty(
         name="Component Type",
         description="Property for selecting the UI item to draw",
         options={"ENUM_FLAG"},
-        items=(
-            ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
-            ("EXPRESSION", "Expression", "Draw UI for setting Expression"),
-            ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
-            ("COLLIDER", "Collider", "Draw UI for setting Collider"),
-            ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
-            ("SPRING", "Spring", "Draw UI for setting Spring"),
-        ),
+        items=component_type_items,
         default=set(),
         update=update_addon_collection,
     )

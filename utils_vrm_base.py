@@ -338,7 +338,7 @@ def get_vrm_extension_property(
 
     # Spring Bone関連のプロパティでない場合｡
     if any([type == "FIRST_PERSON", type == "EXPRESSION"]):
-        vrm_extension = get_vrm_extension_root_property()
+        vrm_extension = get_vrm_extension_root_property("VRM")
 
         if type == "FIRST_PERSON":
             return vrm_extension.first_person

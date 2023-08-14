@@ -214,12 +214,17 @@ class VRMHELPER_PT_ui_basic_settings(VRMHELPER_PT_Base):
             row.scale_y = 1.4
             row.prop(basic_prop, "tool_mode", text=" ", expand=True)
 
+            layout.separator()
             match basic_prop.tool_mode:
+                case "0":
+                    pass
+
                 case "1":
                     layout.label(text="Selected Tool:")
-                    row = layout.row()
-                    row.scale_y = 1.4
-                    row.prop(basic_prop, "component_type", text=" ")
+                    columns = 3
+
+                    grid = layout.grid_flow(row_major=True, align=True, columns=columns)
+                    grid.prop(basic_prop, "component_type", text=" ")
 
         layout.operator(VRMHELPER_OT_evaluate_addon_collections.bl_idname)
 

@@ -1,8 +1,6 @@
 # TODO : PropertyGroupクラスを返す関数の返り値の型ヒントを､詳細なクラス名が分かる形に変更する｡
-# TODO : VRMAddonが定義するクラスをReferenceとして当アドオン内に定義して型ヒントに記述する｡
 # TODO : 各OperatorのPollの確認｡
-# TODO : UI Listの表示アイテムを格納するCollection Propertyを取得する関数の返り値型ヒントが違っている
-#        Colldection Property自体はbpy_prop_collection_idpropになる
+
 
 bl_info = {
     "name": "Helper Addon for VRM Addon",
