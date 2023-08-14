@@ -1141,7 +1141,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_restore_initial_values(
+class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
     VRMHELPER_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_restore_initial_values"
@@ -1354,7 +1354,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
 class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_remove_from_empty"
     bl_label = "Remove Collider"
-    bl_description = "Remove spring bone collider from selected empty"
+    bl_description = "Remove spring bone collider from selected empty object"
 
     @classmethod
     def poll(cls, context):
@@ -1529,7 +1529,7 @@ class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_collider_group_base):
 
 class VRMHELPER_OT_collider_group_register_collider_from_bone(VRMHELPER_operator_base):
     bl_idname = "vrmhelper.vrm1_collider_group_register_collider_from_bone"
-    bl_label = "Create From Bone"
+    bl_label = "Create from Bone"
     bl_description = "Registers the colliders linked to the selected bone to the active collider group"
 
     # TODO : Collider Groupが1つも存在しない場合は新たにグループを作成してそれを対象にする｡
@@ -1867,7 +1867,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_assign_parameters_to_selected_joints(
+class VRMHELPER_OT_spring_assign_parameters_to_joints(
     VRMHELPER_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
@@ -2180,7 +2180,7 @@ CLASSES = (
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
     VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
-    VRMHELPER_OT_vrm1_expression_restore_initial_values,
+    VRMHELPER_OT_vrm1_expression_restore_initial_parameters,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -2206,7 +2206,7 @@ CLASSES = (
     VRMHELPER_OT_spring_remove_joint,
     VRMHELPER_OT_spring_clear_joint,
     VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_selected_joints,
+    VRMHELPER_OT_spring_assign_parameters_to_joints,
     VRMHELPER_OT_spring_add_collider_group,
     VRMHELPER_OT_spring_remove_collider_group,
     VRMHELPER_OT_spring_clear_collider_group,

@@ -149,7 +149,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
     VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
-    VRMHELPER_OT_vrm1_expression_restore_initial_values,
+    VRMHELPER_OT_vrm1_expression_restore_initial_parameters,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -175,7 +175,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_spring_remove_joint,
     VRMHELPER_OT_spring_clear_joint,
     VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_selected_joints,
+    VRMHELPER_OT_spring_assign_parameters_to_joints,
     VRMHELPER_OT_spring_add_collider_group,
     VRMHELPER_OT_spring_remove_collider_group,
     VRMHELPER_OT_spring_clear_collider_group,
@@ -509,12 +509,12 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     col.scale_y = 1.2
     col.operator(
         VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters.bl_idname,
-        text="Store MToon Current Value",
+        text="Store MToon Current Values",
         icon="IMPORT",
     )
     col.operator(
         VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters.bl_idname,
-        text="Discard stored MToon Value",
+        text="Discard stored MToon Values",
         icon="EXPORT",
     )
 
@@ -539,7 +539,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         icon="NODE_MATERIAL",
     )
     col.operator(
-        VRMHELPER_OT_vrm1_expression_restore_initial_values.bl_idname,
+        VRMHELPER_OT_vrm1_expression_restore_initial_parameters.bl_idname,
         text="Reset Bind's All Values",
         icon="RECOVER_LAST",
     )
@@ -706,13 +706,12 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     )
 
     # UI描画
-    layout.prop(collider_prop, "is_additive_selecting")
+    layout.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2collider_ui_list()
 
-    row = layout.row()
-    row.template_list(
+    layout.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
         "",
         wm_vrm1_prop,
@@ -721,12 +720,18 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
         "collider",
         rows=define_ui_list_rows(rows),
     )
-    row = layout.row()
-    row.prop(collider_prop, "collider_type", text=" ", expand=True)
-    row = layout.row()
-    row.prop(collider_prop, "collider_radius", text="Generated Collider Radius")
-    row = layout.row()
 
+    layout.separator(factor=0.5)
+    box = layout.box()
+    box.label(text="Create Operator's Options")
+    row = box.row()
+    row.label(text="Create Collider Type")
+    row.prop(collider_prop, "collider_type", text=" ", expand=True)
+    row = box.row()
+    row.label(text="Create Collider Radius")
+    row.prop(collider_prop, "collider_radius")
+
+    row = box.row()
     op = row.operator(VRMHELPER_OT_collider_create_from_bone.bl_idname)
     op.collider_type = collider_prop.collider_type
     op.collider_radius = collider_prop.collider_radius
@@ -1044,8 +1049,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 # アクティブアイテムの調整用プロパティ
                 if active_item.item_type[2]:
                     joint = spring.joints[active_item.item_indexes[1]]
-                    box_3rd = box_sub.box()
-                    box_3rd.prop_search(
+                    box_sub.prop_search(
                         joint.node,
                         "bone_name",
                         target_armature,
@@ -1077,11 +1081,11 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     icon="PANEL_CLOSE",
                 )
 
-                # コライダーグループの設定用オペレーター
-                box_sub = box.box()
-                box_sub.operator(
-                    VRMHELPER_OT_empty_operator.bl_idname, text="Set Collider Group"
-                )
+                # TODO : コライダーグループの設定用オペレーター
+                # box_sub = box.box()
+                # box_sub.operator(
+                #     VRMHELPER_OT_empty_operator.bl_idname, text="Set Collider Group"
+                # )
 
         # ----------------------------------------------------------
         #    ジョイントの自動作成｡
@@ -1118,6 +1122,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
             text="Create from Selected",
         )
+        op.source_type = "SELECT"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
@@ -1132,15 +1137,15 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         col.separator(factor=2.0)
         op = col.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
-            text="Adust Active Joint",
+            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            text="Adust Joints from Active",
         )
         op.source_type = "SINGLE"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
-            text="Adjust Selected Joint",
+            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            text="Adjust Joints from Selected Bone",
         )
         set_properties_to_from_dict(op, joint_properties)
         op.source_type = "MULTIPLE"
