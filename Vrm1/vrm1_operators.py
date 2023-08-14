@@ -94,6 +94,7 @@ from ..utils_vrm_base import (
     get_bones_for_each_branch_by_type,
     store_mtoon1_current_values,
     set_mtoon1_default_values,
+    re_link_all_collider_object2collection,
 )
 
 from .utils_vrm1_first_person import (
@@ -1340,8 +1341,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
                 )
 
                 # コライダーオブジェクトを対象コレクションにリンクする｡
-                link_object2collection(collider_head, dest_collection)
-                link_object2collection(collider_tail, dest_collection)
+                re_link_all_collider_object2collection()
 
         # 'use_mirror_x'の値を変更していた場合は元に戻す｡
         if is_changed_use_mirror:
