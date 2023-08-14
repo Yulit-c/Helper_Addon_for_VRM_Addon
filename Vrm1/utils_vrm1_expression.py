@@ -39,7 +39,7 @@ from bpy.types import (
 
 
 from ..addon_classes import (
-    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1ExpressionsPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1TextureTransformBindPropertyGroup,
@@ -137,9 +137,9 @@ def get_source_vrm1_expression4ui_list() -> (
     # UI Listに表示する対象オブジェクトをリストに格納する｡
     for data_name, display_name in PRESET_EXPRESSION_NAME_DICT.items():
         # 'expressionsから表示名を用いてプリセットのエクスプレッションを取得する｡
-        preset_expression: ReferenceVrm1ExpressionPropertyGroup = attrgetter(data_name)(
-            expressions
-        )
+        preset_expression: ReferenceVrm1ExpressionsPropertyGroup = attrgetter(
+            data_name
+        )(expressions)
         # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
         has_any_morph_bind = True if preset_expression.morph_target_binds else False
         has_any_material_bind = (
@@ -246,14 +246,14 @@ def add_items2expression_ui_list() -> int:
 # ----------------------------------------------------------
 
 
-def get_active_expression() -> Optional[ReferenceVrm1ExpressionPropertyGroup]:
+def get_active_expression() -> Optional[ReferenceVrm1ExpressionsPropertyGroup]:
     """
     エクスプレッションリストでアクティブになっているエクスプレッションを取得する｡
     エラーになる場合はオフセットしてエラーを回避する｡
 
     Returns
     -------
-    Optional[ReferenceVrm1ExpressionPropertyGroup]
+    Optional[ReferenceVrm1ExpressionsPropertyGroup]
         リスト内でアクティブになっているエクスプレッションのプロパティグループ｡
 
     """

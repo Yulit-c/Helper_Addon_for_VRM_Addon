@@ -39,7 +39,7 @@ from mathutils import (
 from ..addon_classes import (
     ReferenceVrm1ColliderPropertyGroup,
     ReferenceVrm1ColliderGroupPropertyGroup,
-    ReferenceVrm1SpringPropertyGroup,
+    ReferenceSpringBone1SpringPropertyGroup,
 )
 
 from ..preferences import (
@@ -482,7 +482,7 @@ def get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm1_spring_list_i
 
 
 def get_source_vrm1_springs() -> (
-    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any], None, None]
+    Generator[tuple[ReferenceSpringBone1SpringPropertyGroup, Any, Any], None, None]
 ):
     """
     Target ArmatureのVRM Extension内のVRM1スプリングの全スプリングから
@@ -490,7 +490,7 @@ def get_source_vrm1_springs() -> (
 
     Returns
     -------
-    Generator[tuple[ReferenceVrm1SpringPropertyGroup, Any, Any]]
+    Generator[tuple[ReferenceSpringBone1SpringPropertyGroup, Any, Any]]
         全スプリングが持つ'spring', 'joints', 'collider_groups'の属性を格納したタプルのジェネレーター｡
     """
     # VRM Extensionの'colliders'を取得する

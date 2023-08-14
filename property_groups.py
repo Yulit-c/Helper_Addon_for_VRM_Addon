@@ -54,7 +54,7 @@ from bpy.props import (
 
 
 from .addon_classes import (
-    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1ExpressionsPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
 )
@@ -143,11 +143,11 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
     sort_order_component_type = (
         "FIRST_PERSON",
         "EXPRESSION",
+        "CONSTRAINT",
         "COLLIDER",
         "COLLIDER_GROUP",
         "SPRING",
-        "CONSTRAINT",
-    )  # UI描画時に一定の順にソートするためのコンテナ｡
+    )  # UI描画時に一定の順にソートするためのキー｡
 
     component_type: EnumProperty(
         name="Component Type",
@@ -155,11 +155,11 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
         options={"ENUM_FLAG"},
         items=(
             ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
-            ("EXPRESSION", "EXPRESSION", "Draw UI for setting Expression"),
+            ("EXPRESSION", "Expression", "Draw UI for setting Expression"),
+            ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
             ("COLLIDER", "Collider", "Draw UI for setting Collider"),
             ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
             ("SPRING", "Spring", "Draw UI for setting Spring"),
-            ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
         ),
         default=set(),
         update=update_addon_collection,
@@ -926,7 +926,7 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
     """
 
     expressions_list: list[
-        ReferenceVrm1ExpressionPropertyGroup
+        ReferenceVrm1ExpressionsPropertyGroup
         | ReferenceVrm1CustomExpressionPropertyGroup
     ] = []  # 全エクスプレッションを格納したリスト
 

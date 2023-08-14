@@ -12,45 +12,110 @@ from typing import (
 ------------------------------------------------------------
 ---------------------------------------------------------"""
 
+
+class ReferenceVRM1MeshObjectPropertyGroup:
+    mesh_object_name: bpy.types.StringProperty
+    value: bpy.types.StringProperty
+    bpy_object: bpy.types.Object
+
+
 """---------------------------------------------------------
-    First Person
+    VRM0
 ---------------------------------------------------------"""
 
 
-class ReferenceVrm1FirstPersonPropertyGroup:
+# ----------------------------------------------------------
+#    Meta
+# ----------------------------------------------------------
+class ReferenceVrm0MetaPropertyGroup:
     pass
 
 
+# ----------------------------------------------------------
+#    Humanoid
+# ----------------------------------------------------------
+class ReferenceVrm0HumanoidPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    First Person
+# ----------------------------------------------------------
+class ReferenceVrm0FirstPersonPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    Blend Shape
+# ----------------------------------------------------------
+class ReferenceVrm0BlendShapeMasterPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    Secondary Animation
+# ----------------------------------------------------------
+class ReferenceVrm0SecondaryAnimationPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    Root
+# ----------------------------------------------------------
+class ReferenceVrm0PropertyGroup:
+    meta: ReferenceVrm0MetaPropertyGroup
+    humanoid: ReferenceVrm0HumanoidPropertyGroup
+    first_person: ReferenceVrm0FirstPersonPropertyGroup
+    blend_shape_master: ReferenceVrm0BlendShapeMasterPropertyGroup
+    secondary_animation: ReferenceVrm0SecondaryAnimationPropertyGroup
+
+
 """---------------------------------------------------------
-    Expression
+    VRM1
 ---------------------------------------------------------"""
 
 
-class ReferenceVrm1ExpressionPropertyGroup:
-    morph_target_binds: bpy.props.CollectionProperty()
-    material_color_binds: bpy.props.CollectionProperty()
-    texture_transform_binds: bpy.props.CollectionProperty()
-    is_binary: bpy.types.BoolProperty
-
-    EXPRESSION_OVERRIDE_TYPE_VALUES = []
-
-    override_blink: bpy.types.EnumProperty
-    override_look_at: bpy.types.EnumProperty
-    override_mouth: bpy.types.EnumProperty
-
-    show_expanded: bpy.types.BoolProperty
-    show_expanded_morph_target_binds: bpy.types.BoolProperty
-    show_expanded_material_color_binds: bpy.types.BoolProperty
-    show_expanded_texture_transform_binds: bpy.types.BoolProperty
+# ----------------------------------------------------------
+#    Meta
+# ----------------------------------------------------------
+class ReferenceVrm1MetaPropertyGroup:
+    pass
 
 
-class ReferenceVrm1CustomExpressionPropertyGroup:
-    custom_name: bpy.types.StringProperty
-    expression: bpy.props.PointerProperty()
+# ----------------------------------------------------------
+#    Humanoid
+# ----------------------------------------------------------
+class ReferenceVrm1HumanoidPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    First Person
+# ----------------------------------------------------------
+class ReferenceVrm1MeshAnnotationPropertyGroup:
+    node: ReferenceVRM1MeshObjectPropertyGroup
+    TYPE_ITEMS = Literal["auto", "both", "thirdPersonOnly", "firstPersonOnly"]
+    type: TYPE_ITEMS
+
+
+class ReferenceVrm1FirstPersonPropertyGroup:
+    mesh_annotations: bpy.types.CollectionProperty  # ReferenceVrm1MeshAnnotationPropertyGroup
+
+
+# ----------------------------------------------------------
+#    Lool At
+# ----------------------------------------------------------
+class ReferenceVrm1LookAtPropertyGroup:
+    pass
+
+
+# ----------------------------------------------------------
+#    Expression
+# ----------------------------------------------------------
 
 
 class ReferenceVrm1MorphTargetBindPropertyGroup:
-    node: bpy.props.PointerProperty()
+    node: ReferenceVRM1MeshObjectPropertyGroup
     index: bpy.types.StringProperty
     weight: bpy.types.FloatProperty
 
@@ -72,6 +137,41 @@ class ReferenceVrm1TextureTransformBindPropertyGroup:
     material: bpy.types.Material
     scale: list[bpy.types.FloatProperty]
     offset: list[bpy.types.FloatProperty]
+
+
+class ReferenceVrm1ExpressionsPropertyGroup:
+    morph_target_binds: bpy.types.CollectionProperty  # ReferenceVrm1MorphTargetBindPropertyGroup
+    material_color_binds: bpy.types.CollectionProperty  # ReferenceVrm1MaterialColorBindPropertyGroup
+    texture_transform_binds: bpy.types.CollectionProperty  # ReferenceVrm1TextureTransformBindPropertyGroup
+    is_binary: bpy.types.BoolProperty
+
+    EXPRESSION_OVERRIDE_TYPE_VALUES = Literal["none", "block", "blend"]
+
+    override_blink: EXPRESSION_OVERRIDE_TYPE_VALUES
+    override_look_at: EXPRESSION_OVERRIDE_TYPE_VALUES
+    override_mouth: EXPRESSION_OVERRIDE_TYPE_VALUES
+
+    show_expanded: bpy.types.BoolProperty
+    show_expanded_morph_target_binds: bpy.types.BoolProperty
+    show_expanded_material_color_binds: bpy.types.BoolProperty
+    show_expanded_texture_transform_binds: bpy.types.BoolProperty
+
+
+class ReferenceVrm1CustomExpressionPropertyGroup:
+    str: bpy.types.StringProperty
+    custom_name: bpy.types.StringProperty
+    expression: ReferenceVrm1ExpressionsPropertyGroup
+
+
+# ----------------------------------------------------------
+#    Root
+# ----------------------------------------------------------
+class ReferenceVrm1PropertyGroup:
+    meta: ReferenceVrm1MetaPropertyGroup
+    humanoid: ReferenceVrm1HumanoidPropertyGroup
+    first_person: ReferenceVrm1FirstPersonPropertyGroup
+    look_at: ReferenceVrm1LookAtPropertyGroup
+    expressions: ReferenceVrm1ExpressionsPropertyGroup
 
 
 """---------------------------------------------------------
@@ -101,14 +201,14 @@ class ReferenceBonePropertyGroup:
     search_one_time_uuid: bpy.types.StringProperty
 
 
-class ReferenceSpringBone1ColliderShapePropertyGroup:
+class ReferenceSpringBone1ColliderPropertyGroup:
     sphere: ReferenceSpringBone1ColliderShapeSpherePropertyGroup
     capsule: ReferenceSpringBone1ColliderShapeCapsulePropertyGroup
 
 
 class ReferenceVrm1ColliderPropertyGroup:
     node: ReferenceBonePropertyGroup
-    shape: ReferenceSpringBone1ColliderShapePropertyGroup
+    shape: ReferenceSpringBone1ColliderPropertyGroup
 
     show_expanded: bpy.types.BoolProperty
     shape_type: Literal["Sphere", "Capsule"]
@@ -122,7 +222,7 @@ class ReferenceVrm1ColliderPropertyGroup:
 # ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    colliders: bpy.props.CollectionProperty()  # ReferenceVrm1ColliderPropertyGroup
+    colliders: bpy.types.CollectionProperty  # ReferenceVrm1ColliderPropertyGroup
     show_expanded: bpy.types.BoolProperty
     uuid: bpy.types.StringProperty
     search_one_time_uuid: bpy.types.StringProperty
@@ -149,20 +249,75 @@ class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
     previous_center_world_translation: list[bpy.types.FloatProperty]
 
 
-class ReferenceVrm1SpringPropertyGroup:
+class ReferenceSpringBone1SpringPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    joints: bpy.props.CollectionProperty()  # ReferenceSpringBone1JointPropertyGroup
-    collider_groups: bpy.props.CollectionProperty()  # ReferenceSpringBone1ColliderGroupPropertyGroup
+    joints: bpy.types.CollectionProperty  # ReferenceSpringBone1JointPropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderGroupPropertyGroup
     center: ReferenceBonePropertyGroup
+
     show_expanded: bpy.types.BoolProperty
     show_expanded_bones: bpy.types.BoolProperty
     show_expanded_collider_groups: bpy.types.BoolProperty
     animation_state: ReferenceSpringBone1SpringAnimationStatePropertyGroup
 
 
+# ----------------------------------------------------------
+#    Root
+# ----------------------------------------------------------
+class ReferenceSpringBone1SpringBonePropertyGroup:
+    colliders: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderPropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderGroupPropertyGroup
+    springs: bpy.types.CollectionProperty  # ReferenceSpringBone1SpringPropertyGroup
+
+    enable_animation: bpy.types.BoolProperty
+
+    # for UI
+    show_expanded_colliders: bpy.types.BoolProperty
+    show_expanded_collider_groups: bpy.types.BoolProperty
+    show_expanded_springs: bpy.types.BoolProperty
+
+
+"""---------------------------------------------------------
+    Node Constraint
+---------------------------------------------------------"""
+
+
+class ReferenceNodeConstraint1NodeConstraintPropertyGroup:
+    # for UI
+    show_expanded_roll_constraints: bpy.types.BoolProperty
+    show_expanded_aim_constraints: bpy.types.BoolProperty
+    show_expanded_rotation_constraints: bpy.types.BoolProperty
+
+
+"""---------------------------------------------------------
+    Root Overall
+---------------------------------------------------------"""
+
+
+class ReferenceVrmAddonArmatureExtensionPropertyGroup:
+    addon_version: list[
+        bpy.types.IntProperty,
+        bpy.types.IntProperty,
+        bpy.types.IntProperty,
+    ]
+    vrm0: ReferenceVrm0PropertyGroup
+    vrm1: ReferenceVrm1PropertyGroup
+    spring_bone1: ReferenceSpringBone1SpringBonePropertyGroup
+    node_constraint1: ReferenceNodeConstraint1NodeConstraintPropertyGroup
+    armature_data_name: bpy.types.StringProperty
+
+    SPEC_VERSION_ITEMS = Literal["0.0", "1.0"]
+    spec_version: SPEC_VERSION_ITEMS
+
+
+# ----------------------------------------------------------
+# ----------------------------------------------------------
+# ----------------------------------------------------------
+# ----------------------------------------------------------
+# ----------------------------------------------------------
 """---------------------------------------------------------
 ------------------------------------------------------------
-    Common
+    For This Addon
 ------------------------------------------------------------
 ---------------------------------------------------------"""
 
@@ -229,7 +384,7 @@ class MToon1MaterialParameters(TypedDict, total=False):
 
 class ExpressionCandidateUIList(TypedDict, total=False):
     name: str
-    preset_expression: ReferenceVrm1ExpressionPropertyGroup
+    preset_expression: ReferenceVrm1ExpressionsPropertyGroup
     custom_expression: ReferenceVrm1CustomExpressionPropertyGroup
     has_morph_bind: bool
     has_material_bind: bool

@@ -21,11 +21,8 @@ from pprint import (
     pprint,
 )
 from typing import (
-    Any,
     Literal,
-    Iterator,
-    TypedDict,
-    NamedTuple,
+    Optional,
 )
 import bpy
 from bpy.types import (
@@ -42,11 +39,16 @@ from bpy.types import (
 from .addon_classes import (
     MToon1MaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
-    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm1ExpressionsPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
     ReferenceVrm1ColliderGroupPropertyGroup,
-    ReferenceVrm1SpringPropertyGroup,
+    ReferenceSpringBone1SpringPropertyGroup,
+    ReferenceVrm0PropertyGroup,
+    ReferenceVrm1PropertyGroup,
+    ReferenceSpringBone1SpringBonePropertyGroup,
+    ReferenceNodeConstraint1NodeConstraintPropertyGroup,
+    ReferenceVrmAddonArmatureExtensionPropertyGroup,
 )
 
 from .addon_constants import (
@@ -238,9 +240,33 @@ def check_addon_mode() -> str:
     return basic_prop.tool_mode
 
 
+def get_vrm_extension_all_root_property() -> (
+    Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]
+):
+    """
+    Target Armatureに登録されているVRM Addonの全体のルートプロパティを取得する｡
+
+    Returns
+    -------
+    Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]
+        Armatureに登録されたVRM Addonプロパティの最上階層｡
+        Target Armatureが指定されていなければNone
+
+    """
+    if not (target_armature := get_target_armature_data()):
+        return
+
+    return target_armature.vrm_addon_extension
+
+
 def get_vrm_extension_root_property(
-    target: Literal["SPRING1"] | None = None,
-) -> PropertyGroup:
+    target: Literal["VRM", "SPRING1"],
+) -> (
+    ReferenceVrm0PropertyGroup
+    | ReferenceVrm1PropertyGroup
+    | ReferenceSpringBone1SpringBonePropertyGroup
+    | ReferenceNodeConstraint1NodeConstraintPropertyGroup
+):
     """
     選択されているUI Modeに対応したバージョンのVRM Extensionのルートプロパティを取得する｡
 
@@ -256,19 +282,22 @@ def get_vrm_extension_root_property(
         選択されているUI Modeに応じてVRM ExtensionのProperty Groupのルートを取得する｡
 
     """
-    target_armature = get_target_armature_data()
+    if not (vrm_extension := get_vrm_extension_all_root_property()):
+        return
 
-    if target is None:
-        if check_addon_mode() == "0":
-            vrm_extension = target_armature.vrm_addon_extension.vrm0
+    match target:
+        case "VRM":
+            match check_addon_mode():
+                case "0":
+                    vrm_property = vrm_extension.vrm0
 
-        if check_addon_mode() == "1":
-            vrm_extension = target_armature.vrm_addon_extension.vrm1
+                case "1":
+                    vrm_property = vrm_extension.vrm1
 
-    if target == "SPRING1":
-        vrm_extension = target_armature.vrm_addon_extension.spring_bone1
+        case "SPRING1":
+            vrm_property = vrm_extension.spring_bone1
 
-    return vrm_extension
+    return vrm_property
 
 
 def get_vrm_extension_property(
@@ -281,10 +310,10 @@ def get_vrm_extension_property(
     ]
 ) -> (
     ReferenceVrm1FirstPersonPropertyGroup
-    | ReferenceVrm1ExpressionPropertyGroup
+    | ReferenceVrm1ExpressionsPropertyGroup
     | ReferenceVrm1ColliderPropertyGroup
     | ReferenceVrm1ColliderGroupPropertyGroup
-    | ReferenceVrm1SpringPropertyGroup
+    | ReferenceSpringBone1SpringPropertyGroup
 ):
     """
     Target ArmatureのVRM Extensionの中から引数で指定したProperty Groupを取得する｡
@@ -714,6 +743,15 @@ def set_mtoon1_default_values(target_material: Material):
 
 
 def get_all_collider_objects_from_scene() -> list[Object]:
+    """
+    Target ArmatureのVRM Extensionに登録された全てのコライダーオブジェクトのリストを返す｡
+
+    Returns
+    -------
+    list[Object]
+        コライダーを定義するEmpty Objectのリスト｡
+
+    """
     # Target ArmatureのVRM Extensionに定義された全コライダーオブジェクトを取得する｡
     colliders = get_vrm_extension_property("COLLIDER")
     collider_object_list = []
@@ -732,10 +770,17 @@ def get_all_collider_objects_from_scene() -> list[Object]:
 
 
 def re_link_all_collider_object2collection():
+    """
+    アドオンが定義するコレクション構造を構成した上で､
+    定義されている全てのコライダーオブジェクトを対応するコレクションにリンクさせる｡
+    """
+
     addon_collection_dict = setting_vrm_helper_collection()
+    if not get_target_armature():
+        return
+
     vrm1_collider_collection = addon_collection_dict["VRM1_COLLIDER"]
     collider_objects = get_all_collider_objects_from_scene()
-    pprint(collider_objects)
 
     for obj in collider_objects:
         unlink_object_from_all_collections(obj)
