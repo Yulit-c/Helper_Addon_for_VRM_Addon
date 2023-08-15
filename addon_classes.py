@@ -387,12 +387,14 @@ class VRMHELPER_UL_base:
 """---------------------------------------------------------
     Operator
 ---------------------------------------------------------"""
+
+
 class VRMHELPER_VRM1_joint_property:
     """
     ジョイント用オペレータープロパティーをフィールドとする基底クラス｡
     """
 
-    hit_radius: bpy.types.FloatProperty(
+    hit_radius: bpy.props.FloatProperty(
         name="Hit Radius",
         description="radius value of joint set by operator",
         default=0.01,
@@ -401,7 +403,7 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    stiffness: bpy.types.FloatProperty(
+    stiffness: bpy.props.FloatProperty(
         name="Stiffness",
         description="stiffness value of joint set by operator",
         default=1.0,
@@ -410,7 +412,7 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    drag_force: bpy.types.FloatProperty(
+    drag_force: bpy.props.FloatProperty(
         name="Drag Force",
         description="drag force value of joint set by operator",
         default=0.5,
@@ -419,7 +421,7 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    gravity_power: bpy.types.FloatProperty(
+    gravity_power: bpy.props.FloatProperty(
         name="Gravity Power",
         description="gravity power value  of joint set by operator",
         default=0.0,
@@ -428,7 +430,7 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    gravity_dir: bpy.types.FloatVectorProperty(
+    gravity_dir: bpy.props.FloatVectorProperty(
         name="Gravity Direction",
         description="gravity direction value of joint set by operator",
         default=(0.0, 0.0, -1.0),
@@ -437,13 +439,12 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    damping_ratio: bpy.types.FloatProperty(
+    damping_ratio: bpy.props.FloatProperty(
         name="Damping Ratio",
         description="Descriptiondamping rate of the parameters of the joints to be created",
         default=1.0,
         min=0.01,
     )
-
 
 
 """---------------------------------------------------------
