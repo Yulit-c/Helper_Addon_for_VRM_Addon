@@ -156,7 +156,6 @@ def get_source_vrm1_expression4ui_list() -> (
 
         # 取得した情報を格納した辞書を作成し､Preset Expressionのリストに加える｡
         preset_expression_info: ExpressionCandidateUIList = {
-            # "name": display_name,
             "name": name,
             "preset_expression": preset_expression,
             "has_morph_bind": has_any_morph_bind,
@@ -170,7 +169,6 @@ def get_source_vrm1_expression4ui_list() -> (
     candidate_custom_expressions = []
     for i in expressions.custom:
         custom_exp: ReferenceVrm1CustomExpressionPropertyGroup = i
-        # custom_expressions_dict[custom_exp.name] = custom_exp.expression
         # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
         has_any_morph_bind = True if custom_exp.morph_target_binds else False
         has_any_material_bind = (
@@ -200,7 +198,6 @@ def add_items2expression_ui_list() -> int:
     -------
     int
         リストに表示するアイテム数｡
-
     """
 
     (
@@ -257,7 +254,6 @@ def get_active_expression() -> Optional[ReferenceVrm1ExpressionPropertyGroup]:
     -------
     Optional[ReferenceVrm1ExpressionPropertyGroup]
         リスト内でアクティブになっているエクスプレッションのプロパティグループ｡
-
     """
     active_index = get_vrm1_active_index_prop("EXPRESSION")
     if not (expressions_list := get_ui_vrm1_expression_prop()):
@@ -700,7 +696,6 @@ def search_existing_texture_transform_bind_and_update(
     MToon1MaterialParameters
         'source_material'に設定されたMToonパラメーターと値を格納した辞書｡
         MToonパラメーターが初期値の場合はNoneを返す｡
-
     """
 
     mtoon_parameters_dict = get_mtoon_transform_current_parameters(source_material)

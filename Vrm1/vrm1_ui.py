@@ -568,7 +568,7 @@ class VRMHELPER_UL_expression_list(UIList):
         expression: ReferenceVrm1ExpressionPropertyGroup = item.expressions_list[index]
 
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
-        sp = layout.split(factor=0.45)
+        sp = layout.split(factor=0.4)
         row = sp.row(align=True)
 
         vrm1_expressions = get_vrm1_extension_property_expression()
@@ -579,57 +579,69 @@ class VRMHELPER_UL_expression_list(UIList):
             row.label(text=label_name, icon=label_icon)
 
         # カスタムエクスプレッションの場合
-        if item.expression_index[0] < 0:
+        elif item.expression_index[0] < 0:
             custom_expressions = vrm1_expressions.custom
             custom_expression: ReferenceVrm1ExpressionPropertyGroup = (
                 custom_expressions[item.expression_index[1]]
             )
             prop_icon = EXPRESSION_ICON_DICT["custom"]
             row.prop(
-                custom_expression, "custom_name", text="", icon=prop_icon, emboss=False
+                custom_expression,
+                "custom_name",
+                text="",
+                icon=prop_icon,
+                emboss=False,
             )
 
         # 各種バインドを持つ場合はアイコンを描画する｡
-        sp = sp.split(factor=0.15)
-        row = sp.row(align=False)
-        row.alignment = "RIGHT"
+        # sp = sp.split(factor=0.8)
+        row_parameters = sp.row(align=False)
+        row_parameters.alignment = "RIGHT"
+        row_bind = row_parameters.row(align=True)
+        row_bind.alignment = "RIGHT"
 
         if item.has_morph_bind:
-            row.label(text="", icon="MESH_DATA")
+            row_bind.label(text="", icon="MESH_DATA")
         else:
-            row.label(text="")
+            row_bind.label(text="")
 
         if item.has_material_bind:
-            row.label(text="", icon="MATERIAL")
+            row_bind.label(text="", icon="MATERIAL")
         else:
-            row.label(text="")
+            row_bind.label(text="")
 
         # エクスプレッションが持つ各パラメーターの描画
-        row = sp.row(align=True)
-        row.alignment = "RIGHT"
-        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True)
-        row.separator()
+        # row = sp.row(align=True)
+        row_override = row_parameters.row(align=True)
+        row_override.alignment = "RIGHT"
+        row_override.prop(
+            expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True
+        )
+        row_override.separator()
 
         icon_blink = EXPRESSION_OPTION_ICON[expression.override_blink]
-        row_blink = row.row(align=True)
+        row_blink = row_override.row(align=True)
         row_blink.alignment = "RIGHT"
         row_blink.prop(
             expression, "override_blink", text="", icon=icon_blink, icon_only=True
         )
         row_blink.separator(factor=0.5)
         icon_look_at = EXPRESSION_OPTION_ICON[expression.override_look_at]
-        row_look_at = row.row(align=True)
+        row_look_at = row_override.row(align=True)
         row_look_at.alignment = "RIGHT"
         row_look_at.prop(
             expression, "override_look_at", text="", icon=icon_look_at, icon_only=True
         )
         row_look_at.separator(factor=0.5)
         icon_mouth = EXPRESSION_OPTION_ICON[expression.override_mouth]
-        row_mouth = row.row(align=True)
+        row_mouth = row_override.row(align=True)
         row_mouth.alignment = "RIGHT"
         row_mouth.prop(
             expression, "override_mouth", text="", icon=icon_mouth, icon_only=True
         )
+
+        row_preview = row_parameters.row(align=True)
+        row_preview.prop(expression, "preview", text="Preview")
 
 
 class VRMHELPER_UL_expressin_morph_list(UIList):
