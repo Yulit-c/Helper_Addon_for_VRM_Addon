@@ -947,13 +947,6 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
         default=False,
     )
 
-    # custom_expression_index: IntProperty(
-    #     name="Custom Expression Index",
-    #     description="If item is a custom expression, it has a value greater than or equal to 0",
-    #     default=-1,
-    #     min=-1,
-    # )
-
     expression_index: IntVectorProperty(
         name="Expression Index",
         description="Description",

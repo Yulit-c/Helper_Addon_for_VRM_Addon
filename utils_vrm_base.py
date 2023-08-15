@@ -503,7 +503,7 @@ def store_mtoon1_current_values(
     for name in stored_parameter_names:
         mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES[name]
         value = attrgetter(mtoon1_attr_name)(mtoon1)
-        value = [abs(i) for i in value]
+        # value = [abs(i) for i in value]
 
         setattr(target_item, name, value)
 
@@ -537,9 +537,7 @@ def get_mtoon1_default_values(
 
     if stored_mtoon_parameters:
         default_texture_scale = stored_mtoon_parameters.texture_scale
-        default_texture_offset = [
-            abs(i) for i in stored_mtoon_parameters.texture_offset
-        ]
+        default_texture_offset = stored_mtoon_parameters.texture_offset
         default_lit_factor = stored_mtoon_parameters.lit_color
         default_shade_factor = stored_mtoon_parameters.shade_color
         default_emissive_factor = stored_mtoon_parameters.emission_color

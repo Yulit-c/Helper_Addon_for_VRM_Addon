@@ -51,6 +51,10 @@ from mathutils import (
     Vector,
 )
 
+from ..addon_classes import (
+    VRMHELPER_VRM1_joint_property,
+)
+
 from ..preferences import (
     get_addon_collection_name,
 )
@@ -169,70 +173,6 @@ from ..Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-class VRMHELPER_VRM1_joint_property:
-    """
-    ジョイント用オペレータープロパティーをフィールドとする基底クラス｡
-    """
-
-    hit_radius: FloatProperty(
-        name="Hit Radius",
-        description="radius value of joint set by operator",
-        default=0.01,
-        min=0.0,
-        soft_max=0.5,
-        options={"HIDDEN"},
-    )
-
-    stiffness: FloatProperty(
-        name="Stiffness",
-        description="stiffness value of joint set by operator",
-        default=1.0,
-        min=0.0,
-        soft_max=4.0,
-        options={"HIDDEN"},
-    )
-
-    drag_force: FloatProperty(
-        name="Drag Force",
-        description="drag force value of joint set by operator",
-        default=0.5,
-        min=0.0,
-        max=1.0,
-        options={"HIDDEN"},
-    )
-
-    gravity_power: FloatProperty(
-        name="Gravity Power",
-        description="gravity power value  of joint set by operator",
-        default=0.0,
-        min=0.0,
-        soft_max=2.0,
-        options={"HIDDEN"},
-    )
-
-    gravity_dir: FloatVectorProperty(
-        name="Gravity Direction",
-        description="gravity direction value of joint set by operator",
-        default=(0.0, 0.0, -1.0),
-        size=3,
-        subtype="XYZ",
-        options={"HIDDEN"},
-    )
-
-    damping_ratio: FloatProperty(
-        name="Damping Ratio",
-        description="Descriptiondamping rate of the parameters of the joints to be created",
-        default=1.0,
-        min=0.01,
-    )
 
 
 """---------------------------------------------------------
