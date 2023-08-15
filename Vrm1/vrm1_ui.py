@@ -43,10 +43,15 @@ from bpy.types import (
 
 
 from ..addon_classes import (
+    ReferenceVrm1ExpressionPropertyGroup,
+    # ----------------------------------------------------------
     VRMHELPER_UL_base,
 )
 
 from ..addon_constants import (
+    PRESET_EXPRESSION_NAME_DICT,
+    EXPRESSION_ICON_DICT,
+    EXPRESSION_OPTION_ICON,
     JOINT_PROP_NAMES,
 )
 
@@ -82,6 +87,7 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
+    get_vrm1_extension_property_expression,
     is_existing_target_armature,
     check_addon_mode,
 )
@@ -559,18 +565,29 @@ class VRMHELPER_UL_expression_list(UIList):
         active_propname,
         index,
     ):
-        expression = item.expressions_list[index]
+        expression: ReferenceVrm1ExpressionPropertyGroup = item.expressions_list[index]
 
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
-        sp = layout.split(factor=0.25)
+        sp = layout.split(factor=0.45)
         row = sp.row(align=True)
-        if item.custom_expression_index < 0:
-            row.label(text=item.name)
-        else:
-            custom_expression = get_vrm_extension_property("EXPRESSION").custom[
-                item.custom_expression_index
-            ]
-            row.prop(custom_expression, "custom_name", text="", emboss=False)
+
+        vrm1_expressions = get_vrm1_extension_property_expression()
+        # プリセットエクスプレッションの場合
+        if item.expression_index[1] < 0:
+            label_name = PRESET_EXPRESSION_NAME_DICT[item.name]
+            label_icon = EXPRESSION_ICON_DICT[item.name]
+            row.label(text=label_name, icon=label_icon)
+
+        # カスタムエクスプレッションの場合
+        if item.expression_index[0] < 0:
+            custom_expressions = vrm1_expressions.custom
+            custom_expression: ReferenceVrm1ExpressionPropertyGroup = (
+                custom_expressions[item.expression_index[1]]
+            )
+            prop_icon = EXPRESSION_ICON_DICT["custom"]
+            row.prop(
+                custom_expression, "custom_name", text="", icon=prop_icon, emboss=False
+            )
 
         # 各種バインドを持つ場合はアイコンを描画する｡
         sp = sp.split(factor=0.15)
@@ -590,10 +607,29 @@ class VRMHELPER_UL_expression_list(UIList):
         # エクスプレッションが持つ各パラメーターの描画
         row = sp.row(align=True)
         row.alignment = "RIGHT"
-        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
-        row.prop(expression, "override_blink", text="", icon="HIDE_ON")
-        row.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
-        row.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
+        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True)
+        row.separator()
+
+        icon_blink = EXPRESSION_OPTION_ICON[expression.override_blink]
+        row_blink = row.row(align=True)
+        row_blink.alignment = "RIGHT"
+        row_blink.prop(
+            expression, "override_blink", text="", icon=icon_blink, icon_only=True
+        )
+        row_blink.separator(factor=0.5)
+        icon_look_at = EXPRESSION_OPTION_ICON[expression.override_look_at]
+        row_look_at = row.row(align=True)
+        row_look_at.alignment = "RIGHT"
+        row_look_at.prop(
+            expression, "override_look_at", text="", icon=icon_look_at, icon_only=True
+        )
+        row_look_at.separator(factor=0.5)
+        icon_mouth = EXPRESSION_OPTION_ICON[expression.override_mouth]
+        row_mouth = row.row(align=True)
+        row_mouth.alignment = "RIGHT"
+        row_mouth.prop(
+            expression, "override_mouth", text="", icon=icon_mouth, icon_only=True
+        )
 
 
 class VRMHELPER_UL_expressin_morph_list(UIList):

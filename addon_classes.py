@@ -13,6 +13,10 @@ from typing import (
 ---------------------------------------------------------"""
 
 
+class ReferenceStringPropertyGroup:
+    value: bpy.types.StringProperty
+
+
 class ReferenceVRM1MeshObjectPropertyGroup:
     mesh_object_name: bpy.types.StringProperty
     value: bpy.types.StringProperty
@@ -139,7 +143,7 @@ class ReferenceVrm1TextureTransformBindPropertyGroup:
     offset: list[bpy.types.FloatProperty]
 
 
-class ReferenceVrm1ExpressionsPropertyGroup:
+class ReferenceVrm1ExpressionPropertyGroup:
     morph_target_binds: bpy.types.CollectionProperty  # ReferenceVrm1MorphTargetBindPropertyGroup
     material_color_binds: bpy.types.CollectionProperty  # ReferenceVrm1MaterialColorBindPropertyGroup
     texture_transform_binds: bpy.types.CollectionProperty  # ReferenceVrm1TextureTransformBindPropertyGroup
@@ -156,11 +160,41 @@ class ReferenceVrm1ExpressionsPropertyGroup:
     show_expanded_material_color_binds: bpy.types.BoolProperty
     show_expanded_texture_transform_binds: bpy.types.BoolProperty
 
+    frame_change_post_shape_key_updates: dict[tuple[str, str], float] = {}
+    preview: bpy.types.PropertyGroup
 
-class ReferenceVrm1CustomExpressionPropertyGroup:
-    str: bpy.types.StringProperty
+
+class ReferenceVrm1ExpressionsPresetPropertyGroup:
+    happy: ReferenceVrm1ExpressionPropertyGroup
+    angry: ReferenceVrm1ExpressionPropertyGroup
+    sad: ReferenceVrm1ExpressionPropertyGroup
+    relaxed: ReferenceVrm1ExpressionPropertyGroup
+    surprised: ReferenceVrm1ExpressionPropertyGroup
+    neutral: ReferenceVrm1ExpressionPropertyGroup
+    aa: ReferenceVrm1ExpressionPropertyGroup
+    ih: ReferenceVrm1ExpressionPropertyGroup
+    ou: ReferenceVrm1ExpressionPropertyGroup
+    ee: ReferenceVrm1ExpressionPropertyGroup
+    oh: ReferenceVrm1ExpressionPropertyGroup
+    blink: ReferenceVrm1ExpressionPropertyGroup
+    blink_left: ReferenceVrm1ExpressionPropertyGroup
+    blink_right: ReferenceVrm1ExpressionPropertyGroup
+    look_up: ReferenceVrm1ExpressionPropertyGroup
+    look_down: ReferenceVrm1ExpressionPropertyGroup
+    look_left: ReferenceVrm1ExpressionPropertyGroup
+    look_right: ReferenceVrm1ExpressionPropertyGroup
+
+
+class ReferenceVrm1CustomExpressionPropertyGroup(ReferenceVrm1ExpressionPropertyGroup):
     custom_name: bpy.types.StringProperty
-    expression: ReferenceVrm1ExpressionsPropertyGroup
+
+
+class ReferenceVrm1ExpressionsPropertyGroup:
+    preset: ReferenceVrm1ExpressionsPresetPropertyGroup
+    custom: bpy.types.CollectionProperty  # ReferenceVrm1CustomExpressionPropertyGroup
+
+    expression_ui_list_elements: bpy.types.CollectionProperty  # ReferenceStringPropertyGroup
+    active_expression_ui_list_element_index: bpy.types.IntProperty
 
 
 # ----------------------------------------------------------
@@ -171,7 +205,7 @@ class ReferenceVrm1PropertyGroup:
     humanoid: ReferenceVrm1HumanoidPropertyGroup
     first_person: ReferenceVrm1FirstPersonPropertyGroup
     look_at: ReferenceVrm1LookAtPropertyGroup
-    expressions: ReferenceVrm1ExpressionsPropertyGroup
+    expressions: ReferenceVrm1ExpressionPropertyGroup
 
 
 """---------------------------------------------------------
@@ -384,7 +418,7 @@ class MToon1MaterialParameters(TypedDict, total=False):
 
 class ExpressionCandidateUIList(TypedDict, total=False):
     name: str
-    preset_expression: ReferenceVrm1ExpressionsPropertyGroup
+    preset_expression: ReferenceVrm1ExpressionPropertyGroup
     custom_expression: ReferenceVrm1CustomExpressionPropertyGroup
     has_morph_bind: bool
     has_material_bind: bool

@@ -54,7 +54,7 @@ from bpy.props import (
 
 
 from .addon_classes import (
-    ReferenceVrm1ExpressionsPropertyGroup,
+    ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
 )
@@ -931,7 +931,7 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
     """
 
     expressions_list: list[
-        ReferenceVrm1ExpressionsPropertyGroup
+        ReferenceVrm1ExpressionPropertyGroup
         | ReferenceVrm1CustomExpressionPropertyGroup
     ] = []  # 全エクスプレッションを格納したリスト
 
@@ -947,10 +947,18 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
         default=False,
     )
 
-    custom_expression_index: IntProperty(
-        name="Custom Expression Index",
-        description="If item is a custom expression, it has a value greater than or equal to 0",
-        default=-1,
+    # custom_expression_index: IntProperty(
+    #     name="Custom Expression Index",
+    #     description="If item is a custom expression, it has a value greater than or equal to 0",
+    #     default=-1,
+    #     min=-1,
+    # )
+
+    expression_index: IntVectorProperty(
+        name="Expression Index",
+        description="Description",
+        default=(-1, -1),
+        size=2,
         min=-1,
     )
 

@@ -90,6 +90,7 @@ from ..utils_vrm_base import (
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
     get_vrm_extension_property,
+    get_vrm1_extension_property_expression,
     is_existing_target_armature_and_mode,
     get_bones_for_each_branch_by_type,
     store_mtoon1_current_values,
@@ -379,9 +380,13 @@ class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_expression
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         new_item = custom_expressions.add()
         new_item.custom_name = "custom_expression"
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 
@@ -397,14 +402,18 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression
         # アクティブアイテムがカスタムエクスプレッションである
         return (
             active_item := get_active_list_item_in_expression()
-        ) and not active_item.custom_expression_index < 0
+        ) and not active_item.expression_index[1] < 0
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         active_item = get_active_list_item_in_expression()
-        custom_expressions.remove(active_item.custom_expression_index)
+        custom_expressions.remove(active_item.expression_index[1])
 
         self.offset_active_item_index(self.component_type)
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 
@@ -418,13 +427,19 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_
     @classmethod
     def poll(cls, context):
         # Expressionsにカスタムエクスプレッションが1つ以上存在している
-        return get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
+        return custom_expressions
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         custom_expressions.clear()
 
         self.offset_active_item_index(self.component_type)
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 

@@ -39,8 +39,9 @@ from bpy.types import (
 from .addon_classes import (
     MToon1MaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
-    ReferenceVrm1ExpressionsPropertyGroup,
+    ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
+    ReferenceVrm1ExpressionsPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
     ReferenceVrm1ColliderGroupPropertyGroup,
     ReferenceSpringBone1SpringPropertyGroup,
@@ -260,7 +261,7 @@ def get_vrm_extension_all_root_property() -> (
 
 
 def get_vrm_extension_root_property(
-    target: Literal["VRM", "SPRING1"],
+    target: Literal["VRM", "SPRING1", "CONSTRAINT"],
 ) -> (
     ReferenceVrm0PropertyGroup
     | ReferenceVrm1PropertyGroup
@@ -272,9 +273,8 @@ def get_vrm_extension_root_property(
 
     Parameters
     ----------
-    target : str | None,  --optional
-        VRM1のSpring Boneのプロパティを取得する場合は'SPRING1'を指定する｡
-        by default : None
+    target: Literal["VRM", "SPRING1","CONSTRAINT"]
+        取得したいプロパティグループの種類を指定する｡
 
     Returns
     -------
@@ -300,6 +300,26 @@ def get_vrm_extension_root_property(
     return vrm_property
 
 
+"""---------------------------------------------------------
+    Cnndidaete Replacing
+---------------------------------------------------------"""
+
+
+def get_vrm1_extension_root_property() -> ReferenceVrm1PropertyGroup:
+    vrm_all_root = get_vrm_extension_all_root_property()
+    vrm1_root = vrm_all_root.vrm1
+    return vrm1_root
+
+
+def get_vrm1_extension_property_expression() -> ReferenceVrm1ExpressionsPropertyGroup:
+    vrm1_extension = get_vrm1_extension_root_property()
+    vrm1_expressions = vrm1_extension.expressions
+    return vrm1_expressions
+
+
+"""-------------------------------------------------------"""
+
+
 def get_vrm_extension_property(
     type: Literal[
         "FIRST_PERSON",
@@ -310,7 +330,7 @@ def get_vrm_extension_property(
     ]
 ) -> (
     ReferenceVrm1FirstPersonPropertyGroup
-    | ReferenceVrm1ExpressionsPropertyGroup
+    | ReferenceVrm1ExpressionPropertyGroup
     | ReferenceVrm1ColliderPropertyGroup
     | ReferenceVrm1ColliderGroupPropertyGroup
     | ReferenceSpringBone1SpringPropertyGroup

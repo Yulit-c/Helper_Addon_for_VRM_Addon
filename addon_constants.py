@@ -70,6 +70,33 @@ PRESET_EXPRESSION_NAME_DICT = {
     "look_right": "Look Right",
 }
 
+EXPRESSION_ICON_DICT = {
+    "happy": "HEART",
+    "angry": "ORPHAN_DATA",
+    "sad": "MOD_FLUIDSIM",
+    "relaxed": "LIGHT_SUN",
+    "surprised": "LIGHT_SUN",
+    "neutral": "VIEW_ORTHO",
+    "aa": "EVENT_A",
+    "ih": "EVENT_I",
+    "ou": "EVENT_U",
+    "ee": "EVENT_E",
+    "oh": "EVENT_O",
+    "blink": "HIDE_ON",
+    "blink_left": "HIDE_ON",
+    "blink_right": "HIDE_ON",
+    "look_up": "ANCHOR_TOP",
+    "look_down": "ANCHOR_BOTTOM",
+    "look_left": "ANCHOR_RIGHT",
+    "look_right": "ANCHOR_LEFT",
+    "custom": "SHAPEKEY_DATA",
+}
+
+EXPRESSION_OPTION_ICON = {
+    "none": "REMOVE",
+    "block": "FAKE_USER_ON",
+    "blend": "GP_MULTIFRAME_EDITING",
+}
 
 """---------------------------------------------------------
     Spring
