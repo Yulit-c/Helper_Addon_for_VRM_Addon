@@ -43,10 +43,15 @@ from bpy.types import (
 
 
 from ..addon_classes import (
+    ReferenceVrm1ExpressionPropertyGroup,
+    # ----------------------------------------------------------
     VRMHELPER_UL_base,
 )
 
 from ..addon_constants import (
+    PRESET_EXPRESSION_NAME_DICT,
+    EXPRESSION_ICON_DICT,
+    EXPRESSION_OPTION_ICON,
     JOINT_PROP_NAMES,
 )
 
@@ -82,6 +87,7 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
+    get_vrm1_extension_property_expression,
     is_existing_target_armature,
     check_addon_mode,
 )
@@ -149,7 +155,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
     VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
-    VRMHELPER_OT_vrm1_expression_restore_initial_values,
+    VRMHELPER_OT_vrm1_expression_restore_initial_parameters,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -175,7 +181,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_spring_remove_joint,
     VRMHELPER_OT_spring_clear_joint,
     VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_selected_joints,
+    VRMHELPER_OT_spring_assign_parameters_to_joints,
     VRMHELPER_OT_spring_add_collider_group,
     VRMHELPER_OT_spring_remove_collider_group,
     VRMHELPER_OT_spring_clear_collider_group,
@@ -509,12 +515,12 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     col.scale_y = 1.2
     col.operator(
         VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters.bl_idname,
-        text="Store MToon Current Value",
+        text="Store MToon Current Values",
         icon="IMPORT",
     )
     col.operator(
         VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters.bl_idname,
-        text="Discard stored MToon Value",
+        text="Discard stored MToon Values",
         icon="EXPORT",
     )
 
@@ -539,7 +545,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         icon="NODE_MATERIAL",
     )
     col.operator(
-        VRMHELPER_OT_vrm1_expression_restore_initial_values.bl_idname,
+        VRMHELPER_OT_vrm1_expression_restore_initial_parameters.bl_idname,
         text="Reset Bind's All Values",
         icon="RECOVER_LAST",
     )
@@ -559,41 +565,83 @@ class VRMHELPER_UL_expression_list(UIList):
         active_propname,
         index,
     ):
-        expression = item.expressions_list[index]
+        expression: ReferenceVrm1ExpressionPropertyGroup = item.expressions_list[index]
 
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
-        sp = layout.split(factor=0.25)
+        sp = layout.split(factor=0.4)
         row = sp.row(align=True)
-        if item.custom_expression_index < 0:
-            row.label(text=item.name)
-        else:
-            custom_expression = get_vrm_extension_property("EXPRESSION").custom[
-                item.custom_expression_index
-            ]
-            row.prop(custom_expression, "custom_name", text="", emboss=False)
+
+        vrm1_expressions = get_vrm1_extension_property_expression()
+        # プリセットエクスプレッションの場合
+        if item.expression_index[1] < 0:
+            label_name = PRESET_EXPRESSION_NAME_DICT[item.name]
+            label_icon = EXPRESSION_ICON_DICT[item.name]
+            row.label(text=label_name, icon=label_icon)
+
+        # カスタムエクスプレッションの場合
+        elif item.expression_index[0] < 0:
+            custom_expressions = vrm1_expressions.custom
+            custom_expression: ReferenceVrm1ExpressionPropertyGroup = (
+                custom_expressions[item.expression_index[1]]
+            )
+            prop_icon = EXPRESSION_ICON_DICT["custom"]
+            row.prop(
+                custom_expression,
+                "custom_name",
+                text="",
+                icon=prop_icon,
+                emboss=False,
+            )
 
         # 各種バインドを持つ場合はアイコンを描画する｡
-        sp = sp.split(factor=0.15)
-        row = sp.row(align=False)
-        row.alignment = "RIGHT"
+        # sp = sp.split(factor=0.8)
+        row_parameters = sp.row(align=False)
+        row_parameters.alignment = "RIGHT"
+        row_bind = row_parameters.row(align=True)
+        row_bind.alignment = "RIGHT"
 
         if item.has_morph_bind:
-            row.label(text="", icon="MESH_DATA")
+            row_bind.label(text="", icon="MESH_DATA")
         else:
-            row.label(text="")
+            row_bind.label(text="")
 
         if item.has_material_bind:
-            row.label(text="", icon="MATERIAL")
+            row_bind.label(text="", icon="MATERIAL")
         else:
-            row.label(text="")
+            row_bind.label(text="")
 
         # エクスプレッションが持つ各パラメーターの描画
-        row = sp.row(align=True)
-        row.alignment = "RIGHT"
-        row.prop(expression, "is_binary", text="", icon="IPO_CONSTANT")
-        row.prop(expression, "override_blink", text="", icon="HIDE_ON")
-        row.prop(expression, "override_look_at", text="", icon="VIS_SEL_11")
-        row.prop(expression, "override_mouth", text="", icon="MESH_TORUS")
+        # row = sp.row(align=True)
+        row_override = row_parameters.row(align=True)
+        row_override.alignment = "RIGHT"
+        row_override.prop(
+            expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True
+        )
+        row_override.separator()
+
+        icon_blink = EXPRESSION_OPTION_ICON[expression.override_blink]
+        row_blink = row_override.row(align=True)
+        row_blink.alignment = "RIGHT"
+        row_blink.prop(
+            expression, "override_blink", text="", icon=icon_blink, icon_only=True
+        )
+        row_blink.separator(factor=0.5)
+        icon_look_at = EXPRESSION_OPTION_ICON[expression.override_look_at]
+        row_look_at = row_override.row(align=True)
+        row_look_at.alignment = "RIGHT"
+        row_look_at.prop(
+            expression, "override_look_at", text="", icon=icon_look_at, icon_only=True
+        )
+        row_look_at.separator(factor=0.5)
+        icon_mouth = EXPRESSION_OPTION_ICON[expression.override_mouth]
+        row_mouth = row_override.row(align=True)
+        row_mouth.alignment = "RIGHT"
+        row_mouth.prop(
+            expression, "override_mouth", text="", icon=icon_mouth, icon_only=True
+        )
+
+        row_preview = row_parameters.row(align=True)
+        row_preview.prop(expression, "preview", text="Preview")
 
 
 class VRMHELPER_UL_expressin_morph_list(UIList):
@@ -706,13 +754,12 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     )
 
     # UI描画
-    layout.prop(collider_prop, "is_additive_selecting")
+    layout.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2collider_ui_list()
 
-    row = layout.row()
-    row.template_list(
+    layout.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
         "",
         wm_vrm1_prop,
@@ -721,12 +768,18 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
         "collider",
         rows=define_ui_list_rows(rows),
     )
-    row = layout.row()
-    row.prop(collider_prop, "collider_type", text=" ", expand=True)
-    row = layout.row()
-    row.prop(collider_prop, "collider_radius", text="Generated Collider Radius")
-    row = layout.row()
 
+    layout.separator(factor=0.5)
+    box = layout.box()
+    box.label(text="Create Operator's Options")
+    row = box.row()
+    row.label(text="Create Collider Type")
+    row.prop(collider_prop, "collider_type", text=" ", expand=True)
+    row = box.row()
+    row.label(text="Create Collider Radius")
+    row.prop(collider_prop, "collider_radius")
+
+    row = box.row()
     op = row.operator(VRMHELPER_OT_collider_create_from_bone.bl_idname)
     op.collider_type = collider_prop.collider_type
     op.collider_radius = collider_prop.collider_radius
@@ -1044,8 +1097,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 # アクティブアイテムの調整用プロパティ
                 if active_item.item_type[2]:
                     joint = spring.joints[active_item.item_indexes[1]]
-                    box_3rd = box_sub.box()
-                    box_3rd.prop_search(
+                    box_sub.prop_search(
                         joint.node,
                         "bone_name",
                         target_armature,
@@ -1077,11 +1129,11 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     icon="PANEL_CLOSE",
                 )
 
-                # コライダーグループの設定用オペレーター
-                box_sub = box.box()
-                box_sub.operator(
-                    VRMHELPER_OT_empty_operator.bl_idname, text="Set Collider Group"
-                )
+                # TODO : コライダーグループの設定用オペレーター
+                # box_sub = box.box()
+                # box_sub.operator(
+                #     VRMHELPER_OT_empty_operator.bl_idname, text="Set Collider Group"
+                # )
 
         # ----------------------------------------------------------
         #    ジョイントの自動作成｡
@@ -1118,6 +1170,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
             text="Create from Selected",
         )
+        op.source_type = "SELECT"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
@@ -1132,15 +1185,15 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         col.separator(factor=2.0)
         op = col.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
-            text="Adust Active Joint",
+            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            text="Adust Joints from Active",
         )
         op.source_type = "SINGLE"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_selected_joints.bl_idname,
-            text="Adjust Selected Joint",
+            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            text="Adjust Joints from Selected Bone",
         )
         set_properties_to_from_dict(op, joint_properties)
         op.source_type = "MULTIPLE"

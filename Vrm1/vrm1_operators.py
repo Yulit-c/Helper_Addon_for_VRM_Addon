@@ -51,6 +51,10 @@ from mathutils import (
     Vector,
 )
 
+from ..addon_classes import (
+    VRMHELPER_VRM1_joint_property,
+)
+
 from ..preferences import (
     get_addon_collection_name,
 )
@@ -90,10 +94,12 @@ from ..utils_vrm_base import (
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
     get_vrm_extension_property,
+    get_vrm1_extension_property_expression,
     is_existing_target_armature_and_mode,
     get_bones_for_each_branch_by_type,
     store_mtoon1_current_values,
     set_mtoon1_default_values,
+    re_link_all_collider_object2collection,
 )
 
 from .utils_vrm1_first_person import (
@@ -167,70 +173,6 @@ from ..Logging.preparation_logger import preparating_logger
 
 logger = preparating_logger(__name__)
 #######################################################
-
-"""---------------------------------------------------------
-------------------------------------------------------------
-    Class
-------------------------------------------------------------
----------------------------------------------------------"""
-
-
-class VRMHELPER_VRM1_joint_property:
-    """
-    ジョイント用オペレータープロパティーをフィールドとする基底クラス｡
-    """
-
-    hit_radius: FloatProperty(
-        name="Hit Radius",
-        description="radius value of joint set by operator",
-        default=0.01,
-        min=0.0,
-        soft_max=0.5,
-        options={"HIDDEN"},
-    )
-
-    stiffness: FloatProperty(
-        name="Stiffness",
-        description="stiffness value of joint set by operator",
-        default=1.0,
-        min=0.0,
-        soft_max=4.0,
-        options={"HIDDEN"},
-    )
-
-    drag_force: FloatProperty(
-        name="Drag Force",
-        description="drag force value of joint set by operator",
-        default=0.5,
-        min=0.0,
-        max=1.0,
-        options={"HIDDEN"},
-    )
-
-    gravity_power: FloatProperty(
-        name="Gravity Power",
-        description="gravity power value  of joint set by operator",
-        default=0.0,
-        min=0.0,
-        soft_max=2.0,
-        options={"HIDDEN"},
-    )
-
-    gravity_dir: FloatVectorProperty(
-        name="Gravity Direction",
-        description="gravity direction value of joint set by operator",
-        default=(0.0, 0.0, -1.0),
-        size=3,
-        subtype="XYZ",
-        options={"HIDDEN"},
-    )
-
-    damping_ratio: FloatProperty(
-        name="Damping Ratio",
-        description="Descriptiondamping rate of the parameters of the joints to be created",
-        default=1.0,
-        min=0.01,
-    )
 
 
 """---------------------------------------------------------
@@ -378,9 +320,13 @@ class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_expression
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         new_item = custom_expressions.add()
         new_item.custom_name = "custom_expression"
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 
@@ -396,14 +342,18 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression
         # アクティブアイテムがカスタムエクスプレッションである
         return (
             active_item := get_active_list_item_in_expression()
-        ) and not active_item.custom_expression_index < 0
+        ) and not active_item.expression_index[1] < 0
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         active_item = get_active_list_item_in_expression()
-        custom_expressions.remove(active_item.custom_expression_index)
+        custom_expressions.remove(active_item.expression_index[1])
 
         self.offset_active_item_index(self.component_type)
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 
@@ -417,13 +367,19 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_
     @classmethod
     def poll(cls, context):
         # Expressionsにカスタムエクスプレッションが1つ以上存在している
-        return get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
+        return custom_expressions
 
     def execute(self, context):
-        custom_expressions = get_vrm_extension_property("EXPRESSION").custom
+        vrm1_expresions = get_vrm1_extension_property_expression()
+        custom_expressions = vrm1_expresions.custom
         custom_expressions.clear()
 
         self.offset_active_item_index(self.component_type)
+
+        # VRM Addon側のUI Listを更新する｡
+        bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
 
         return {"FINISHED"}
 
@@ -1141,7 +1097,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_restore_initial_values(
+class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
     VRMHELPER_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_restore_initial_values"
@@ -1340,8 +1296,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
                 )
 
                 # コライダーオブジェクトを対象コレクションにリンクする｡
-                link_object2collection(collider_head, dest_collection)
-                link_object2collection(collider_tail, dest_collection)
+                re_link_all_collider_object2collection()
 
         # 'use_mirror_x'の値を変更していた場合は元に戻す｡
         if is_changed_use_mirror:
@@ -1354,7 +1309,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
 class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_remove_from_empty"
     bl_label = "Remove Collider"
-    bl_description = "Remove spring bone collider from selected empty"
+    bl_description = "Remove spring bone collider from selected empty object"
 
     @classmethod
     def poll(cls, context):
@@ -1529,7 +1484,7 @@ class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_collider_group_base):
 
 class VRMHELPER_OT_collider_group_register_collider_from_bone(VRMHELPER_operator_base):
     bl_idname = "vrmhelper.vrm1_collider_group_register_collider_from_bone"
-    bl_label = "Create From Bone"
+    bl_label = "Create from Bone"
     bl_description = "Registers the colliders linked to the selected bone to the active collider group"
 
     # TODO : Collider Groupが1つも存在しない場合は新たにグループを作成してそれを対象にする｡
@@ -1867,7 +1822,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_assign_parameters_to_selected_joints(
+class VRMHELPER_OT_spring_assign_parameters_to_joints(
     VRMHELPER_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
@@ -2180,7 +2135,7 @@ CLASSES = (
     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters,
     VRMHELPER_OT_vrm1_expression_assign_expression_to_scene,
     VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene,
-    VRMHELPER_OT_vrm1_expression_restore_initial_values,
+    VRMHELPER_OT_vrm1_expression_restore_initial_parameters,
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
@@ -2206,7 +2161,7 @@ CLASSES = (
     VRMHELPER_OT_spring_remove_joint,
     VRMHELPER_OT_spring_clear_joint,
     VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_selected_joints,
+    VRMHELPER_OT_spring_assign_parameters_to_joints,
     VRMHELPER_OT_spring_add_collider_group,
     VRMHELPER_OT_spring_remove_collider_group,
     VRMHELPER_OT_spring_clear_collider_group,
