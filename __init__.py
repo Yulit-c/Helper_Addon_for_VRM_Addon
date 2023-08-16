@@ -1,5 +1,7 @@
 # TODO : PropertyGroupクラスを返す関数の返り値の型ヒントを､詳細なクラス名が分かる形に変更する｡
 # TODO : 各OperatorのPollの確認｡
+# TODO : オペレーターのself.reportメッセージを追加｡
+# TODO : bpy.typesとbpy.propsの記法変更
 
 
 bl_info = {

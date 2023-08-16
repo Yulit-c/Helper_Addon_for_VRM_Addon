@@ -49,9 +49,6 @@ from ..addon_classes import (
     ExpressionCandidateUIList,
 )
 
-from ..addon_constants import (
-    PRESET_EXPRESSION_NAME_DICT,
-)
 
 from ..preferences import (
     get_addon_collection_name,
