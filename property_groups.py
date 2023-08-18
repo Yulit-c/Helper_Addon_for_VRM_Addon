@@ -128,14 +128,16 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
         update=update_addon_collection,
     )
 
+    tool_mode_items = (
+        # ("0", "0.x", "Setup VRM for version 0.x"),
+        ("1", "1.x", "Setup VRM for version 1.x"),
+        # ("2", "Misc", "Use other utility tools."),
+    )
+
     tool_mode: EnumProperty(
         name="Tool Mode",
         description="Property for selecting the UI item to draw",
-        items=(
-            ("0", "0.x", "Setup VRM for version 0.x"),
-            ("1", "1.x", "Setup VRM for version 1.x"),
-            ("2", "Misc", "Use other utility tools."),
-        ),
+        items=tool_mode_items,
         default="1",
         update=update_vrm_extension_version,
     )
