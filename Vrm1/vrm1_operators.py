@@ -1741,7 +1741,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         anchor_layout = row.column(align=True)
         if self.source_type == "BONE_GROUP":
             anchor_layout = anchor_layout.box()
-        anchor_layout.label(text="Target Bone Group")
+        anchor_layout.label(text="Target Collider Group")
         collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
         for group in collider_group_collection:
             row_sub = anchor_layout.row(align=True)
