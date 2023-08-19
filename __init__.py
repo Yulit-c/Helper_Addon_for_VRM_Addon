@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Helper Addon for VRM Addon",
     "author": "Yu-Lit",
-    "version": (0, 0, 2),
+    "version": (0, 1, 1),
     "blender": (3, 3, 0),
     "location": "Property Panel, Press N in the 3DView",
     "description": "Addon for VRM Setup",
@@ -11,10 +11,6 @@ bl_info = {
     "tracker_url": "",
     "category": "Import-Export",
 }
-
-import os
-
-os.system("cls")
 
 
 if "bpy" in locals():
