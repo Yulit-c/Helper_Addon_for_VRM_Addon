@@ -12,12 +12,6 @@
             "level": "DEBUG",
             "formatter": "simple",
             "stream": "ext://sys.stdout"
-        },
-        "fileHandler": {
-            "class": "logging.FileHandler",
-            "level": "INFO",
-            "formatter": "simple",
-            "filename": "to be replaced"
         }
     },
     "loggers": {
