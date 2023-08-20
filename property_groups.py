@@ -1176,7 +1176,7 @@ class VRMHELPER_WM_vrm1_operator_spring_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Constraint
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_constraint_property(PropertyGroup):
+class VRMHELPER_WM_vrm1_constraint_properties(PropertyGroup):
     def update_constraint_axis(self, context):
         if self.is_locked_update:
             return
@@ -1351,7 +1351,7 @@ class VRMHELPER_WM_vrm1_root_property_group(PropertyGroup):
     constraint_prop: PointerProperty(
         name="Constraint Prop",
         description="Properties of Constraints",
-        type=VRMHELPER_WM_vrm1_constraint_property,
+        type=VRMHELPER_WM_vrm1_constraint_properties,
     )
 
 
@@ -1502,7 +1502,7 @@ def get_vrm1_wm_root_prop() -> VRMHELPER_WM_vrm1_root_property_group:
     return vrm1_wm_root_prop
 
 
-def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_property:
+def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_properties:
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     constraint_prop = wm_vrm1_prop.constraint_prop
     return constraint_prop
@@ -1792,7 +1792,7 @@ CLASSES = (
     VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items,
     VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items,
     VRMHELPER_WM_vrm1_operator_spring_list_items,
-    VRMHELPER_WM_vrm1_constraint_property,
+    VRMHELPER_WM_vrm1_constraint_properties,
     VRMHELPER_WM_vrm1_constraint_list_items,
     VRMHELPER_WM_vrm1_root_property_group,
     VRMHELPER_WM_root_property_group,

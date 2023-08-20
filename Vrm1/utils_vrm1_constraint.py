@@ -414,7 +414,7 @@ def add_items2constraint_ui_list(constraint_type: Literal["OBJECT", "BONE"]) -> 
             new_label.constraint_type = type_index
 
         # UI Listのアイテムにコンストレイントを追加する｡
-        new_item = items.add()
+        new_item: VRMHELPER_WM_vrm1_constraint_list_items = items.add()
         new_item.name = element.name
         new_item.constraint_name = constraint.name
         new_item.is_object_constraint = constraint_type == "OBJECT"

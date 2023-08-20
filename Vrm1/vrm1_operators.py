@@ -60,9 +60,11 @@ from ..preferences import (
 )
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm1_constraint_list_items,
+    # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
-    # ----------------------------------------------------------
+    # ---------------------------------------------------------------------------------
     get_ui_vrm1_first_person_prop,
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
@@ -71,7 +73,7 @@ from ..property_groups import (
     get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_operator_spring_prop,
     get_ui_vrm1_constraint_prop,
-    # ----------------------------------------------------------
+    # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_first_person_prop,
@@ -2043,10 +2045,14 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
         current_ui_constraint_type = constraint_prop.constraint_type
         add_items2constraint_ui_list(current_ui_constraint_type)
         constraint_collection = get_ui_vrm1_constraint_prop()
-        target_constraint_index = None
+        target_constraint_index = 0
 
         for n, props in enumerate(constraint_collection):
-            if props.constraint_name == new_constraint.name:
+            list_item: VRMHELPER_WM_vrm1_constraint_list_items = props
+            if (
+                constrainted_element.name == list_item.name
+                and list_item.constraint_name == new_constraint.name
+            ):
                 target_constraint_index = n
                 break
 
