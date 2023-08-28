@@ -98,6 +98,11 @@ EXPRESSION_OPTION_ICON = {
     "blend": "GP_MULTIFRAME_EDITING",
 }
 
+MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME = "vrm.move_up_vrm1_expressions_custom_expression"
+MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME = (
+    "vrm.move_down_vrm1_expressions_custom_expression"
+)
+
 """---------------------------------------------------------
     Spring
 ---------------------------------------------------------"""

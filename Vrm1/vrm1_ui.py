@@ -52,6 +52,8 @@ from ..addon_constants import (
     PRESET_EXPRESSION_NAME_DICT,
     EXPRESSION_ICON_DICT,
     EXPRESSION_OPTION_ICON,
+    MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME,
+    MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME,
     JOINT_PROP_NAMES,
 )
 
@@ -298,6 +300,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     """
 
     # Property Groupの取得｡
+    target_armature = get_target_armature()
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_scene_vrm1_prop = get_vrm1_scene_root_prop()
     active_indexes = scene_scene_vrm1_prop.active_indexes
@@ -341,6 +344,14 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         VRMHELPER_OT_vrm1_expression_assign_expression_to_scene.bl_idname,
         text="Assign Active Expression",
     )
+
+    active_expression = get_active_expression()
+    if hasattr(active_expression, "custom_name"):
+        op = col.operator(MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME, text="", icon="TRIA_UP")
+        op.armature_name = target_armature.name
+        op.custom_expression_name = active_expression.custom_name
+
+        col.operator(MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME, text="", icon="TRIA_DOWN")
 
     # ----------------------------------------------------------
     #    選択された編集対象のリストとオペレーターを描画

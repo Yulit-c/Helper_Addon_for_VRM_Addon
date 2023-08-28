@@ -242,7 +242,12 @@ def add_items2expression_ui_list() -> int:
 # ----------------------------------------------------------
 
 
-def get_active_expression() -> Optional[ReferenceVrm1ExpressionPropertyGroup]:
+def get_active_expression() -> (
+    Optional[
+        ReferenceVrm1ExpressionPropertyGroup
+        | ReferenceVrm1CustomExpressionPropertyGroup
+    ]
+):
     """
     エクスプレッションリストでアクティブになっているエクスプレッションを取得する｡
     エラーになる場合はオフセットしてエラーを回避する｡
