@@ -138,6 +138,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_expression_create_custom_expression,
     VRMHELPER_OT_vrm1_expression_remove_custom_expression,
     VRMHELPER_OT_vrm1_expression_clear_custom_expression,
+    VRMHELPER_OT_vrm1_expression_move_custom_expression,
     # -----------------------------------------------------
     VRMHELPER_OT_vrm1_expression_morph_create_morph,
     VRMHELPER_OT_vrm1_expression_morph_remove_morph,
@@ -347,11 +348,18 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
 
     active_expression = get_active_expression()
     if hasattr(active_expression, "custom_name"):
-        op = col.operator(MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME, text="", icon="TRIA_UP")
-        op.armature_name = target_armature.name
-        op.custom_expression_name = active_expression.custom_name
-
-        col.operator(MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME, text="", icon="TRIA_DOWN")
+        op = col.operator(
+            VRMHELPER_OT_vrm1_expression_move_custom_expression.bl_idname,
+            text="",
+            icon="TRIA_UP",
+        )
+        op.move_direction = "UP"
+        op = col.operator(
+            VRMHELPER_OT_vrm1_expression_move_custom_expression.bl_idname,
+            text="",
+            icon="TRIA_DOWN",
+        )
+        op.move_direction = "DOWN"
 
     # ----------------------------------------------------------
     #    選択された編集対象のリストとオペレーターを描画

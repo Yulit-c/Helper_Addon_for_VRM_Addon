@@ -66,9 +66,9 @@ from ..property_groups import (
     get_target_armature_data,
     # ---------------------------------------------------------------------------------
     get_ui_vrm1_first_person_prop,
+    get_ui_vrm1_expression_prop,
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
-    get_ui_vrm1_collider_group_prop,
     get_ui_vrm1_operator_bone_group_prop,
     get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_operator_spring_prop,
@@ -111,6 +111,7 @@ from .utils_vrm1_first_person import (
 )
 
 from .utils_vrm1_expression import (
+    add_items2expression_ui_list,
     get_active_list_item_in_expression,
     get_active_expression,
     search_existing_morph_bind_and_update,
@@ -382,6 +383,59 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_
 
         # VRM Addon側のUI Listを更新する｡
         bpy.ops.vrm.update_vrm1_expression_ui_list_elements()
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm1_expression_move_custom_expression(VRMHELPER_expression_base):
+    bl_idname = "vrm_helper.vrm1_expression_move_custom_expression"
+    bl_label = "Move Custom Expression"
+    bl_description = "Reorder active custom expression"
+    bl_options = {"UNDO"}
+
+    move_direction: EnumProperty(
+        name="Move Direction",
+        description="Choose whether to move it up or down.",
+        items=(
+            ("UP", "Up", "Move active custom expression up"),
+            ("DOWN", "Down", "Move active custom expression down"),
+        ),
+        default="UP",
+    )
+
+    @classmethod
+    def poll(cls, context):
+        # アクティブアイテムがカスタムエクスプレッションである
+        return (
+            active_item := get_active_list_item_in_expression()
+        ) and not active_item.expression_index[1] < 0
+
+    def execute(self, context):
+        active_expression = get_active_expression()
+        stored_expression_name = active_expression.custom_name
+        target_armature = get_target_armature()
+
+        # Custom Expressionを移動する
+        match self.move_direction:
+            case "UP":
+                bpy.ops.vrm.move_up_vrm1_expressions_custom_expression(
+                    armature_name=target_armature.name,
+                    custom_expression_name=stored_expression_name,
+                )
+
+            case "DOWN":
+                bpy.ops.vrm.move_down_vrm1_expressions_custom_expression(
+                    armature_name=target_armature.name,
+                    custom_expression_name=stored_expression_name,
+                )
+
+        # Expressionリストの更新
+        add_items2expression_ui_list()
+        expressions_list = get_ui_vrm1_expression_prop()
+        for n, expression in enumerate(expressions_list):
+            if expression.name == stored_expression_name:
+                index_prop = get_vrm1_index_root_prop()
+                index_prop.expression = n
 
         return {"FINISHED"}
 
@@ -2122,6 +2176,7 @@ CLASSES = (
     VRMHELPER_OT_vrm1_expression_create_custom_expression,
     VRMHELPER_OT_vrm1_expression_remove_custom_expression,
     VRMHELPER_OT_vrm1_expression_clear_custom_expression,
+    VRMHELPER_OT_vrm1_expression_move_custom_expression,
     # -----------------------------------------------------
     VRMHELPER_OT_vrm1_expression_morph_create_morph,
     VRMHELPER_OT_vrm1_expression_morph_remove_morph,
