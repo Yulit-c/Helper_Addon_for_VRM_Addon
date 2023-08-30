@@ -835,6 +835,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
                 row.prop(active_item, "collider_name", text="", icon=collider_icon)
                 row = box.row(align=True)
                 box.prop(active_collider, "shape_type", text="")
+                # TODO : Collider(End)のPositionも表示
                 box.prop(
                     collider_prop,
                     "active_collider_radius",
