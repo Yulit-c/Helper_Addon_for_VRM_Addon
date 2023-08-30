@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Helper Addon for VRM Addon",
     "author": "Yu-Lit",
-    "version": (0, 1, 3),
+    "version": (0, 1, 5),
     "blender": (3, 3, 0),
     "location": "Property Panel, Press N in the 3DView",
     "description": "Addon for VRM Setup",
