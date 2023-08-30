@@ -123,6 +123,7 @@ def get_source_vrm1_colliders() -> (
     colliders_dict = {}
     for n, collider in enumerate(colliders):
         colliders_dict.setdefault(collider.node.bone_name, [])
+        # n : vrm extension colliders内でのインデックス｡
         colliders_dict[collider.node.bone_name].append((n, collider))
 
     sort_order = [
@@ -142,6 +143,21 @@ def get_source_vrm1_colliders() -> (
     # sorted_colliders = dict(sorted(colliders_dict.items(), key=lambda x: sort_order.index(x[0])))
 
     return sorted_colliders
+
+
+def get_active_vrm1_collider(
+    active_collider: VRMHELPER_WM_vrm1_collider_list_items,
+) -> Optional[ReferenceVrm1ColliderPropertyGroup]:
+    if not (active_collider_object := active_collider.collider_object):
+        return
+
+    vrm1_colliders = get_vrm_extension_property("COLLIDER")
+    for i in vrm1_colliders:
+        collider: ReferenceVrm1ColliderPropertyGroup = i
+        if not collider.bpy_object == active_collider_object:
+            continue
+
+        return collider
 
 
 def add_items2collider_ui_list() -> int:

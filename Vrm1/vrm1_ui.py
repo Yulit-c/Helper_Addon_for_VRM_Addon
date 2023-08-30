@@ -108,6 +108,7 @@ from .utils_vrm1_expression import (
 
 from .utils_vrm1_spring import (
     get_active_list_item_in_spring,
+    get_active_vrm1_collider,
     add_items2collider_ui_list,
     add_items2collider_group_ui_list,
     add_items2spring_ui_list,
@@ -808,6 +809,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
     if items_list := get_ui_vrm1_collider_prop():
         active_item: VRMHELPER_WM_vrm1_collider_list_items = items_list[active_index]
+        active_collider = get_active_vrm1_collider(active_item)
         layout.separator()
         box = layout.box()
         row = box.row(align=True)
@@ -832,7 +834,8 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
                 row.label(text="Selected Collider:")
                 row.prop(active_item, "collider_name", text="", icon=collider_icon)
                 row = box.row(align=True)
-                row.prop(
+                box.prop(active_collider, "shape_type", text="")
+                box.prop(
                     collider_prop,
                     "active_collider_radius",
                     text="Active Collider Radius",
