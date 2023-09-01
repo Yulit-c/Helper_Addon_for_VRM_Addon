@@ -24,15 +24,6 @@ from typing import (
     Any,
 )
 import bpy
-from bpy.types import (
-    Object,
-    Armature,
-    Bone,
-    Material,
-    Collection,
-    UILayout,
-)
-
 
 from .addon_classes import (
     VRMHelper_Addon_Collection_Dict,
@@ -163,18 +154,20 @@ def set_properties_to_from_dict(target: object, source_dict: dict[str, Any]):
 ---------------------------------------------------------"""
 
 
-def get_selected_bone(target_armature: Armature) -> list[Bone] | None:
+def get_selected_bone(
+    target_armature: bpy.types.Armature,
+) -> Optional[list[bpy.types.Bone]]:
     """
     Edit/Pose Modeで選択されたボーンの名前と一致するボーンをtarget_armatureのbonesから取得する｡
 
     Parameters
     ----------
-    target_armature : Armature
+    target_armature : bpy.types.Armature
         対象のArmatureデータ
 
     Returns
     -------
-    list[Bone]|None
+    Optional[list[bpy.types.Bone]]
         target_armatureのbonesから取得した､選択中ボーンのリスト
 
     """
@@ -192,22 +185,19 @@ def get_selected_bone(target_armature: Armature) -> list[Bone] | None:
     return bones
 
 
-def get_branch_root_bone(source_bone: Bone) -> Bone | None:
+def get_branch_root_bone(source_bone: bpy.types.Bone) -> Optional[bpy.types.Bone]:
     """
     source_boneの親ボーンを再帰的に走査して枝ボーンの根元となるボーンを取得する｡
-    source_boneが枝ボーンの一部出ない場合はNoneを返す｡
+    source_boneが枝ボーンの一部でない場合はNoneを返す｡
 
     Parameters
     ----------
-    source_bone : Bone
+    source_bone : bpy.types.Bone
         処理対象となるボーン｡
-
-    parent_bone : Bone
-        処理対象ボーンの親ボーン｡
 
     Returns
     -------
-    Bone | None
+    Optional[bpy.types.Bone]
         取得された枝ボーンの根元となるボーン｡取得できなかった場合はNone｡
 
     """
@@ -229,23 +219,23 @@ def get_branch_root_bone(source_bone: Bone) -> Bone | None:
 
 
 def get_child_bones_in_branch(
-    source_bone: Bone,
-    result: list[Bone],
-) -> list[Bone] | None:
+    source_bone: bpy.types.Bone,
+    result: list[bpy.types.Bone],
+) -> Optional[list[bpy.types.Bone]]:
     """
     'source_bone'が属する枝に含まれるボーンのリストを返す｡
 
     Parameters
     ----------
-    source_bone : Bone
+    source_bone : bpy.types.Bone
         処理対象となるボーン｡
 
-    result : list[Bone]
+    result : list[bpy.types.Bone]
         返り値として渡されるリスト｡再帰処理で値が更新される｡
 
     Returns
     -------
-    list[Bone] | None
+    Optional[list[bpy.types.Bone]]
         'source_bone'が属する枝に含まれるボーンを格納したリスト｡
 
     """
@@ -268,22 +258,22 @@ def get_child_bones_in_branch(
 
 
 def get_bones_for_each_branch_from_source_bones(
-    target_armature: Object, source_bones: Iterator[Bone]
-) -> list[list[Bone]]:
+    target_armature: bpy.types.Object, source_bones: Iterator[bpy.types.Bone]
+) -> list[list[bpy.types.Bone]]:
     """
     'source_bones'で受け取ったボーンが属する枝の全ボーンを枝毎にグルーピングして取得する｡
 
     Parameters
     ----------
-    target_armature : Object
+    target_armature : bpy.types.Object
         ボーンを取得基となるArmature Object
 
-    source_bones : Iterator[Bone]
+    source_bones : Iterator[bpy.types.Bone]
         処理対象となるボーンを格納したイテレーター
 
     Returns
     -------
-    list[list[Bone]]
+    list[list[bpy.types.Bone]]
         取得されたボーンを枝毎に格納したリスト全てを格納したリスト｡
 
     """
@@ -306,16 +296,18 @@ def get_bones_for_each_branch_from_source_bones(
 ---------------------------------------------------------"""
 
 
-def link_object2collection(target_object: Object, dest_collection: Collection):
+def link_object2collection(
+    target_object: bpy.types.Object, dest_collection: bpy.types.Collection
+):
     """
     'Target_object'のオブジェクトを'dest_collection'のコレクションにリンクさせる｡
 
     Parameters
     ----------
-    target_object : Object
+    target_object : bpy.types.Object
         対象となるオブジェクト｡
 
-    dest_collection : Collection
+    dest_collection : bpy.types.Collection
         リンクさせるコレクション｡
 
     """
@@ -326,7 +318,7 @@ def link_object2collection(target_object: Object, dest_collection: Collection):
     dest_collection.objects.link(target_object)
 
 
-def unlink_collection_from_all(target_collection: Collection):
+def unlink_collection_from_all(target_collection: bpy.types.Collection):
     """
     'target_collection'に設定されている全てのコレクションリンクを解除する｡
 
@@ -347,7 +339,7 @@ def unlink_collection_from_all(target_collection: Collection):
             s.collection.children.unlink(target_collection)
 
 
-def unlink_object_from_all_collections(target_object: Object):
+def unlink_object_from_all_collections(target_object: bpy.types.Object):
     # 全てのコレクションからリンクを解除する｡
     for c in bpy.data.collections:
         if target_object in list(c.objects):
@@ -361,10 +353,9 @@ def unlink_object_from_all_collections(target_object: Object):
 
 def create_or_get_collection_and_link_to_dest(
     target_collection_name: str,
-    dest_collection_name: str | None = None,
-) -> Collection | None:
+    dest_collection_name: Optional[str] = None,
+) -> Optional[bpy.types.Collection]:
     """
-    "target_collection_name"で指定したコレクションを作成/取得し､
     "dest_collection_name"で指定したコレクションにリンクする｡
 
     Parameters
@@ -372,16 +363,17 @@ def create_or_get_collection_and_link_to_dest(
     target_collection_name : str
         作成/取得するコレクションの名前
 
-    dest_collection_name : str | None,  --optional
-        target collectionをリンクさせるコレクションの名前,
+    dest_collection_name : Optional[str],  --optional
+        target collectionをリンクさせるコレクションの名前｡
         by default : None
 
     Returns
     -------
-    Collection|None
+    Optional[bpy.types.Collection]
         作成/取得したコレクション｡
 
     """
+
     context = bpy.context
     # Target Collectionの作成あるいは取得する｡
     if not (target_collection := bpy.data.collections.get(target_collection_name)):
@@ -487,19 +479,19 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
 
 
 def get_all_materials_from_source_collection_objects(
-    source_collection: Collection,
-) -> set[Material]:
+    source_collection: bpy.types.Collection,
+) -> set[bpy.types.Material]:
     """
     'source collection'で指定したコレクションにリンクされた全オブジェクトのマテリアルを集合として取得する｡
 
     Parameters
     ----------
-    source_collection : Collection
+    source_collection : bpy.types.Collection
         処理対象のコレクション｡
 
     Returns
     -------
-    set[Material]
+    set[bpy.types.Material]
         取得されたマテリアルを格納した集合｡
 
     """
@@ -543,13 +535,13 @@ def get_all_materials(scene, context) -> list[tuple[str]]:
 ---------------------------------------------------------"""
 
 
-def filtering_mesh_type(source_object: Object) -> bool:
+def filtering_mesh_type(source_object: bpy.types.Object) -> bool:
     """
     引数で受け取ったオブジェクトのタイプがMeshか否かを判定する｡
 
     Parameters
     ----------
-    source_object : Object
+    source_object : bpy.types.Object
         対象となるオブジェクト｡
 
     Returns
@@ -564,19 +556,24 @@ def filtering_mesh_type(source_object: Object) -> bool:
         return False
 
 
-def get_parent_count(source, parent_count) -> tuple[Optional[Object], int]:
+def get_parent_count(
+    source: bpy.types.Object | bpy.types.Bone, parent_count: int
+) -> tuple[Optional[bpy.types.Object | bpy.types.Bone], int]:
     """
     'source'で受け取ったオブジェクトかボーンの親の数を再帰的にカウントしてその総数を返す｡
 
     Parameters
     ----------
-    source : Object | Bone
-        対象となるオブジェクトあるいはボーン
+    source : bpy.types.Object | bpy.types.Bone
+        処理の対象となるオブジェクトまたはボーン
+
+    parent_count : int
+        現在までにカウントされた親要素の数
 
     Returns
     -------
-    int
-        'source'の親の数を再帰的にカウントした総数｡
+    tuple[Optional[bpy.types.Object|bpy.types.Bone], int]
+        次の処理対象となるオブジェクトまたはボーンと現在までにカウントされた親要素の数を格納したタプル
 
     """
     if not source.parent:
