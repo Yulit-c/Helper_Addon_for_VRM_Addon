@@ -221,7 +221,7 @@ def get_branch_root_bone(source_bone: bpy.types.Bone) -> Optional[bpy.types.Bone
 def get_child_bones_in_branch(
     source_bone: bpy.types.Bone,
     result: list[bpy.types.Bone],
-) -> Optional[list[bpy.types.Bone]]:
+) -> list[bpy.types.Bone]:
     """
     'source_bone'が属する枝に含まれるボーンのリストを返す｡
 
@@ -235,7 +235,7 @@ def get_child_bones_in_branch(
 
     Returns
     -------
-    Optional[list[bpy.types.Bone]]
+    list[bpy.types.Bone]
         'source_bone'が属する枝に含まれるボーンを格納したリスト｡
 
     """
@@ -252,7 +252,7 @@ def get_child_bones_in_branch(
 
         if child_bones:
             source_bone = child_bones[0]
-            get_child_bones_in_branch(source_bone, result=result)
+            get_child_bones_in_branch(source_bone, result)
 
     return result
 
