@@ -1216,7 +1216,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
 
         op = col.operator(
             VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
-            text="Adjust Joints from Selected Bone",
+            text="Adjust Joints from Selected Spring",
         )
         set_properties_to_from_dict(op, joint_properties)
         op.source_type = "MULTIPLE"
