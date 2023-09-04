@@ -15,4 +15,4 @@
 通常の方法でインストールすることで使用可能ですが､当アドオンの動作には[VRM-Addon-for-Blender](https://github.com/saturday06/VRM-Addon-for-Blender)の有効化が必要です｡
 
 ## 使用方法
-ドキュメント整備中
+ドキュメントは[こちら](https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS8vuD0F/view)

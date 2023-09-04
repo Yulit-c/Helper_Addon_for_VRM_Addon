@@ -196,10 +196,6 @@ from .vrm1_operators import (
     VRMHELPER_OT_constraint_remove_vrm_constraint,
 )
 
-from ..operators import (
-    VRMHELPER_OT_empty_operator,
-)
-
 
 """---------------------------------------------------------
 ------------------------------------------------------------
