@@ -58,7 +58,6 @@ from .utils_vrm_base import (
 
 
 from .operators import (
-    VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
 )
 

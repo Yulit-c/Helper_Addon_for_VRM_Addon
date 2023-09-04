@@ -156,7 +156,6 @@ class VRMHELPER_OT_reset_shape_keys_on_selected_objects(bpy.types.Operator):
         return {"FINISHED"}
 
 
-
 class VRMHELPER_operator_base(bpy.types.Operator):
     """
     オペレーター用基底クラス
@@ -411,7 +410,7 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Common
     # ----------------------------------------------------------
-    VRMHELPER_OT_empty_operator,
+    # VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
     VRMHELPER_OT_reset_shape_keys_on_selected_objects,
 )
