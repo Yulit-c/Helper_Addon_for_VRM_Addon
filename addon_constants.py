@@ -7,6 +7,12 @@ from .addon_classes import (
 
 
 """---------------------------------------------------------
+    Documentation
+---------------------------------------------------------"""
+DOCUMENTATION_URL = "https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS8vuD0F/view?usp=drive_link"
+
+
+"""---------------------------------------------------------
     VRM Component
 ---------------------------------------------------------"""
 VRM_COMPONENT_TYPES = Literal[

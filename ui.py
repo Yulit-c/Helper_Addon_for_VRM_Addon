@@ -30,15 +30,12 @@ else:
     from .Vrm1 import vrm1_operators
     from .Vrm1 import vrm1_ui
 
-
-import os
 import bpy
-from bpy.types import (
-    Panel,
-    Menu,
-    UIList,
-    UILayout,
+
+from .addon_constants import (
+    DOCUMENTATION_URL,
 )
+
 
 from .property_groups import (
     VRMHELPER_SCENE_basic_settigs,
@@ -94,8 +91,10 @@ logger = preparating_logger(__name__)
 
 
 def draw_spring_setting_box(
-    target_box: UILayout, layout: UILayout, basic_prop: VRMHELPER_SCENE_basic_settigs
-) -> UILayout:
+    target_box: bpy.types.UILayout,
+    layout: bpy.types.UILayout,
+    basic_prop: VRMHELPER_SCENE_basic_settigs,
+) -> bpy.types.UILayout:
     """
     スプリング設定ツールをグルーピングするためのboxが存在しない場合に新たに描画する｡
 
@@ -135,7 +134,7 @@ def draw_spring_setting_box(
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_PT_Base(Panel):
+class VRMHELPER_PT_Base(bpy.types.Panel):
     """パネル用リストの基底クラス"""
 
     bl_space_type = "VIEW_3D"
@@ -182,13 +181,16 @@ class VRMHELPER_PT_Base(Panel):
 class VRMHELPER_PT_ui_basic_settings(VRMHELPER_PT_Base):
     """アドオンの基本設定を行なうパネル"""
 
-    bl_label = "VRM Helper"
+    bl_label = ""
     bl_options = set()
 
     # ヘッダーのカスタマイズ
     def draw_header(self, context):
         layout = self.layout
-        layout.label(text="", icon="SETTINGS")
+        layout.label(text="VRM Helper", icon="SETTINGS")
+        row = layout.row(align=True)
+        row.alignment = "RIGHT"
+        row.operator("wm.url_open", text="", icon="HELP").url = DOCUMENTATION_URL
 
     # パネルの項目の描画
     def draw(self, context):

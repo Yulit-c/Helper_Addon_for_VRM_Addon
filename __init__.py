@@ -7,7 +7,7 @@ bl_info = {
     "description": "Addon for VRM Setup",
     "warning": "",
     "support": "COMMUNITY",
-    "doc_url": "",
+    "doc_url": "https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS8vuD0F/view?usp=drive_link",
     "tracker_url": "",
     "category": "Import-Export",
 }

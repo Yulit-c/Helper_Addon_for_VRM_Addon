@@ -23,22 +23,13 @@ else:
     from .Vrm1 import utils_vrm1_spring
 
 
-import os, time, uuid
-from pprint import pprint
+import os
 from typing import (
     Literal,
 )
 import bpy
-from bpy.types import (
-    Context,
-    Operator,
-)
+
 from bpy.props import (
-    StringProperty,
-    BoolProperty,
-    BoolVectorProperty,
-    FloatProperty,
-    FloatVectorProperty,
     EnumProperty,
 )
 
@@ -63,7 +54,6 @@ from .property_groups import (
 
 from .utils_common import (
     reset_shape_keys_value,
-    filtering_mesh_type,
 )
 
 from .utils_vrm_base import (
@@ -122,7 +112,7 @@ logger = preparating_logger(__name__)
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_empty_operator(Operator):
+class VRMHELPER_OT_empty_operator(bpy.types.Operator):
     bl_idname = "vrmhelper.empty_operator"
     bl_label = "Empty Operator"
     bl_description = "Operator without any processing"
@@ -135,7 +125,7 @@ class VRMHELPER_OT_empty_operator(Operator):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_evaluate_addon_collections(Operator):
+class VRMHELPER_OT_evaluate_addon_collections(bpy.types.Operator):
     bl_idname = "vrmhelper.evaluate_addon_collections"
     bl_label = "Evaluate Addon's Collections"
     bl_description = (
@@ -149,7 +139,7 @@ class VRMHELPER_OT_evaluate_addon_collections(Operator):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_reset_shape_keys_on_selected_objects(Operator):
+class VRMHELPER_OT_reset_shape_keys_on_selected_objects(bpy.types.Operator):
     bl_idname = "vrmhelper.reset_shape_keys_on_selected_objects"
     bl_label = "Reset Shape Keys"
     bl_description = "Reset all shape keys on selected objects"
@@ -166,7 +156,8 @@ class VRMHELPER_OT_reset_shape_keys_on_selected_objects(Operator):
         return {"FINISHED"}
 
 
-class VRMHELPER_operator_base(Operator):
+
+class VRMHELPER_operator_base(bpy.types.Operator):
     """
     オペレーター用基底クラス
     """
