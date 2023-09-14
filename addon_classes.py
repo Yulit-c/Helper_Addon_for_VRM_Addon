@@ -17,10 +17,18 @@ class ReferenceStringPropertyGroup:
     value: bpy.types.StringProperty
 
 
-class ReferenceVRM1MeshObjectPropertyGroup:
+class ReferenceMeshObjectPropertyGroup:
     mesh_object_name: bpy.types.StringProperty
     value: bpy.types.StringProperty
     bpy_object: bpy.types.Object
+
+
+class ReferenceBonePropertyGroup:
+    bone_name: bpy.types.StringProperty
+    value: bpy.types.StringProperty
+    bone_uuid: bpy.types.StringProperty
+    armature_data_name: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
 
 
 """---------------------------------------------------------
@@ -45,8 +53,41 @@ class ReferenceVrm0HumanoidPropertyGroup:
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
+class RererenceVrm0DegreeMapPropertyGroup:
+    curve: list[bpy.types.FloatProperty]
+    x_range: bpy.types.FloatProperty
+    y_range: bpy.types.FloatProperty
+
+
+class ReferenceVrm0MeshAnnotationPropertyGroup:
+    mesh: ReferenceMeshObjectPropertyGroup
+    first_person_flag: Literal["Auto", "FirstPersonOnly", "ThirdPersonOnly", "Both"]
+
+
 class ReferenceVrm0FirstPersonPropertyGroup:
-    pass
+    first_person_bone: ReferenceBonePropertyGroup
+
+    first_person_bone_offset: list[bpy.types.FloatProperty]
+    mesh_annotations: bpy.types.CollectionProperty  # ReferenceVrm0MeshAnnotationPropertyGroup
+    look_at_type_name_items = [
+        ("Bone", "Bone", "Use bones to eye movement", "BONE_DATA", 0),
+        (
+            "BlendShape",
+            "Blend Shape",
+            "Use blend Shapes of VRM Blend Shape Proxy to eye movement.",
+            "SHAPEKEY_DATA",
+            1,
+        ),
+    ]
+    LOOK_AT_TYPE_NAME_VALUES = [
+        look_at_type_name_item[0] for look_at_type_name_item in look_at_type_name_items
+    ]
+    look_at_type_name: Literal["Bone", "BlendShape"]
+
+    look_at_horizontal_inner: RererenceVrm0DegreeMapPropertyGroup
+    look_at_horizontal_outer: RererenceVrm0DegreeMapPropertyGroup
+    look_at_vertical_down: RererenceVrm0DegreeMapPropertyGroup
+    look_at_vertical_up: RererenceVrm0DegreeMapPropertyGroup
 
 
 # ----------------------------------------------------------
@@ -97,7 +138,7 @@ class ReferenceVrm1HumanoidPropertyGroup:
 #    First Person
 # ----------------------------------------------------------
 class ReferenceVrm1MeshAnnotationPropertyGroup:
-    node: ReferenceVRM1MeshObjectPropertyGroup
+    node: ReferenceMeshObjectPropertyGroup
     TYPE_ITEMS = Literal["auto", "both", "thirdPersonOnly", "firstPersonOnly"]
     type: TYPE_ITEMS
 
@@ -119,7 +160,7 @@ class ReferenceVrm1LookAtPropertyGroup:
 
 
 class ReferenceVrm1MorphTargetBindPropertyGroup:
-    node: ReferenceVRM1MeshObjectPropertyGroup
+    node: ReferenceMeshObjectPropertyGroup
     index: bpy.types.StringProperty
     weight: bpy.types.FloatProperty
 
@@ -227,14 +268,6 @@ class ReferenceSpringBone1ColliderShapeCapsulePropertyGroup:
     tail: list[bpy.types.FloatProperty]
 
 
-class ReferenceBonePropertyGroup:
-    bone_name: bpy.types.StringProperty
-    value: bpy.types.StringProperty
-    bone_uuid: bpy.types.StringProperty
-    armature_data_name: bpy.types.StringProperty
-    search_one_time_uuid: bpy.types.StringProperty
-
-
 class ReferenceSpringBone1ColliderPropertyGroup:
     sphere: ReferenceSpringBone1ColliderShapeSpherePropertyGroup
     capsule: ReferenceSpringBone1ColliderShapeCapsulePropertyGroup
@@ -265,22 +298,26 @@ class ReferenceVrm1ColliderGroupPropertyGroup:
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
+class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
+    use_center_space: bpy.types.BoolProperty
+    previous_center_world_translation: list[bpy.types.FloatProperty]
+
+
 class ReferenceSpringBone1JointPropertyGroup:
     node: ReferenceBonePropertyGroup
     hit_radius: bpy.types.FloatProperty
     stiffness: bpy.types.FloatProperty
     gravity_power: bpy.types.FloatProperty
+    gravity_dir: list[bpy.types.FloatProperty]
+    drag_force: bpy.types.FloatProperty
+    animation_state: ReferenceSpringBone1SpringAnimationStatePropertyGroup
+    show_expanded: bpy.types.BoolProperty
 
 
 class ReferenceSpringBone1ColliderGroupPropertyGroup:
     collider_group_name: bpy.types.StringProperty
     collider_group_uuid: bpy.types.StringProperty
     search_one_time_uuid: bpy.types.StringProperty
-
-
-class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
-    use_center_space: bpy.types.BoolProperty
-    previous_center_world_translation: list[bpy.types.FloatProperty]
 
 
 class ReferenceSpringBone1SpringPropertyGroup:
