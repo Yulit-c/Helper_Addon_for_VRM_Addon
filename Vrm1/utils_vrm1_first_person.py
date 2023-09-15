@@ -78,15 +78,19 @@ def get_source_vrm1_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
     ext_first_person = get_vrm_extension_property("FIRST_PERSON")
 
     # UI Listに表示する対象オブジェクトをリストに格納する
-    if mode == "UI":
-        source_annotation_list = [
-            i
-            for i in ext_first_person.mesh_annotations
-            if i.type in annotation_type_filter and not i.node.mesh_object_name == ""
-        ]
+    match mode:
+        case "UI":
+            source_annotation_list = [
+                i
+                for i in ext_first_person.mesh_annotations
+                if i.type in annotation_type_filter
+                and not i.node.mesh_object_name == ""
+            ]
+        case "OPERATOR":
+            source_annotation_list = [i for i in ext_first_person.mesh_annotations]
 
-    if mode == "OPERATOR":
-        source_annotation_list = [i for i in ext_first_person.mesh_annotations]
+        case _:
+            source_annotation_list = []
 
     return source_annotation_list
 

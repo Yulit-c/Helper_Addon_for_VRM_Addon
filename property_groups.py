@@ -24,20 +24,6 @@ from pathlib import Path
 
 import bpy
 
-from bpy.types import (
-    Context,
-    PropertyGroup,
-    Object,
-    Material,
-    Armature,
-    Bone,
-    PoseBone,
-    Constraint,
-)
-
-from idprop.types import (
-    IDPropertyGroup,
-)
 
 from bpy.props import (
     BoolProperty,
@@ -60,7 +46,8 @@ from .addon_classes import (
 )
 
 from .addon_constants import (
-    VRM_COMPONENT_TYPES,
+    VRM0_COMPONENT_TYPES,
+    VRM1_COMPONENT_TYPES,
 )
 
 from .utils_common import (
@@ -93,12 +80,12 @@ logger = preparating_logger(__name__)
 # ----------------------------------------------------------
 #    Basic Settings
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
+class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
     """
     アドオンの基本設定を行なうプロパティ
     """
 
-    def filtering_armature_type(self, source_object: Object) -> bool:
+    def filtering_armature_type(self, source_object: bpy.types.Object) -> bool:
         """
         引数で受け取ったオブジェクトのタイプがArmatureか否かを判定する｡
         """
@@ -123,7 +110,7 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
     target_armature: PointerProperty(
         name="Target Armature",
         description="Armature to be VRM set up",
-        type=Object,
+        type=bpy.types.Object,
         poll=filtering_armature_type,
         update=update_addon_collection,
     )
@@ -176,7 +163,7 @@ class VRMHELPER_SCENE_basic_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Misc Tools
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_misc_tools_settigs(PropertyGroup):
+class VRMHELPER_SCENE_misc_tools_settigs(bpy.types.PropertyGroup):
     """
     Misc Toolsに関するプロパティ
     """
@@ -195,10 +182,291 @@ class VRMHELPER_SCENE_misc_tools_settigs(PropertyGroup):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_SCENE_vrm0_root_property_group(PropertyGroup):
+# ----------------------------------------------------------
+#    First Person
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_first_person_settigs(bpy.types.PropertyGroup):
+    """
+    First Personの設定に関するプロパティ
+    """
+
+    annotation_type: EnumProperty(
+        name="First Person Type",
+        description="Determine the First_Person annotation you wish to apply",
+        items=(
+            (
+                "auto",
+                "Auto",
+                "Set the value to Auto",
+            ),
+            (
+                "both",
+                "Both",
+                "Set the value to Both",
+            ),
+            (
+                "thirdPersonOnly",
+                "Third Person Only",
+                "Set the value to Third Person Only",
+            ),
+            (
+                "firstPersonOnly",
+                "First Person Only",
+                "Set the value to First Person Only",
+            ),
+        ),
+        default="both",
+    )
+
+    is_filtering_by_type: BoolProperty(
+        name="Filtering by Selected Type",
+        description="Filters the display of the list according to the currently selected mode",
+        default=True,
+    )
+
+
+# ----------------------------------------------------------
+#    UI List
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
+    """
+    UI Listのアクティブアイテムインデックス用のIntPropertyを登録するプロパティグループ｡
+    """
+
+    # def update_active_collider_radius(
+    #     self,
+    #     collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs,
+    #     collider: ReferenceVrm1ColliderPropertyGroup,
+    # ):
+    #     """
+    #     'collider_prop'の'active_collider_radius'の値を'collider'のタイプに応じた
+    #     'radius'と同じ値にセットする｡
+
+    #     Parameters
+    #     ----------
+    #     collider_prop : VRMHELPER_SCENE_vrm1_collider_settigs
+    #         プロパティ更新の対象となるプロパティグループ
+
+    #     collider : ReferenceVrm1ColliderPropertyGroup
+    #         'radius'の参照元となるVRM AddonのColliderプロパティ
+
+    #     """
+    #     match detect_collider_shape_type(collider.shape_type):
+    #         case -1:
+    #             return
+    #         case 0:
+    #             source_radius = collider.shape.sphere.radius
+    #         case 1:
+    #             source_radius = collider.shape.capsule.radius
+
+    #     collider_prop.active_collider_radius = source_radius
+
+    def select_collider_object_by_ui_list(self, context):
+        """
+        Spring Bone_ColliderのUIリストアクティブアイテムが更新された際に､
+        アクティブアイテムインデックスに対応したシーン内オブジェクトを選択状態にする｡
+        また､アクティブコライダーの半径を'Active Collider Radius'に反映する｡
+        """
+
+        if self.is_locked_update:
+            return
+
+        if context.mode != "OBJECT":
+            return
+
+        collider_prop = get_scene_vrm1_collider_prop()
+        collider_list = get_ui_vrm1_collider_prop()
+        active_index = get_vrm1_active_index_prop("COLLIDER")
+        active_item = collider_list[active_index]
+        vrm_extension = get_target_armature_data().vrm_addon_extension
+        colliders = vrm_extension.spring_bone1.colliders
+
+        current_object_in_loop = None
+        collider_prop.is_updated_collider_raduis = True
+
+        match tuple(active_item.item_type):
+            # アクティブアイテムがラベルである
+            case (1, 0, 0, 0):
+                return
+
+            # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
+            case (0, 1, 0, 0):
+                if collider_prop.link_bone != active_item.name:
+                    collider_prop.is_updated_link_bone[0] = True
+                    collider_prop.old_bone = active_item.name
+                    collider_prop.link_bone = active_item.name
+
+                if not collider_prop.is_additive_selecting:
+                    bpy.ops.object.select_all(action="DESELECT")
+
+                [
+                    (
+                        i.bpy_object.select_set(True),
+                        (current_object_in_loop := i.bpy_object),
+                    )
+                    for i in colliders
+                    if i.node.bone_name == active_item.bone_name
+                ]
+
+            # アクティブアイテムがコライダーであればそれを選択する｡
+            case (0, 0, 1, 0):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider.select_set(True)
+                    current_object_in_loop = collider
+
+            # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
+            case (0, 0, 0, 1):
+                if collider := find_collider_from_empty_name(
+                    colliders, active_item.collider_name
+                ):
+                    self.update_active_collider_radius(collider_prop, collider)
+
+                if collider_object := bpy.data.objects.get(active_item.collider_name):
+                    if not collider_prop.is_additive_selecting:
+                        bpy.ops.object.select_all(action="DESELECT")
+                    collider_object.select_set(True)
+                    current_object_in_loop = collider_object
+
+        collider_prop.is_updated_collider_raduis = False
+
+        # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
+        context.view_layer.objects.active = current_object_in_loop
+
+    def select_constraint_by_ui_list(self, context):
+        """
+        Node ConstraintのUIリストアクティブアイテムが更新された際に､
+        アクティブアイテムインデックスに対応したコンストレイントを持つ要素を可能なら選択状態にする｡
+        """
+        # 現在のインデックスからアクティブアイテムを取得する｡
+        constraint_ui_list = get_ui_vrm1_constraint_prop()
+        active_index = get_vrm1_active_index_prop("CONSTRAINT")
+        if len(constraint_ui_list) - 1 < active_index:
+            return
+
+        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
+            active_index
+        ]
+        # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
+        if active_item.is_blank or active_item.is_label:
+            return
+
+        # アクティブアイテムがオブジェクトコンストレイントの場合
+        if active_item.is_object_constraint:
+            if not context.mode == "OBJECT":
+                return
+
+            # アクティブアイテムが参照しているコンストレイントが付与されたオブジェクトを選択する｡
+            constrainted_object: bpy.types.Object = bpy.data.objects.get(
+                active_item.name
+            )
+            context.view_layer.objects.active = constrainted_object
+            bpy.ops.object.select_all(action="DESELECT")
+            constrainted_object.select_set(True)
+
+        # アクティブアイテムがボーンコンストレイントの場合
+        else:
+            if not context.mode == "POSE":
+                return
+
+            # アクティブアイテムが参照しているコンストレイントが付与されたポーズボーンを選択する｡
+            target_armature = get_target_armature()
+            pose_bones = target_armature.pose.bones
+            constrainted_bone: bpy.types.PoseBone = pose_bones.get(active_item.name)
+            target_armature.data.bones.active = constrainted_bone.bone
+            bpy.ops.pose.select_all(action="DESELECT")
+            constrainted_bone.bone.select = True
+
+    # -----------------------------------------------------
+
+    is_locked_update: BoolProperty(
+        name="Is Locked Update",
+        description="",
+        default=False,
+    )
+
+    first_person: IntProperty(
+        name="List Index of First Person",
+        description="Index of active items in First Person UI List",
+        default=0,
+        min=0,
+    )
+
+    expression: IntProperty(
+        name="List Index of Expression",
+        description="Index of active items in Expression UI List",
+        default=0,
+        min=0,
+    )
+    expression_morph: IntProperty(
+        name="List Index of Morph Target Bind",
+        description="Index of active items in Expression Morph Target UI List",
+        default=0,
+        min=0,
+    )
+    expression_material: IntProperty(
+        name="List Index of Material Bind",
+        description="Index of active items in Expression Material Color UI List",
+        default=0,
+        min=0,
+    )
+
+    collider: IntProperty(
+        name="List Index of Collider",
+        description="Index of active items in Colliderin UI List",
+        default=0,
+        min=0,
+        update=select_collider_object_by_ui_list,
+    )
+
+    collider_group: IntProperty(
+        name="List Index of Collider Group",
+        description="Index of active items in Collider Group UI List",
+        default=0,
+        min=0,
+    )
+
+    spring: IntProperty(
+        name="List Index of Spring",
+        description="Index of active items in Spring UI List",
+        default=0,
+        min=0,
+    )
+
+    constraint: IntProperty(
+        name="List Index of Object Constraint",
+        description="Index of active items in Object Constraint UI List",
+        default=0,
+        min=0,
+        update=select_constraint_by_ui_list,
+    )
+
+
+# ----------------------------------------------------------
+#    VRM0 Root Property
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     Scene階層下のVRM0用プロパティグループ群
     ---------------------------------------------------------"""
+
+    first_person_settings: PointerProperty(
+        name="First_Person Settings",
+        description="Group of properties for First_Person Annotation Settings",
+        type=VRMHELPER_SCENE_vrm0_first_person_settigs,
+    )
+
+    active_indexes: PointerProperty(
+        name="Active Item Indexes",
+        description="Used to define the active item index of UI Lists",
+        type=VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
+    )
 
 
 """---------------------------------------------------------
@@ -209,7 +477,7 @@ class VRMHELPER_SCENE_vrm0_root_property_group(PropertyGroup):
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_first_person_settigs(bpy.types.PropertyGroup):
     """
     First Personの設定に関するプロパティ
     """
@@ -252,7 +520,7 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Expression
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_expression_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_expression_settigs(bpy.types.PropertyGroup):
     """
     Expressionの設定に関するプロパティ
     """
@@ -271,7 +539,7 @@ class VRMHELPER_SCENE_vrm1_expression_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_collider_settigs(bpy.types.PropertyGroup):
     """
     Colliderの設定に関するプロパティ
     """
@@ -421,7 +689,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_collider_group_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_collider_group_settigs(bpy.types.PropertyGroup):
     """
     Collider Groupの設定に関するプロパティ
     """
@@ -430,7 +698,7 @@ class VRMHELPER_SCENE_vrm1_collider_group_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_spring_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_spring_settigs(bpy.types.PropertyGroup):
     """
     Springの設定に関するプロパティ
     """
@@ -500,7 +768,7 @@ class VRMHELPER_SCENE_vrm1_spring_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    Constraint
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_constraint_settigs(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_constraint_settigs(bpy.types.PropertyGroup):
     """
     Constraintの設定に関するプロパティ
     """
@@ -525,7 +793,7 @@ class VRMHELPER_SCENE_vrm1_constraint_settigs(PropertyGroup):
 # ----------------------------------------------------------
 #    UI List
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
     """
     UI Listのアクティブアイテムインデックス用のIntPropertyを登録するプロパティグループ｡
     """
@@ -558,7 +826,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
 
         collider_prop.active_collider_radius = source_radius
 
-    def select_collider_object_by_ui_list(self, context: Context):
+    def select_collider_object_by_ui_list(self, context):
         """
         Spring Bone_ColliderのUIリストアクティブアイテムが更新された際に､
         アクティブアイテムインデックスに対応したシーン内オブジェクトを選択状態にする｡
@@ -636,7 +904,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
         # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
         context.view_layer.objects.active = current_object_in_loop
 
-    def select_constraint_by_ui_list(self, context: Context):
+    def select_constraint_by_ui_list(self, context):
         """
         Node ConstraintのUIリストアクティブアイテムが更新された際に､
         アクティブアイテムインデックスに対応したコンストレイントを持つ要素を可能なら選択状態にする｡
@@ -660,7 +928,9 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
                 return
 
             # アクティブアイテムが参照しているコンストレイントが付与されたオブジェクトを選択する｡
-            constrainted_object: Object = bpy.data.objects.get(active_item.name)
+            constrainted_object: bpy.types.Object = bpy.data.objects.get(
+                active_item.name
+            )
             context.view_layer.objects.active = constrainted_object
             bpy.ops.object.select_all(action="DESELECT")
             constrainted_object.select_set(True)
@@ -673,7 +943,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
             # アクティブアイテムが参照しているコンストレイントが付与されたポーズボーンを選択する｡
             target_armature = get_target_armature()
             pose_bones = target_armature.pose.bones
-            constrainted_bone: PoseBone = pose_bones.get(active_item.name)
+            constrainted_bone: bpy.types.PoseBone = pose_bones.get(active_item.name)
             target_armature.data.bones.active = constrainted_bone.bone
             bpy.ops.pose.select_all(action="DESELECT")
             constrainted_bone.bone.select = True
@@ -743,11 +1013,11 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(PropertyGroup):
     )
 
 
-class VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters(bpy.types.PropertyGroup):
     material: PointerProperty(
         name="Material",
         description="Material to store parameters",
-        type=Material,
+        type=bpy.types.Material,
     )
 
     texture_scale: FloatVectorProperty(
@@ -807,7 +1077,7 @@ class VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters(PropertyGroup):
     )
 
 
-class VRMHELPER_SCENE_vrm1_root_property_group(PropertyGroup):
+class VRMHELPER_SCENE_vrm1_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     Scene階層下のVRM1用プロパティグループ群
     ---------------------------------------------------------"""
@@ -866,7 +1136,7 @@ class VRMHELPER_SCENE_vrm1_root_property_group(PropertyGroup):
 #     Scene Root Property Group
 # ------------------------------------------------------------
 # ---------------------------------------------------------"""
-class VRMHELPER_SCENE_root_property_group(PropertyGroup):
+class VRMHELPER_SCENE_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
         Scene階層下へのグルーピング用Property Group
     ---------------------------------------------------------"""
@@ -904,10 +1174,31 @@ class VRMHELPER_SCENE_root_property_group(PropertyGroup):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_WM_vrm0_root_property_group(PropertyGroup):
+class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     WindowManager階層下のVRM0用プロパティグループ群
     ---------------------------------------------------------"""
+
+
+# ----------------------------------------------------------
+#    First Person
+# ----------------------------------------------------------
+class VRMHELPER_WM_vrm0_first_person_list_items(bpy.types.PropertyGroup):
+    """
+    First Person設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+
+class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
+    """---------------------------------------------------------
+    WindowManager階層下のVRM1用プロパティグループ群
+    ---------------------------------------------------------"""
+
+    first_person_list_items4custom_filter: CollectionProperty(
+        name="Candidate First Person List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_first_person_list_items,
+    )
 
 
 """---------------------------------------------------------
@@ -918,7 +1209,7 @@ class VRMHELPER_WM_vrm0_root_property_group(PropertyGroup):
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_first_person_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_first_person_list_items(bpy.types.PropertyGroup):
     """
     First Person設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -927,7 +1218,7 @@ class VRMHELPER_WM_vrm1_first_person_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Expression
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_expression_list_items(bpy.types.PropertyGroup):
     """
     Expression設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -958,7 +1249,7 @@ class VRMHELPER_WM_vrm1_expression_list_items(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_expression_morph_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_expression_morph_list_items(bpy.types.PropertyGroup):
     """
     ExpressionのMorph Target設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -982,7 +1273,7 @@ class VRMHELPER_WM_vrm1_expression_morph_list_items(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_expression_material_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_expression_material_list_items(bpy.types.PropertyGroup):
     """
     ExpressionのMaterial Color/TextureTransform Bind設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1009,7 +1300,7 @@ class VRMHELPER_WM_vrm1_expression_material_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_collider_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_collider_list_items(bpy.types.PropertyGroup):
     """
     Collider設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1042,7 +1333,7 @@ class VRMHELPER_WM_vrm1_collider_list_items(PropertyGroup):
     collider_object: PointerProperty(
         name="Collider Object",
         description="Empty Object that defines vrm spring collider",
-        type=Object,
+        type=bpy.types.Object,
     )
 
     collider_type: EnumProperty(
@@ -1072,7 +1363,7 @@ class VRMHELPER_WM_vrm1_collider_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_collider_group_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_collider_group_list_items(bpy.types.PropertyGroup):
     """
     Collider Group設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1104,7 +1395,7 @@ class VRMHELPER_WM_vrm1_collider_group_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_spring_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_spring_list_items(bpy.types.PropertyGroup):
     """
     Spring Bone設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1131,7 +1422,7 @@ class VRMHELPER_WM_vrm1_spring_list_items(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items(bpy.types.PropertyGroup):
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
@@ -1145,7 +1436,9 @@ class VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(
+    bpy.types.PropertyGroup
+):
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
@@ -1159,7 +1452,7 @@ class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(PropertyGroup)
     )
 
 
-class VRMHELPER_WM_vrm1_operator_spring_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_operator_spring_list_items(bpy.types.PropertyGroup):
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
@@ -1176,7 +1469,7 @@ class VRMHELPER_WM_vrm1_operator_spring_list_items(PropertyGroup):
 # ----------------------------------------------------------
 #    Constraint
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm1_constraint_properties(PropertyGroup):
+class VRMHELPER_WM_vrm1_constraint_properties(bpy.types.PropertyGroup):
     def update_constraint_axis(self, context):
         if self.is_locked_update:
             return
@@ -1229,7 +1522,7 @@ class VRMHELPER_WM_vrm1_constraint_properties(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_constraint_list_items(PropertyGroup):
+class VRMHELPER_WM_vrm1_constraint_list_items(bpy.types.PropertyGroup):
     """
     Node Constraint設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1277,7 +1570,7 @@ class VRMHELPER_WM_vrm1_constraint_list_items(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_root_property_group(PropertyGroup):
+class VRMHELPER_WM_vrm1_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     WindowManager階層下のVRM1用プロパティグループ群
     ---------------------------------------------------------"""
@@ -1355,7 +1648,7 @@ class VRMHELPER_WM_vrm1_root_property_group(PropertyGroup):
     )
 
 
-class VRMHELPER_WM_root_property_group(PropertyGroup):
+class VRMHELPER_WM_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
         Window Manager階層下へのグルーピング用Property Group
     ---------------------------------------------------------"""
@@ -1433,7 +1726,7 @@ def get_scene_basic_prop() -> VRMHELPER_SCENE_basic_settigs:
     return scene_basic_prop
 
 
-def get_target_armature() -> Optional[Object]:
+def get_target_armature() -> Optional[bpy.types.Object]:
     """
     Basic Prop階層下のTarget Armatureに登録されたArmature Objectを返す｡
 
@@ -1448,7 +1741,7 @@ def get_target_armature() -> Optional[Object]:
         return target_armature
 
 
-def get_target_armature_data() -> Optional[Armature]:
+def get_target_armature_data() -> Optional[bpy.types.Armature]:
     """
     Basic Prop階層下のTarget Armatureに登録されたArmature ObjectにリンクされたObject Dataを返す｡
 
@@ -1474,12 +1767,30 @@ def get_scene_misc_prop() -> VRMHELPER_SCENE_misc_tools_settigs:
 ---------------------------------------------------------"""
 
 
+# ----------------------------------------------------------
+#    Scene
+# ----------------------------------------------------------
 def get_vrm0_scene_root_prop() -> VRMHELPER_SCENE_vrm0_root_property_group:
     scene_root_prop = get_scene_prop_root()
     vrm0_scene_root_property = scene_root_prop.vrm0_props
     return vrm0_scene_root_property
 
 
+def get_vrm0_index_root_prop() -> VRMHELPER_SCENE_vrm0_ui_list_active_indexes:
+    vrm0_root_property = get_vrm0_scene_root_prop()
+    vrm0_index_root_prop = vrm0_root_property.active_indexes
+    return vrm0_index_root_prop
+
+
+def get_scene_vrm0_first_person_prop() -> VRMHELPER_SCENE_vrm0_first_person_settigs:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    first_person_prop = scene_vrm0_prop.first_person_settings
+    return first_person_prop
+
+
+# ----------------------------------------------------------
+#    Window Manager
+# ----------------------------------------------------------
 def get_vrm0_wm_root_prop() -> VRMHELPER_WM_vrm0_root_property_group:
     wm_root_prop = get_wm_prop_root()
     vrm0_wm_root_prop = wm_root_prop.vrm0_props
@@ -1487,103 +1798,62 @@ def get_vrm0_wm_root_prop() -> VRMHELPER_WM_vrm0_root_property_group:
     return vrm0_wm_root_prop
 
 
-"""---------------------------------------------------------
-    Get VRM1 Property Group
----------------------------------------------------------"""
-
-
-# ----------------------------------------------------------
-#    Window Manager
-# ----------------------------------------------------------
-def get_vrm1_wm_root_prop() -> VRMHELPER_WM_vrm1_root_property_group:
-    wm_root_prop = get_wm_prop_root()
-    vrm1_wm_root_prop = wm_root_prop.vrm1_props
-
-    return vrm1_wm_root_prop
-
-
-def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_properties:
-    wm_vrm1_prop = get_vrm1_wm_root_prop()
-    constraint_prop = wm_vrm1_prop.constraint_prop
-    return constraint_prop
-
-
-def get_ui_vrm1_first_person_prop() -> VRMHELPER_WM_vrm1_first_person_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    first_person_filter = wm_vrm1_root_prop.first_person_list_items4custom_filter
+def get_ui_vrm0_first_person_prop() -> VRMHELPER_WM_vrm0_first_person_list_items:
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    first_person_filter = wm_vrm0_root_prop.first_person_list_items4custom_filter
     return first_person_filter
 
 
-def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_filter = wm_vrm1_root_prop.expression_list_items4custom_filter
-    return expression_filter
+def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
+    """
+    引数'type'に対応したアクティブインデックスのプロパティを
+    'VRMHELPER_SCENE_vrm0_ui_list_active_indexes'から取得する｡
+
+    Parameters
+    ----------
+    component_type: VRM1_COMPONENT_TYPES
+        UI Listアクティブインデックスを取得したいVRMコンポーネントの種類｡
+
+    Returns
+    -------
+    int
+        取得されたアクティブアイテムのインデックス｡
+
+    """
+    vrm0_index_prop = get_vrm0_index_root_prop()
+
+    match component_type:
+        case "FIRST_PERSON":
+            list_items = get_ui_vrm0_first_person_prop()
+            index = vrm0_index_prop.first_person
+
+        # case "BLEND_SHAPE":
+        #     list_items = get_ui_vrm0_expression_prop()
+        #     index = vrm0_index_prop.expression
+
+        # case "BLEND_SHAPE_MORPH":
+        #     list_items = get_ui_vrm0_expression_morph_prop()
+        #     index = vrm0_index_prop.expression_morph
+
+        # case "BLEND_SHAPE_MATERIAL":
+        #     list_items = get_ui_vrm0_expression_material_prop()
+        #     index = vrm0_index_prop.expression_material
+
+        # case "BONE_GROUPS":
+        #     list_items = get_ui_vrm0_spring_prop()
+        #     index = vrm0_index_prop.spring
+
+        # case "COLLIDER_GROUP":
+        #     list_items = get_ui_vrm0_collider_group_prop()
+        #     index = vrm0_index_prop.collider_group
+
+    active_index = evaluation_active_index_prop(list_items, index)
+    return active_index
 
 
-def get_ui_vrm1_expression_morph_prop() -> (
-    VRMHELPER_WM_vrm1_expression_morph_list_items
-):
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_morph_filter = (
-        wm_vrm1_root_prop.expression_morph_list_items4custom_filter
-    )
-    return expression_morph_filter
-
-
-def get_ui_vrm1_expression_material_prop() -> (
-    VRMHELPER_WM_vrm1_expression_material_list_items
-):
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_material_filter = (
-        wm_vrm1_root_prop.expression_material_list_items4custom_filter
-    )
-    return expression_material_filter
-
-
-def get_ui_vrm1_collider_prop() -> VRMHELPER_WM_vrm1_collider_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    collider_filter = wm_vrm1_root_prop.collider_list_items4custom_filter
-    return collider_filter
-
-
-def get_ui_vrm1_collider_group_prop() -> VRMHELPER_WM_vrm1_collider_group_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    collider_group_filter = wm_vrm1_root_prop.collider_group_list_items4custom_filter
-    return collider_group_filter
-
-
-def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    spring_filter = wm_vrm1_root_prop.spring_list_items4custom_filter
-    return spring_filter
-
-
-def get_ui_vrm1_operator_bone_group_prop() -> (
-    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
-):
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
-    return bone_group_filter
-
-
-def get_ui_vrm1_operator_collider_group_prop() -> (
-    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
-):
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
-    return collider_group_filter
-
-
-def get_ui_vrm1_operator_spring_prop() -> VRMHELPER_WM_vrm1_operator_spring_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    spring_filter = wm_vrm1_root_prop.spring_list4operator
-    return spring_filter
-
-
-def get_ui_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_list_items:
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    constraint_filter = wm_vrm1_root_prop.constraint_list_items4custom_filter
-    return constraint_filter
+"""---------------------------------------------------------
+    Get VRM1 Property Group
+---------------------------------------------------------"""
 
 
 # ----------------------------------------------------------
@@ -1601,14 +1871,14 @@ def get_vrm1_index_root_prop() -> VRMHELPER_SCENE_vrm1_ui_list_active_indexes:
     return vrm1_index_root_prop
 
 
-def get_vrm1_active_index_prop(component_type: VRM_COMPONENT_TYPES) -> int:
+def get_vrm1_active_index_prop(component_type: VRM1_COMPONENT_TYPES) -> int:
     """
     引数'type'に対応したアクティブインデックスのプロパティを
     'VRMHELPER_SCENE_vrm1_ui_list_active_indexes'から取得する｡
 
     Parameters
     ----------
-    component_type: VRM_COMPONENT_TYPES
+    component_type: VRM1_COMPONENT_TYPES
         UI Listアクティブインデックスを取得したいVRMコンポーネントの種類｡
 
     Returns
@@ -1754,6 +2024,100 @@ def get_scene_vrm1_mtoon_stored_prop() -> VRMHELPER_SCENE_vrm1_mtoon1_stored_par
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     mtoon_stored_prop = scene_vrm1_prop.mtoon1_stored_parameters
     return mtoon_stored_prop
+
+
+# ----------------------------------------------------------
+#    Window Manager
+# ----------------------------------------------------------
+def get_vrm1_wm_root_prop() -> VRMHELPER_WM_vrm1_root_property_group:
+    wm_root_prop = get_wm_prop_root()
+    vrm1_wm_root_prop = wm_root_prop.vrm1_props
+
+    return vrm1_wm_root_prop
+
+
+def get_wm_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_properties:
+    wm_vrm1_prop = get_vrm1_wm_root_prop()
+    constraint_prop = wm_vrm1_prop.constraint_prop
+    return constraint_prop
+
+
+def get_ui_vrm1_first_person_prop() -> VRMHELPER_WM_vrm1_first_person_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    first_person_filter = wm_vrm1_root_prop.first_person_list_items4custom_filter
+    return first_person_filter
+
+
+def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_filter = wm_vrm1_root_prop.expression_list_items4custom_filter
+    return expression_filter
+
+
+def get_ui_vrm1_expression_morph_prop() -> (
+    VRMHELPER_WM_vrm1_expression_morph_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_morph_filter = (
+        wm_vrm1_root_prop.expression_morph_list_items4custom_filter
+    )
+    return expression_morph_filter
+
+
+def get_ui_vrm1_expression_material_prop() -> (
+    VRMHELPER_WM_vrm1_expression_material_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    expression_material_filter = (
+        wm_vrm1_root_prop.expression_material_list_items4custom_filter
+    )
+    return expression_material_filter
+
+
+def get_ui_vrm1_collider_prop() -> VRMHELPER_WM_vrm1_collider_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_filter = wm_vrm1_root_prop.collider_list_items4custom_filter
+    return collider_filter
+
+
+def get_ui_vrm1_collider_group_prop() -> VRMHELPER_WM_vrm1_collider_group_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list_items4custom_filter
+    return collider_group_filter
+
+
+def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list_items4custom_filter
+    return spring_filter
+
+
+def get_ui_vrm1_operator_bone_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
+    return bone_group_filter
+
+
+def get_ui_vrm1_operator_collider_group_prop() -> (
+    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
+):
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
+    return collider_group_filter
+
+
+def get_ui_vrm1_operator_spring_prop() -> VRMHELPER_WM_vrm1_operator_spring_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    spring_filter = wm_vrm1_root_prop.spring_list4operator
+    return spring_filter
+
+
+def get_ui_vrm1_constraint_prop() -> VRMHELPER_WM_vrm1_constraint_list_items:
+    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
+    constraint_filter = wm_vrm1_root_prop.constraint_list_items4custom_filter
+    return constraint_filter
 
 
 """---------------------------------------------------------

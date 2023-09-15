@@ -15,7 +15,16 @@ DOCUMENTATION_URL = "https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS
 """---------------------------------------------------------
     VRM Component
 ---------------------------------------------------------"""
-VRM_COMPONENT_TYPES = Literal[
+VRM0_COMPONENT_TYPES = Literal[
+    "FIRST_PERSON",
+    "BLEND_SHAPE",
+    "BLEND_SHAPE_MORPH",
+    "BLEND_SHAPE_MATERIAL",
+    "BONE_GROUPS",
+    "COLLIDER_GROUP",
+]
+
+VRM1_COMPONENT_TYPES = Literal[
     "FIRST_PERSON",
     "EXPRESSION",
     "EXPRESSION_MORPH",

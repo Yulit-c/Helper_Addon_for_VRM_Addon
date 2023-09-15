@@ -72,6 +72,10 @@ from ..utils_vrm_base import (
     re_link_all_collider_object2collection,
 )
 
+from .utils_vrm0_first_person import (
+    get_scene_vrm0_first_person_prop,
+)
+
 from ..operators import (
     VRMHELPER_operator_base,
     VRMHELPER_first_person_base,
@@ -98,6 +102,48 @@ logger = preparating_logger(__name__)
 """---------------------------------------------------------
     First Person
 ---------------------------------------------------------"""
+
+
+class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base):
+    bl_idname = "vrm_helper.set_mesh_annotation_0"
+    bl_label = "Set VRM0 Mesh Annotation"
+    bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+
+    """
+    選択されたオブジェクトをTarget ArmatureのVRM First Person Mesh Annotationに設定する｡
+    Mesh Annotationのタイプは現在の描画モードの値が適用される｡
+    """
+
+    @classmethod
+    def poll(cls, context):
+        # 選択オブジェクト内にMeshタイプのオブジェクトが含まれていなければ使用不可｡
+        return [obj for obj in context.selected_objects if filtering_mesh_type(obj)]
+
+    def execute(self, context):
+        mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        annotation_type = get_scene_vrm0_first_person_prop().annotation_type
+
+        # 選択オブジェクトの数だけMesh Annotationを追加する｡
+        # 既にオブジェクトが存在する場合､Typeが異なれば値を更新､同じであれば処理をスキップする｡
+        for obj in [
+            obj for obj in context.selected_objects if filtering_mesh_type(obj)
+        ]:
+            if annotation := search_same_name_mesh_annotation(obj.name):
+                logger.debug(annotation.node.mesh_object_name)
+                if annotation.type == annotation_type:
+                    continue
+                annotation.type = annotation_type
+                continue
+
+            else:
+                new_item = mesh_annotations.add()
+                new_item.node.mesh_object_name = obj.name
+                new_item.type = annotation_type
+
+        # 登録された Mesh Annotationをタイプ毎に纏めてソートする｡
+        sort_mesh_annotations()
+
+        return {"FINISHED"}
 
 
 """---------------------------------------------------------

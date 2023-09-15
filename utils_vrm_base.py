@@ -323,6 +323,7 @@ def get_vrm1_extension_property_expression() -> ReferenceVrm1ExpressionsProperty
 def get_vrm_extension_property(
     type: Literal[
         "FIRST_PERSON",
+        "BLEND_SHAPE",
         "EXPRESSION",
         "COLLIDER",
         "COLLIDER_GROUP",
@@ -342,6 +343,7 @@ def get_vrm_extension_property(
     ----------
     type : type: Literal[
         "FIRST_PERSON",
+        "BLEND_SHAPE",
         "EXPRESSION",
         "COLLIDER",
         'COLLIDER_GROUP'
@@ -357,17 +359,16 @@ def get_vrm_extension_property(
     """
 
     # Spring Bone関連のプロパティでない場合｡
-    if any([type == "FIRST_PERSON", type == "EXPRESSION"]):
+    if type in {"FIRST_PERSON", "BLEND_SHAPE", "EXPRESSION"}:
         vrm_extension = get_vrm_extension_root_property("VRM")
+        match type:
+            case "FIRST_PERSON":
+                return vrm_extension.first_person
 
-        if type == "FIRST_PERSON":
-            return vrm_extension.first_person
-
-        if type == "EXPRESSION":
-            if check_addon_mode() == "0":
+            case "BLEND_SHAPE":
                 return vrm_extension.blend_shape_master.blend_shape_groups
 
-            if check_addon_mode() == "1":
+            case "EXPRESSION":
                 return vrm_extension.expressions
 
     # Spring Bone関連のプロパティである場合｡
