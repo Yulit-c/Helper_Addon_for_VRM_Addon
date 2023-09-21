@@ -6,6 +6,7 @@ if "bpy" in locals():
         "property_groups",
         "utils_common",
         "operators",
+        "utils_vrm0_first_person",
         "vrm0_operators",
     ]
 
@@ -18,6 +19,7 @@ else:
     from .. import property_groups
     from .. import utils_common
     from .. import operators
+    from . import utils_vrm0_first_person
     from . import vrm0_operators
 
 
@@ -107,8 +109,8 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
 
     # Property Groupの取得｡
     wm_vrm0_prop = get_vrm0_wm_root_prop()
-    scene_scene_vrm0_prop = get_vrm0_scene_root_prop()
-    first_person_prop = scene_scene_vrm0_prop.first_person_settings
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    first_person_prop = scene_vrm0_prop.first_person_settings
 
     # ----------------------------------------------------------
     #    UI描画
@@ -125,11 +127,11 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
     row = layout.row()
     row.template_list(
-        "VRMHELPER_UL_first_person_list",
+        "VRMHELPER_UL_vrm0_first_person_list",
         "",
         wm_vrm0_prop,
         "first_person_list_items4custom_filter",
-        scene_scene_vrm0_prop.active_indexes,
+        scene_vrm0_prop.active_indexes,
         "first_person",
         rows=define_ui_list_rows(rows),
     )
@@ -159,7 +161,7 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
     # )
 
 
-class VRMHELPER_UL_first_person_list(bpy.types.UIList):
+class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
     """First Person Mesh Annotationを表示するUI List"""
 
     def draw_item(
@@ -170,8 +172,8 @@ class VRMHELPER_UL_first_person_list(bpy.types.UIList):
         # リスト内の項目のレイアウトを定義する｡
         if self.layout_type in {"DEFAULT", "COMPACT"}:
             sp = layout.split(align=True, factor=0.7)
-            sp.label(text=annotation.node.mesh_object_name, icon="OUTLINER_OB_MESH")
-            sp.prop(annotation, "type", text="")
+            sp.label(text=annotation.mesh.mesh_object_name, icon="OUTLINER_OB_MESH")
+            sp.prop(annotation, "first_person_flag", text="")
 
 
 """---------------------------------------------------------
@@ -183,4 +185,5 @@ CLASSES = (
     # ----------------------------------------------------------
     #    UI List
     # ----------------------------------------------------------
+    VRMHELPER_UL_vrm0_first_person_list,
 )

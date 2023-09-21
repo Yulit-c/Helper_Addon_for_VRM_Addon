@@ -52,15 +52,12 @@ from ..addon_constants import (
     PRESET_EXPRESSION_NAME_DICT,
     EXPRESSION_ICON_DICT,
     EXPRESSION_OPTION_ICON,
-    MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME,
-    MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME,
     JOINT_PROP_NAMES,
 )
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm1_collider_settigs,
     VRMHELPER_SCENE_vrm1_spring_settigs,
-    VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
@@ -69,14 +66,9 @@ from ..property_groups import (
     get_target_armature_data,
     get_vrm1_scene_root_prop,
     get_vrm1_index_root_prop,
-    get_vrm1_active_index_prop,
-    get_ui_vrm1_first_person_prop,
-    get_ui_vrm1_expression_prop,
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
     get_ui_vrm1_collider_prop,
-    get_ui_vrm1_collider_group_prop,
-    get_ui_vrm1_spring_prop,
     get_ui_vrm1_constraint_prop,
 )
 
@@ -90,7 +82,6 @@ from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
     get_vrm1_extension_property_expression,
-    is_existing_target_armature,
     check_addon_mode,
 )
 
@@ -220,8 +211,8 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
 
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
-    scene_scene_vrm1_prop = get_vrm1_scene_root_prop()
-    first_person_prop = scene_scene_vrm1_prop.first_person_settings
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    first_person_prop = scene_vrm1_prop.first_person_settings
 
     # ----------------------------------------------------------
     #    UI描画
@@ -238,11 +229,11 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
     row = layout.row()
     row.template_list(
-        "VRMHELPER_UL_first_person_list",
+        "VRMHELPER_UL_vrm1_first_person_list",
         "",
         wm_vrm1_prop,
         "first_person_list_items4custom_filter",
-        scene_scene_vrm1_prop.active_indexes,
+        scene_vrm1_prop.active_indexes,
         "first_person",
         rows=define_ui_list_rows(rows),
     )
@@ -272,7 +263,7 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     )
 
 
-class VRMHELPER_UL_first_person_list(UIList):
+class VRMHELPER_UL_vrm1_first_person_list(UIList):
     """First Person Mesh Annotationを表示するUI List"""
 
     def draw_item(
@@ -300,9 +291,9 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     target_armature = get_target_armature()
     wm_vrm1_prop = get_vrm1_wm_root_prop()
-    scene_scene_vrm1_prop = get_vrm1_scene_root_prop()
-    active_indexes = scene_scene_vrm1_prop.active_indexes
-    expression_prop = scene_scene_vrm1_prop.expression_settings
+    scene_vrm1_prop = get_vrm1_scene_root_prop()
+    active_indexes = scene_vrm1_prop.active_indexes
+    expression_prop = scene_vrm1_prop.expression_settings
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = add_items2expression_ui_list()
@@ -1459,7 +1450,7 @@ CLASSES = (
     # ----------------------------------------------------------
     #    UI List
     # ----------------------------------------------------------
-    VRMHELPER_UL_first_person_list,
+    VRMHELPER_UL_vrm1_first_person_list,
     VRMHELPER_UL_expression_list,
     VRMHELPER_UL_expressin_morph_list,
     VRMHELPER_UL_expressin_material_list,

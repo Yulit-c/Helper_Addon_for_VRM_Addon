@@ -25,7 +25,7 @@ from bpy.types import (
 
 
 from ..addon_constants import (
-    FIRST_PERSON_ANNOTATION_TYPES,
+    VRM0_FIRST_PERSON_ANNOTATION_TYPES,
 )
 
 from ..property_groups import (
@@ -73,7 +73,7 @@ def vrm0_get_source_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
     annotation_type_filter = {first_person_prop.annotation_type}
     # 選択タイプによるフィルタリングの有無｡
     if not first_person_prop.is_filtering_by_type:
-        annotation_type_filter |= FIRST_PERSON_ANNOTATION_TYPES
+        annotation_type_filter |= VRM0_FIRST_PERSON_ANNOTATION_TYPES
 
     ext_first_person = get_vrm_extension_property("FIRST_PERSON")
 
@@ -83,8 +83,8 @@ def vrm0_get_source_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
             source_annotation_list = [
                 i
                 for i in ext_first_person.mesh_annotations
-                if i.type in annotation_type_filter
-                and not i.node.mesh_object_name == ""
+                if i.first_person_flag in annotation_type_filter
+                and not i.mesh.mesh_object_name == ""
             ]
         case "OPERATOR":
             source_annotation_list = [i for i in ext_first_person.mesh_annotations]
@@ -116,7 +116,7 @@ def vrm0_add_items2annotation_ui_list() -> int:
 
     for annotation in source_annotation_list:
         new_item = items.add()
-        new_item.name = annotation.node.mesh_object_name
+        new_item.name = annotation.mesh.mesh_object_name
 
     return len(source_annotation_list)
 
@@ -139,7 +139,7 @@ def vrm0_search_same_name_mesh_annotation(object_name: str) -> PropertyGroup:
     if annotations := [
         i
         for i in vrm0_get_source_annotation("OPERATOR")
-        if i.node.mesh_object_name == object_name
+        if i.mesh.mesh_object_name == object_name
     ]:
         return annotations[0]
 
@@ -157,7 +157,7 @@ def vrm0_remove_mesh_annotation(source_object_name: str):
     mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
     try:
         mesh_annotations.remove(
-            [i.node.mesh_object_name for i in mesh_annotations].index(
+            [i.mesh.mesh_object_name for i in mesh_annotations].index(
                 source_object_name
             )
         )
@@ -168,7 +168,7 @@ def vrm0_remove_mesh_annotation(source_object_name: str):
 
 def vrm0_sort_mesh_annotations():
     """
-    現在のMesh Annotationsの状態を取得した後に'type'->'node.mesh_object_name'の順にソートする｡
+    現在のMesh Annotationsの状態を取得した後に'type'->'mesh.mesh_object_name'の順にソートする｡
     その際重複したオブジェクトは除外される｡
 
     """
@@ -176,10 +176,10 @@ def vrm0_sort_mesh_annotations():
     mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
     seen = []
     current_annotations_list = [
-        (i.node.mesh_object_name, i.type)
+        (i.mesh.mesh_object_name, i.first_person_flag)
         for i in mesh_annotations
-        if i.node.mesh_object_name not in seen
-        and not seen.append(i.node.mesh_object_name)
+        if i.mesh.mesh_object_name not in seen
+        and not seen.append(i.mesh.mesh_object_name)
     ]
     current_annotations_list.sort(key=lambda x: (x[1], x[0]))
 
@@ -187,5 +187,5 @@ def vrm0_sort_mesh_annotations():
     mesh_annotations.clear()
     for name, type in current_annotations_list:
         new_item = mesh_annotations.add()
-        new_item.node.mesh_object_name = name
-        new_item.type = type
+        new_item.mesh.mesh_object_name = name
+        new_item.first_person_flag = type

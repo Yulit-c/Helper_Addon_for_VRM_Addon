@@ -221,27 +221,27 @@ class VRMHELPER_SCENE_vrm0_first_person_settigs(bpy.types.PropertyGroup):
         description="Determine the First_Person annotation you wish to apply",
         items=(
             (
-                "auto",
+                "Auto",
                 "Auto",
                 "Set the value to Auto",
             ),
             (
-                "both",
+                "Both",
                 "Both",
                 "Set the value to Both",
             ),
             (
-                "thirdPersonOnly",
+                "ThirdPersonOnly",
                 "Third Person Only",
                 "Set the value to Third Person Only",
             ),
             (
-                "firstPersonOnly",
+                "FirstPersonOnly",
                 "First Person Only",
                 "Set the value to First Person Only",
             ),
         ),
-        default="both",
+        default="Both",
     )
 
     is_filtering_by_type: BoolProperty(
@@ -1211,7 +1211,7 @@ class VRMHELPER_WM_vrm0_first_person_list_items(bpy.types.PropertyGroup):
 
 class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
-    WindowManager階層下のVRM1用プロパティグループ群
+    WindowManager階層下のVRM0用プロパティグループ群
     ---------------------------------------------------------"""
 
     first_person_list_items4custom_filter: CollectionProperty(
@@ -2151,8 +2151,11 @@ CLASSES = (
     # ----------------------------------------------------------
     VRMHELPER_SCENE_basic_settigs,
     VRMHELPER_SCENE_misc_tools_settigs,
-    VRMHELPER_SCENE_vrm0_root_property_group,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_SCENE_vrm0_first_person_settigs,
+    VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
+    VRMHELPER_SCENE_vrm0_root_property_group,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_SCENE_vrm1_first_person_settigs,
     VRMHELPER_SCENE_vrm1_expression_settigs,
     VRMHELPER_SCENE_vrm1_collider_settigs,
@@ -2162,13 +2165,14 @@ CLASSES = (
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
     VRMHELPER_SCENE_vrm1_root_property_group,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_SCENE_root_property_group,
     # ----------------------------------------------------------
     #    Window Manager
     # ----------------------------------------------------------
-    VRMHELPER_WM_vrm0_root_property_group,
     VRMHELPER_WM_vrm0_first_person_list_items,
-    VRMHELPER_WM_vrm1_root_property_group,
+    VRMHELPER_WM_vrm0_root_property_group,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm1_first_person_list_items,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_expression_morph_list_items,
@@ -2182,5 +2186,6 @@ CLASSES = (
     VRMHELPER_WM_vrm1_constraint_properties,
     VRMHELPER_WM_vrm1_constraint_list_items,
     VRMHELPER_WM_vrm1_root_property_group,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_WM_root_property_group,
 )

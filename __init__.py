@@ -23,9 +23,11 @@ if "bpy" in locals():
         "preferences",
         "property_groups",
         "operators",
+        "vrm0_operators",
         "vrm1_operators",
-        "ui",
+        "vrm0_ui",
         "vrm1_ui",
+        "ui",
     ]
 
     for module in reloadable_modules:
@@ -37,9 +39,11 @@ else:
     from . import preferences
     from . import property_groups
     from . import operators
+    from .Vrm0 import vrm0_operators
+    from .Vrm0 import vrm0_ui
     from .Vrm1 import vrm1_operators
-    from . import ui
     from .Vrm1 import vrm1_ui
+    from . import ui
 
 
 import bpy
@@ -75,7 +79,9 @@ CLASSES = (
     *preferences.CLASSES,
     *property_groups.CLASSES,
     *operators.CLASSES,
+    *vrm0_operators.CLASSES,
     *vrm1_operators.CLASSES,
+    *vrm0_ui.CLASSES,
     *vrm1_ui.CLASSES,
     *ui.CLASSES,
 )

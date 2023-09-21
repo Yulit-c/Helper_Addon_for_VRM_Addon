@@ -53,7 +53,14 @@ UI_LIST_CUSTOM_FILTER_TYPE = Literal[
 """---------------------------------------------------------
     First Person
 ---------------------------------------------------------"""
-FIRST_PERSON_ANNOTATION_TYPES = {
+VRM0_FIRST_PERSON_ANNOTATION_TYPES = {
+    "Auto",
+    "Both",
+    "ThirdPersonOnly",
+    "FirstPersonOnly",
+}
+
+VRM1_FIRST_PERSON_ANNOTATION_TYPES = {
     "auto",
     "both",
     "thirdPersonOnly",

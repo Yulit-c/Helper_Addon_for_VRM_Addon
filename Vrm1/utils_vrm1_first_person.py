@@ -25,7 +25,7 @@ from bpy.types import (
 
 
 from ..addon_constants import (
-    FIRST_PERSON_ANNOTATION_TYPES,
+    VRM1_FIRST_PERSON_ANNOTATION_TYPES,
 )
 
 from ..property_groups import (
@@ -73,7 +73,7 @@ def vrm1_get_source_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
     annotation_type_filter = {first_person_prop.annotation_type}
     # 選択タイプによるフィルタリングの有無｡
     if not first_person_prop.is_filtering_by_type:
-        annotation_type_filter |= FIRST_PERSON_ANNOTATION_TYPES
+        annotation_type_filter |= VRM1_FIRST_PERSON_ANNOTATION_TYPES
 
     ext_first_person = get_vrm_extension_property("FIRST_PERSON")
 

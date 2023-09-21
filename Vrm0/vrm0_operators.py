@@ -5,6 +5,7 @@ if "bpy" in locals():
         "preparation_logger",
         "utils_common",
         "utils_vrm_base",
+        "utils_vrm0_first_person",
     ]
 
     for module in reloadable_modules:
@@ -131,16 +132,16 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base)
             obj for obj in context.selected_objects if filtering_mesh_type(obj)
         ]:
             if annotation := vrm0_search_same_name_mesh_annotation(obj.name):
-                logger.debug(annotation.node.mesh_object_name)
-                if annotation.type == annotation_type:
+                logger.debug(annotation.mesh.mesh_object_name)
+                if annotation.first_person_flag == annotation_type:
                     continue
-                annotation.type = annotation_type
+                annotation.first_person_flag = annotation_type
                 continue
 
             else:
                 new_item = mesh_annotations.add()
-                new_item.node.mesh_object_name = obj.name
-                new_item.type = annotation_type
+                new_item.mesh.mesh_object_name = obj.name
+                new_item.first_person_flag = annotation_type
 
         # 登録された Mesh Annotationをタイプ毎に纏めてソートする｡
         vrm0_sort_mesh_annotations()
