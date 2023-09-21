@@ -116,7 +116,7 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
     )
 
     tool_mode_items = (
-        # ("0", "0.x", "Setup VRM for version 0.x"),
+        ("0", "0.x", "Setup VRM for version 0.x"),
         ("1", "1.x", "Setup VRM for version 1.x"),
         # ("2", "Misc", "Use other utility tools."),
     )
@@ -129,7 +129,17 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
         update=update_vrm_extension_version,
     )
 
-    sort_order_component_type = (
+    vrm0_sort_order_component_type = (
+        "META",
+        "HUMANOID",
+        "FIRST_PERSON",
+        "LOOK_AT",
+        "BLEND_SHAPE",
+        "COLLIDER_GROUP",
+        "BONE_GROUP",
+    )  # UI描画時に一定の順にソートするためのキー｡
+
+    vrm1_sort_order_component_type = (
         "META",
         "HUMANOID",
         "FIRST_PERSON",
@@ -141,7 +151,23 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
         "SPRING",
     )  # UI描画時に一定の順にソートするためのキー｡
 
-    component_type_items = [
+    vrm0_component_type_items = [
+        ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
+        ("BLEND_SHAPE", "Blend Shape", "Draw UI for setting Blend Shape"),
+        ("COLLIDER_GROUP", "Collider Group", "Draw UI for setting Collider Group"),
+        ("BONE_GROUP", "Spring Bone Group", "Draw UI for setting Spring Bone Group"),
+    ]
+
+    vrm0_component_type: EnumProperty(
+        name="Vrm0 Component Type",
+        description="Property for selecting the UI item to draw",
+        options={"ENUM_FLAG"},
+        items=vrm0_component_type_items,
+        default=set(),
+        update=update_addon_collection,
+    )
+
+    vrm1_component_type_items = [
         ("FIRST_PERSON", "First Person", "Draw UI for setting First Person"),
         ("EXPRESSION", "Expression", "Draw UI for setting Expression"),
         ("CONSTRAINT", "Constraint", "Draw UI for setting Constraint"),
@@ -150,11 +176,11 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
         ("SPRING", "Spring", "Draw UI for setting Spring"),
     ]
 
-    component_type: EnumProperty(
-        name="Component Type",
+    vrm1_component_type: EnumProperty(
+        name="VRM1 Component Type",
         description="Property for selecting the UI item to draw",
         options={"ENUM_FLAG"},
-        items=component_type_items,
+        items=vrm1_component_type_items,
         default=set(),
         update=update_addon_collection,
     )
@@ -1174,12 +1200,6 @@ class VRMHELPER_SCENE_root_property_group(bpy.types.PropertyGroup):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
-    """---------------------------------------------------------
-    WindowManager階層下のVRM0用プロパティグループ群
-    ---------------------------------------------------------"""
-
-
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
@@ -2132,6 +2152,7 @@ CLASSES = (
     VRMHELPER_SCENE_basic_settigs,
     VRMHELPER_SCENE_misc_tools_settigs,
     VRMHELPER_SCENE_vrm0_root_property_group,
+    VRMHELPER_SCENE_vrm0_first_person_settigs,
     VRMHELPER_SCENE_vrm1_first_person_settigs,
     VRMHELPER_SCENE_vrm1_expression_settigs,
     VRMHELPER_SCENE_vrm1_collider_settigs,
@@ -2146,6 +2167,8 @@ CLASSES = (
     #    Window Manager
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm0_root_property_group,
+    VRMHELPER_WM_vrm0_first_person_list_items,
+    VRMHELPER_WM_vrm1_root_property_group,
     VRMHELPER_WM_vrm1_first_person_list_items,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_expression_morph_list_items,

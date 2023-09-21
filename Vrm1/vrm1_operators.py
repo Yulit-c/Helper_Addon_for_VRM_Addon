@@ -105,9 +105,9 @@ from ..utils_vrm_base import (
 )
 
 from .utils_vrm1_first_person import (
-    search_same_name_mesh_annotation,
-    remove_mesh_annotation,
-    sort_mesh_annotations,
+    vrm1_search_same_name_mesh_annotation,
+    vrm1_remove_mesh_annotation,
+    vrm1_sort_mesh_annotations,
 )
 
 from .utils_vrm1_expression import (
@@ -184,8 +184,8 @@ logger = preparating_logger(__name__)
 
 
 class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base):
-    bl_idname = "vrm_helper.set_mesh_annotation"
-    bl_label = "Set Mesh Annotation"
+    bl_idname = "vrm_helper.set_mesh_annotation_1"
+    bl_label = "Set VRM1 Mesh Annotation"
     bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
 
     """
@@ -207,7 +207,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base)
         for obj in [
             obj for obj in context.selected_objects if filtering_mesh_type(obj)
         ]:
-            if annotation := search_same_name_mesh_annotation(obj.name):
+            if annotation := vrm1_search_same_name_mesh_annotation(obj.name):
                 logger.debug(annotation.node.mesh_object_name)
                 if annotation.type == annotation_type:
                     continue
@@ -220,7 +220,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base)
                 new_item.type = annotation_type
 
         # 登録された Mesh Annotationをタイプ毎に纏めてソートする｡
-        sort_mesh_annotations()
+        vrm1_sort_mesh_annotations()
 
         return {"FINISHED"}
 
@@ -228,7 +228,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base)
 class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
     VRMHELPER_first_person_base
 ):
-    bl_idname = "vrm_helper.remove_mesh_annotation_from_list"
+    bl_idname = "vrm_helper.vrm1_remove_mesh_annotation_from_list"
     bl_label = "Remove Mesh Annotation from Active Item"
     bl_description = (
         "Remove active annotation in the list from Target Armature's VRM Extension"
@@ -250,7 +250,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
         active_item_name = list_items[active_item_index].name
 
         # オブジェクトの名前に一致するMesh Annotationを走査してVRM Extensionから削除する｡
-        remove_mesh_annotation(active_item_name)
+        vrm1_remove_mesh_annotation(active_item_name)
 
         self.offset_active_item_index(self.component_type)
 
@@ -260,7 +260,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
 class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
     VRMHELPER_first_person_base
 ):
-    bl_idname = "vrm_helper.remove_mesh_annotation"
+    bl_idname = "vrm_helper.vrm1_remove_mesh_annotation"
     bl_label = "Remove  Mesh Annotation by Selected Objects"
     bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
 
@@ -278,7 +278,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
 
         # 選択オブジェクトの名前に一致するMesh Annotationを走査してVRM Extensionから削除する｡
         for obj in context.selected_objects:
-            remove_mesh_annotation(obj.name)
+            vrm1_remove_mesh_annotation(obj.name)
 
         self.offset_active_item_index(self.component_type)
 

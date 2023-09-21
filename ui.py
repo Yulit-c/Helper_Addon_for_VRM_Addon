@@ -61,6 +61,11 @@ from .operators import (
     VRMHELPER_OT_evaluate_addon_collections,
 )
 
+from .Vrm0.vrm0_ui import (
+    draw_panel_vrm0_first_person,
+)
+
+
 from .Vrm1.vrm1_ui import (
     draw_panel_vrm1_first_person,
     draw_panel_vrm1_expression,
@@ -247,24 +252,76 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
         # UIの描画
         layout = self.layout
 
-        # ----------------------------------------------------------
-        #    VRM1
-        # ----------------------------------------------------------
         match basic_prop.tool_mode:
+            # ----------------------------------------------------------
+            #    VRM0
+            # ----------------------------------------------------------
             case "0":
-                pass
+                layout.label(text="Edit Target:")
+                columns = 3
 
+                grid = layout.grid_flow(row_major=True, align=True, columns=columns)
+                grid.prop(basic_prop, "vrm0_component_type", text=" ")
+
+                def get_index(element):
+                    return basic_prop.vrm0_sort_order_component_type.index(element)
+
+                component_types = sorted(
+                    list(basic_prop.vrm0_component_type), key=get_index
+                )
+
+                box_spring = None
+                for type in component_types:
+                    match type:
+                        case "FIRST_PERSON":
+                            box = layout.box()
+                            box.label(text="First Person Tools", icon="HIDE_OFF")
+                            box_sub = box.box()
+                            draw_panel_vrm0_first_person(self, context, box_sub)
+
+                        case "BLEND_SHAPE":
+                            box = layout.box()
+                            box.label(text="Blend Shape Tools", icon="SHAPEKEY_DATA")
+                            box_sub = box.box()
+                            # draw_panel_vrm1_expression(self, context, box_sub)
+
+                        case "COLLIDER_GROUP":
+                            box_spring = draw_spring_setting_box(
+                                box_spring, layout, basic_prop
+                            )
+                            box = box_spring.box()
+                            box.label(text="Collider Group Tools", icon="OVERLAY")
+                            box_sub = box.box()
+                            # draw_panel_vrm1_collider_group(self, context, box_sub)
+
+                        case "SPRING":
+                            box_spring = draw_spring_setting_box(
+                                box_spring, layout, basic_prop
+                            )
+                            box = box_spring.box()
+                            box.label(text="Spring Bone Tools", icon="BONE_DATA")
+                            box_sub = box.box()
+                            # draw_panel_vrm1_spring(self, context, box_sub)
+
+                    if len(basic_prop.vrm1_component_type) > 1:
+                        layout.separator(factor=0.25)
+
+            # ----------------------------------------------------------
+            #    VRM1
+            # ----------------------------------------------------------
             case "1":
                 layout.label(text="Edit Target:")
                 columns = 3
 
                 grid = layout.grid_flow(row_major=True, align=True, columns=columns)
-                grid.prop(basic_prop, "component_type", text=" ")
+                grid.prop(basic_prop, "vrm1_component_type", text=" ")
 
                 def get_index(element):
-                    return basic_prop.sort_order_component_type.index(element)
+                    return basic_prop.vrm1_sort_order_component_type.index(element)
 
-                component_types = sorted(list(basic_prop.component_type), key=get_index)
+                component_types = sorted(
+                    list(basic_prop.vrm1_component_type), key=get_index
+                )
 
                 box_spring = None
                 for type in component_types:
@@ -315,7 +372,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                             draw_panel_vrm1_constraint_ui_list(self, context, box_sub)
                             draw_panel_vrm1_constraint_operator(self, context, box_sub)
 
-                    if len(basic_prop.component_type) > 1:
+                    if len(basic_prop.vrm1_component_type) > 1:
                         layout.separator(factor=0.25)
 
 

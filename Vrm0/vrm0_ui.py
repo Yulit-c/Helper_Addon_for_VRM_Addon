@@ -43,6 +43,7 @@ from ..property_groups import (
     get_target_armature,
     get_target_armature_data,
     get_vrm0_scene_root_prop,
+    get_vrm0_wm_root_prop,
 )
 
 from ..utils_common import (
@@ -60,8 +61,19 @@ from ..utils_vrm_base import (
 )
 
 
+from .utils_vrm0_first_person import (
+    vrm0_add_items2annotation_ui_list,
+    vrm0_search_same_name_mesh_annotation,
+)
+
+
 from ..operators import (
     VRMHELPER_OT_reset_shape_keys_on_selected_objects,
+)
+
+
+from .vrm0_operators import (
+    VRMHELPER_OT_vrm0_first_person_set_annotation,
 )
 
 """
@@ -86,6 +98,81 @@ logger = preparating_logger(__name__)
 """---------------------------------------------------------
     First Person
 ---------------------------------------------------------"""
+
+
+def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
+    """
+    VRM0のFirst Personに関する設定/オペレーターを描画する
+    """
+
+    # Property Groupの取得｡
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    scene_scene_vrm0_prop = get_vrm0_scene_root_prop()
+    first_person_prop = scene_scene_vrm0_prop.first_person_settings
+
+    # ----------------------------------------------------------
+    #    UI描画
+    # ----------------------------------------------------------
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = vrm0_add_items2annotation_ui_list()
+
+    row = layout.row()
+    row.prop(
+        first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type"
+    )
+    row = layout.row()
+    row.scale_y = 1.4
+    row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
+    row = layout.row()
+    row.template_list(
+        "VRMHELPER_UL_first_person_list",
+        "",
+        wm_vrm0_prop,
+        "first_person_list_items4custom_filter",
+        scene_scene_vrm0_prop.active_indexes,
+        "first_person",
+        rows=define_ui_list_rows(rows),
+    )
+    col = row.column()
+    # col.operator(
+    #     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list.bl_idname,
+    #     text="",
+    #     icon="REMOVE",
+    # )
+    # col.operator(
+    #     VRMHELPER_OT_vrm0_first_person_clear_annotation.bl_idname,
+    #     text="",
+    #     icon="PANEL_CLOSE",
+    # )
+
+    layout.separator()
+    col = layout.column(align=True)
+    col.operator(
+        VRMHELPER_OT_vrm0_first_person_set_annotation.bl_idname,
+        text="Set from Selected Objects",
+        icon="IMPORT",
+    )
+    # col.operator(
+    #     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects.bl_idname,
+    #     text="Remove by Selected Objects",
+    #     icon="EXPORT",
+    # )
+
+
+class VRMHELPER_UL_first_person_list(bpy.types.UIList):
+    """First Person Mesh Annotationを表示するUI List"""
+
+    def draw_item(
+        self, context, layout, data, item, icon, active_data, active_propname, index
+    ):
+        annotation = vrm0_search_same_name_mesh_annotation(item.name)
+
+        # リスト内の項目のレイアウトを定義する｡
+        if self.layout_type in {"DEFAULT", "COMPACT"}:
+            sp = layout.split(align=True, factor=0.7)
+            sp.label(text=annotation.node.mesh_object_name, icon="OUTLINER_OB_MESH")
+            sp.prop(annotation, "type", text="")
+
 
 """---------------------------------------------------------
 ------------------------------------------------------------

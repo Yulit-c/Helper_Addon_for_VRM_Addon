@@ -74,6 +74,8 @@ from ..utils_vrm_base import (
 
 from .utils_vrm0_first_person import (
     get_scene_vrm0_first_person_prop,
+    vrm0_search_same_name_mesh_annotation,
+    vrm0_sort_mesh_annotations,
 )
 
 from ..operators import (
@@ -128,7 +130,7 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base)
         for obj in [
             obj for obj in context.selected_objects if filtering_mesh_type(obj)
         ]:
-            if annotation := search_same_name_mesh_annotation(obj.name):
+            if annotation := vrm0_search_same_name_mesh_annotation(obj.name):
                 logger.debug(annotation.node.mesh_object_name)
                 if annotation.type == annotation_type:
                     continue
@@ -141,7 +143,7 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base)
                 new_item.type = annotation_type
 
         # 登録された Mesh Annotationをタイプ毎に纏めてソートする｡
-        sort_mesh_annotations()
+        vrm0_sort_mesh_annotations()
 
         return {"FINISHED"}
 
@@ -158,4 +160,5 @@ CLASSES = (
     # ----------------------------------------------------------
     #    First Perxon
     # ----------------------------------------------------------
+    VRMHELPER_OT_vrm0_first_person_set_annotation,
 )

@@ -95,8 +95,8 @@ from ..utils_vrm_base import (
 )
 
 from .utils_vrm1_first_person import (
-    add_items2annotation_ui_list,
-    search_same_name_mesh_annotation,
+    vrm1_add_items2annotation_ui_list,
+    vrm1_search_same_name_mesh_annotation,
 )
 
 from .utils_vrm1_expression import (
@@ -227,7 +227,7 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     #    UI描画
     # ----------------------------------------------------------
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-    rows = add_items2annotation_ui_list()
+    rows = vrm1_add_items2annotation_ui_list()
 
     row = layout.row()
     row.prop(
@@ -278,7 +278,7 @@ class VRMHELPER_UL_first_person_list(UIList):
     def draw_item(
         self, context, layout, data, item, icon, active_data, active_propname, index
     ):
-        annotation = search_same_name_mesh_annotation(item.name)
+        annotation = vrm1_search_same_name_mesh_annotation(item.name)
 
         # リスト内の項目のレイアウトを定義する｡
         if self.layout_type in {"DEFAULT", "COMPACT"}:

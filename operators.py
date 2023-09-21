@@ -62,7 +62,7 @@ from .utils_vrm_base import (
 )
 
 from .Vrm1.utils_vrm1_first_person import (
-    add_items2annotation_ui_list,
+    vrm1_add_items2annotation_ui_list,
 )
 
 from .Vrm1.utils_vrm1_expression import (
@@ -209,7 +209,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         """
         match target_type:
             case "FIRST_PERSON":
-                add_items2annotation_ui_list()
+                vrm1_add_items2annotation_ui_list()
 
             case "EXPRESSION":
                 add_items2expression_ui_list()

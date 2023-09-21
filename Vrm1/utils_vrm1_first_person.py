@@ -52,7 +52,7 @@ logger = preparating_logger(__name__)
 ---------------------------------------------------------"""
 
 
-def get_source_vrm1_annotation(mode: Literal["UI", "OPERATOR"]) -> list[PropertyGroup]:
+def vrm1_get_source_annotation(mode: Literal["UI", "OPERATOR"]) -> list[PropertyGroup]:
     """
     コンテクストのシーン内オブジェクトの中から､VRM Extension内のFirst Personの値が
     選択されたFirst Person Ui Modeと同一のものを抽出したリストを返す｡
@@ -95,7 +95,7 @@ def get_source_vrm1_annotation(mode: Literal["UI", "OPERATOR"]) -> list[Property
     return source_annotation_list
 
 
-def add_items2annotation_ui_list() -> int:
+def vrm1_add_items2annotation_ui_list() -> int:
     """
     First Personの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -109,7 +109,7 @@ def add_items2annotation_ui_list() -> int:
     items = get_ui_vrm1_first_person_prop()
 
     # Current Sceneに存在するオブジェクトから対象オブジェクトを取得する｡
-    source_annotation_list = get_source_vrm1_annotation("UI")
+    source_annotation_list = vrm1_get_source_annotation("UI")
 
     # コレクションプロパティの初期化処理｡
     items.clear()
@@ -121,7 +121,7 @@ def add_items2annotation_ui_list() -> int:
     return len(source_annotation_list)
 
 
-def search_same_name_mesh_annotation(object_name: str) -> PropertyGroup:
+def vrm1_search_same_name_mesh_annotation(object_name: str) -> PropertyGroup:
     """
     引数で受け取ったオブジェクト名と一致するMesh AnnotationをTarget ArmatureのVRM Extensionから取得する。
 
@@ -138,13 +138,13 @@ def search_same_name_mesh_annotation(object_name: str) -> PropertyGroup:
     """
     if annotations := [
         i
-        for i in get_source_vrm1_annotation("OPERATOR")
+        for i in vrm1_get_source_annotation("OPERATOR")
         if i.node.mesh_object_name == object_name
     ]:
         return annotations[0]
 
 
-def remove_mesh_annotation(source_object_name: str):
+def vrm1_remove_mesh_annotation(source_object_name: str):
     """
     引数で受け取ったオブジェクト名を用いてUI List内のアクティブアイテムインデックスを取得してそのアクティブアイテムを削除する｡
 
@@ -166,7 +166,7 @@ def remove_mesh_annotation(source_object_name: str):
         pass
 
 
-def sort_mesh_annotations():
+def vrm1_sort_mesh_annotations():
     """
     現在のMesh Annotationsの状態を取得した後に'type'->'node.mesh_object_name'の順にソートする｡
     その際重複したオブジェクトは除外される｡
