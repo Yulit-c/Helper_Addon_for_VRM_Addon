@@ -3,7 +3,8 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
-        "addon_constants" "preferences",
+        "addon_constants",
+        "preferences",
     ]
 
     for module in reloadable_modules:
