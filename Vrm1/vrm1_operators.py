@@ -157,14 +157,14 @@ from .utils_vrm1_constraint import (
 
 from ..operators import (
     VRMHELPER_operator_base,
-    VRMHELPER_first_person_base,
-    VRMHELPER_expression_base,
-    VRMHELPER_expression_sub_morph,
-    VRMHELPER_expression_sub_material,
-    VRMHELPER_collider_base,
-    VRMHELPER_collider_group_base,
-    VRMHELPER_spring_base,
-    VRMHELPER_constraint_base,
+    VRMHELPER_vrm1_first_person_base,
+    VRMHELPER_vrm1_expression_base,
+    VRMHELPER_vrm1_expression_sub_morph,
+    VRMHELPER_vrm1_expression_sub_material,
+    VRMHELPER_vrm1_collider_base,
+    VRMHELPER_vrm1_collider_group_base,
+    VRMHELPER_vrm1_spring_base,
+    VRMHELPER_vrm1_constraint_base,
 )
 
 """---------------------------------------------------------
@@ -183,7 +183,7 @@ logger = preparating_logger(__name__)
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base):
+class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_vrm1_first_person_base):
     bl_idname = "vrm_helper.set_mesh_annotation_1"
     bl_label = "Set VRM1 Mesh Annotation"
     bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
@@ -226,7 +226,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_first_person_base)
 
 
 class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
-    VRMHELPER_first_person_base
+    VRMHELPER_vrm1_first_person_base
 ):
     bl_idname = "vrm_helper.vrm1_remove_mesh_annotation_from_list"
     bl_label = "Remove Mesh Annotation from Active Item"
@@ -258,7 +258,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
 
 
 class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
-    VRMHELPER_first_person_base
+    VRMHELPER_vrm1_first_person_base
 ):
     bl_idname = "vrm_helper.vrm1_remove_mesh_annotation"
     bl_label = "Remove  Mesh Annotation by Selected Objects"
@@ -285,7 +285,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_first_person_clear_annotation(VRMHELPER_first_person_base):
+class VRMHELPER_OT_vrm1_first_person_clear_annotation(VRMHELPER_vrm1_first_person_base):
     bl_idname = "vrm_helper.clear_mesh_annotation"
     bl_label = "Clear Mesh Annotation"
     bl_description = "Remove all Mesh Annotations in Target Armature"
@@ -316,7 +316,9 @@ class VRMHELPER_OT_vrm1_first_person_clear_annotation(VRMHELPER_first_person_bas
 # ----------------------------------------------------------
 #    Expressions
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_expression_base):
+class VRMHELPER_OT_vrm1_expression_create_custom_expression(
+    VRMHELPER_vrm1_expression_base
+):
     bl_idname = "vrm_helper.vrm1_expression_create_custom_expression"
     bl_label = "Create Custom Expression"
     bl_description = "Create a new custom expression to the target armature"
@@ -334,7 +336,9 @@ class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_expression
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression_base):
+class VRMHELPER_OT_vrm1_expression_remove_custom_expression(
+    VRMHELPER_vrm1_expression_base
+):
     bl_idname = "vrm_helper.vrm1_expression_remove_custom_expression"
     bl_label = "Remove Custom Expression"
     bl_description = "Remove the active custom expression from the target armature"
@@ -361,7 +365,9 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_expression
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_base):
+class VRMHELPER_OT_vrm1_expression_clear_custom_expression(
+    VRMHELPER_vrm1_expression_base
+):
     bl_idname = "vrm_helper.vrm1_expression_clear_custom_expression"
     bl_label = "Clear Custom Expression"
     bl_description = "Clear all custom expressions from the target armature"
@@ -387,7 +393,9 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_expression_
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_move_custom_expression(VRMHELPER_expression_base):
+class VRMHELPER_OT_vrm1_expression_move_custom_expression(
+    VRMHELPER_vrm1_expression_base
+):
     bl_idname = "vrm_helper.vrm1_expression_move_custom_expression"
     bl_label = "Move Custom Expression"
     bl_description = "Reorder active custom expression"
@@ -443,7 +451,9 @@ class VRMHELPER_OT_vrm1_expression_move_custom_expression(VRMHELPER_expression_b
 # ----------------------------------------------------------
 #    Morph Target
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_expression_morph_create_morph(VRMHELPER_expression_sub_morph):
+class VRMHELPER_OT_vrm1_expression_morph_create_morph(
+    VRMHELPER_vrm1_expression_sub_morph
+):
     bl_idname = "vrm_helper.vrm1_expression_morph_create_morph"
     bl_label = "Create Morph Target Bind"
     bl_description = "Create a new morph target bind to the active expression"
@@ -496,7 +506,9 @@ class VRMHELPER_OT_vrm1_expression_morph_create_morph(VRMHELPER_expression_sub_m
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_morph_remove_morph(VRMHELPER_expression_sub_morph):
+class VRMHELPER_OT_vrm1_expression_morph_remove_morph(
+    VRMHELPER_vrm1_expression_sub_morph
+):
     bl_idname = "vrm_helper.vrm1_expression_morph_remove_morph"
     bl_label = "Remove Morph Target Bind"
     bl_description = "Remove the active morph target bind from the active expression"
@@ -520,7 +532,9 @@ class VRMHELPER_OT_vrm1_expression_morph_remove_morph(VRMHELPER_expression_sub_m
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(VRMHELPER_expression_sub_morph):
+class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(
+    VRMHELPER_vrm1_expression_sub_morph
+):
     bl_idname = "vrm_helper.vrm1_expression_morph_clear_morphs"
     bl_label = "Clear Morph Target Binds"
     bl_description = "Clear all morph target binds from the active expression"
@@ -538,7 +552,9 @@ class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(VRMHELPER_expression_sub_m
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(VRMHELPER_expression_sub_morph):
+class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(
+    VRMHELPER_vrm1_expression_sub_morph
+):
     bl_idname = "vrm_helper.vrm1_expression_set_morph_from_scene"
     bl_label = "Set Morph Target from Scene"
     bl_description = (
@@ -601,7 +617,7 @@ class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(VRMHELPER_expression_sub
 
 
 class VRMHELPER_OT_vrm1_expression_change_bind_material(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_change_bind_material"
     bl_label = "Change Bind Material"
@@ -665,7 +681,7 @@ class VRMHELPER_OT_vrm1_expression_change_bind_material(
 
 
 class VRMHELPER_OT_vrm1_expression_material_create_color(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_create_color"
     bl_label = "Create Material Color Bind"
@@ -692,7 +708,7 @@ class VRMHELPER_OT_vrm1_expression_material_create_color(
 
 
 class VRMHELPER_OT_vrm1_expression_material_remove_color(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_remove_color"
     bl_label = "Remove Material Color Bind"
@@ -720,7 +736,7 @@ class VRMHELPER_OT_vrm1_expression_material_remove_color(
 
 
 class VRMHELPER_OT_vrm1_expression_material_clear_colors(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_clear_colors"
     bl_label = "Clear Morph Target Binds"
@@ -741,7 +757,7 @@ class VRMHELPER_OT_vrm1_expression_material_clear_colors(
 
 
 class VRMHELPER_OT_vrm1_expression_material_create_transform(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_create_transform"
     bl_label = "Create Material Color Bind"
@@ -768,7 +784,7 @@ class VRMHELPER_OT_vrm1_expression_material_create_transform(
 
 
 class VRMHELPER_OT_vrm1_expression_material_remove_transform(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_remove_transform"
     bl_label = "Remove Material Color Bind"
@@ -798,7 +814,7 @@ class VRMHELPER_OT_vrm1_expression_material_remove_transform(
 
 
 class VRMHELPER_OT_vrm1_expression_material_clear_transforms(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_material_clear_transforms"
     bl_label = "Clear Morph Target Binds"
@@ -819,7 +835,7 @@ class VRMHELPER_OT_vrm1_expression_material_clear_transforms(
 
 
 class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_set_material_bind_from_scene"
     bl_label = "Set Material Bind from Scene"
@@ -926,7 +942,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
 
 
 class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_store_mtoon1_parameters"
     bl_label = "Store MToon1 Parameters"
@@ -960,7 +976,7 @@ class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
 
 
 class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_discard_stored_mtoon1_parameters"
     bl_label = "Discard Stored MToon1 Parameters"
@@ -977,7 +993,7 @@ class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(
 
 
 class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_restore_mtoon1_parameters"
     bl_label = "Restore MToon1 Parameters"
@@ -1009,7 +1025,7 @@ class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(
 #    Morph & Material Binds
 # ----------------------------------------------------------
 class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_set_both_binds_from_scene"
     bl_label = "Set Both Binds from Scene"
@@ -1154,7 +1170,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
 
 
 class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_restore_initial_values"
     bl_label = "Restore Initial State"
@@ -1197,7 +1213,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
 
 
 class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
-    VRMHELPER_expression_sub_material
+    VRMHELPER_vrm1_expression_sub_material
 ):
     bl_idname = "vrm_helper.vrm1_expression_assign_expression_to_scene"
     bl_label = "Assign Expression"
@@ -1277,7 +1293,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
+class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_create_from_bone"
     bl_label = "Create Collider"
     bl_description = "Create spring bone collider from selected bone"
@@ -1362,7 +1378,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_collider_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
+class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_remove_from_empty"
     bl_label = "Remove Collider"
     bl_description = "Remove spring bone collider from selected empty object"
@@ -1397,7 +1413,7 @@ class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_collider_base):
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
-class VRMHELPER_OT_collider_group_add_group(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_add_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_add_group"
     bl_label = "Add Collider Group"
     bl_description = "Add a new VRM1 Spring BoneCollider Group"
@@ -1410,7 +1426,9 @@ class VRMHELPER_OT_collider_group_add_group(VRMHELPER_collider_group_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_remove_active_group(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_remove_active_group(
+    VRMHELPER_vrm1_collider_group_base
+):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_active_group"
     bl_label = "Remove Collider Group"
     bl_description = "Deletes the collider group that is active in the list."
@@ -1439,7 +1457,7 @@ class VRMHELPER_OT_collider_group_remove_active_group(VRMHELPER_collider_group_b
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_clear_group"
     bl_label = "Clear Collider Group"
     bl_description = "Clear all collider groups."
@@ -1471,7 +1489,7 @@ class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_collider_group_base):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_collider_group_add_collider(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_add_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_add_collider"
     bl_label = "Add Collider"
     bl_description = "Add a new collider to the active group"
@@ -1489,7 +1507,7 @@ class VRMHELPER_OT_collider_group_add_collider(VRMHELPER_collider_group_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_collider"
     bl_label = "Remove Collider"
     bl_description = "Remove the active collider from group"
@@ -1510,7 +1528,7 @@ class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_collider_group_base)
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_collider_group_base):
+class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_clear_collider"
     bl_label = "Clear Collider"
     bl_description = "Remove all colliders linked to the active group"
@@ -1588,7 +1606,7 @@ class VRMHELPER_OT_collider_group_register_collider_from_bone(VRMHELPER_operator
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
-class VRMHELPER_OT_spring_add_spring(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_add_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_add_spring"
     bl_label = "Add Spring"
     bl_description = "Add a new VRM1 Spring"
@@ -1600,7 +1618,7 @@ class VRMHELPER_OT_spring_add_spring(VRMHELPER_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_spring(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_remove_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_spring"
     bl_label = "Add Spring"
     bl_description = "Remove active spring from spring"
@@ -1622,7 +1640,7 @@ class VRMHELPER_OT_spring_remove_spring(VRMHELPER_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_spring(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_clear_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_clear_spring"
     bl_label = "Clear Spring"
     bl_description = "Remove all springs from spring"
@@ -1638,7 +1656,7 @@ class VRMHELPER_OT_spring_clear_spring(VRMHELPER_spring_base):
 
 
 class VRMHELPER_OT_spring_add_joint(
-    VRMHELPER_spring_base, VRMHELPER_VRM1_joint_property
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_add_joint"
     bl_label = "Add Joint"
@@ -1703,7 +1721,7 @@ class VRMHELPER_OT_spring_add_joint(
             return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_joint(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_remove_joint(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_joint"
     bl_label = "Remove Joint"
     bl_description = "Remove active joint from spring"
@@ -1725,7 +1743,7 @@ class VRMHELPER_OT_spring_remove_joint(VRMHELPER_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_joint(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_clear_joint(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.spring_clear_joint"
     bl_label = "Clear Joint"
     bl_description = "Remove all joints from spring"
@@ -1749,7 +1767,7 @@ class VRMHELPER_OT_spring_clear_joint(VRMHELPER_spring_base):
 
 
 class VRMHELPER_OT_spring_add_joint_from_source(
-    VRMHELPER_spring_base, VRMHELPER_VRM1_joint_property
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_create_joint_from_selected"
     bl_label = "Create Joint"
@@ -1879,7 +1897,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
 
 
 class VRMHELPER_OT_spring_assign_parameters_to_joints(
-    VRMHELPER_spring_base, VRMHELPER_VRM1_joint_property
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
     bl_label = "Assign Joints Parameters"
@@ -1952,7 +1970,7 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 # -----------------------------------------------------
 
 
-class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_add_collider_group"
     bl_label = "Add Collider Group"
     bl_description = "Add a new collider group to the active spring"
@@ -1974,7 +1992,7 @@ class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_collider_group"
     bl_label = "Remove Collider Group"
     bl_description = "Remove active collider group from spring"
@@ -1996,7 +2014,7 @@ class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_collider_group(VRMHELPER_spring_base):
+class VRMHELPER_OT_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_clear_collider_group"
     bl_label = "Clear Collider Group"
     bl_description = "Remove all collider groups from spring"
@@ -2024,7 +2042,7 @@ class VRMHELPER_OT_spring_clear_collider_group(VRMHELPER_spring_base):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
+class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base):
     bl_idname = "vrmhelper.vrm1_constraint_add"
     bl_label = "Add Constraint"
     bl_description = "Create a VRM constraint of the specified type"
@@ -2117,7 +2135,7 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_constraint_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_constraint_remove_vrm_constraint(VRMHELPER_constraint_base):
+class VRMHELPER_OT_constraint_remove_vrm_constraint(VRMHELPER_vrm1_constraint_base):
     bl_idname = "vrmhelper.vrm1_constraint_remove"
     bl_label = "Remove Constraint"
     bl_description = "Remove the selected VRM constraint in UI List"

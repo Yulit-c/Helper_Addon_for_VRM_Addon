@@ -47,7 +47,11 @@ from ..property_groups import (
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
-    # ---------------------------------------------------------------------------------
+    # ----------------------------------------------------------
+    get_ui_vrm0_first_person_prop,
+    # ----------------------------------------------------------
+    get_vrm0_index_root_prop,
+    get_scene_vrm0_first_person_prop,
 )
 
 from ..utils_common import (
@@ -74,21 +78,21 @@ from ..utils_vrm_base import (
 )
 
 from .utils_vrm0_first_person import (
-    get_scene_vrm0_first_person_prop,
     vrm0_search_same_name_mesh_annotation,
+    vrm0_remove_mesh_annotation,
     vrm0_sort_mesh_annotations,
 )
 
 from ..operators import (
     VRMHELPER_operator_base,
-    VRMHELPER_first_person_base,
-    VRMHELPER_expression_base,
-    VRMHELPER_expression_sub_morph,
-    VRMHELPER_expression_sub_material,
-    VRMHELPER_collider_base,
-    VRMHELPER_collider_group_base,
-    VRMHELPER_spring_base,
-    VRMHELPER_constraint_base,
+    VRMHELPER_vrm0_first_person_base,
+    # VRMHELPER_vrm0_expression_base,
+    # VRMHELPER_vrm0_expression_sub_morph,
+    # VRMHELPER_vrm0_expression_sub_material,
+    # VRMHELPER_vrm0_collider_base,
+    # VRMHELPER_vrm0_collider_group_base,
+    # VRMHELPER_vrm0_spring_base,
+    # VRMHELPER_vrm0_constraint_base,
 )
 
 """---------------------------------------------------------
@@ -107,10 +111,11 @@ logger = preparating_logger(__name__)
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base):
-    bl_idname = "vrm_helper.set_mesh_annotation_0"
+class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_base):
+    bl_idname = "vrm_helper.vrm0_set_mesh_annotation"
     bl_label = "Set VRM0 Mesh Annotation"
     bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+    vrm_mode = "0"
 
     """
     選択されたオブジェクトをTarget ArmatureのVRM First Person Mesh Annotationに設定する｡
@@ -149,6 +154,92 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_first_person_base)
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(
+    VRMHELPER_vrm0_first_person_base
+):
+    bl_idname = "vrm_helper.vrm0_remove_mesh_annotation_from_list"
+    bl_label = "Remove Mesh Annotation from Active Item"
+    bl_description = (
+        "Remove active annotation in the list from Target Armature's VRM Extension"
+    )
+    vrm_mode = "0"
+
+    """
+    Target ArmatureのVRM Extensionから､リスト内で選択されているMesh Annotationを削除する｡
+    """
+
+    @classmethod
+    def poll(cls, context):
+        # Mesh Annotationが1つ以上存在しなければ使用不可｡
+        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+
+    def execute(self, context):
+        # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
+        list_items = get_ui_vrm0_first_person_prop()
+        active_item_index = get_vrm0_index_root_prop().first_person
+        active_item_name = list_items[active_item_index].name
+
+        # オブジェクトの名前に一致するMesh Annotationを走査してVRM Extensionから削除する｡
+        vrm0_remove_mesh_annotation(active_item_name)
+
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(
+    VRMHELPER_vrm0_first_person_base
+):
+    bl_idname = "vrm_helper.vrm0_remove_mesh_annotation"
+    bl_label = "Remove  Mesh Annotation by Selected Objects"
+    bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
+    vrm_mode = "0"
+
+    """
+    Target ArmatureのVRM Extensionから､選択オブジェクトに対応したMesh Annotationを削除する｡
+    """
+
+    @classmethod
+    def poll(cls, context):
+        # Mesh Annotationが1つ以上存在しなければ使用不可｡
+        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+
+    def execute(self, context):
+        # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
+
+        # 選択オブジェクトの名前に一致するMesh Annotationを走査してVRM Extensionから削除する｡
+        for obj in context.selected_objects:
+            vrm0_remove_mesh_annotation(obj.name)
+
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_first_person_clear_annotation(VRMHELPER_vrm0_first_person_base):
+    bl_idname = "vrm_helper.vrm0_clear_mesh_annotation"
+    bl_label = "Clear Mesh Annotation"
+    bl_description = "Remove all Mesh Annotations in Target Armature"
+    vrm_mode = "0"
+
+    """
+    Target Armature内のVRM Extensionに設定された全てのMesh Annotationを削除する｡
+    """
+
+    @classmethod
+    def poll(cls, context):
+        # Mesh Annotationが1つ以上存在しなければ使用不可｡
+        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+
+    def execute(self, context):
+        mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        mesh_annotations.clear()
+
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -160,6 +251,9 @@ CLASSES = (
     # ----------------------------------------------------------
     # ----------------------------------------------------------
     #    First Perxon
-    # ----------------------------------------------------------
+    # --------------------------------------------==========================--------------
     VRMHELPER_OT_vrm0_first_person_set_annotation,
+    VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list,
+    VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects,
+    VRMHELPER_OT_vrm0_first_person_clear_annotation,
 )

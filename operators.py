@@ -61,6 +61,10 @@ from .utils_vrm_base import (
     re_link_all_collider_object2collection,
 )
 
+from .Vrm0.utils_vrm0_first_person import (
+    vrm0_add_items2annotation_ui_list,
+)
+
 from .Vrm1.utils_vrm1_first_person import (
     vrm1_add_items2annotation_ui_list,
 )
@@ -161,16 +165,18 @@ class VRMHELPER_operator_base(bpy.types.Operator):
     オペレーター用基底クラス
     """
 
-    vrm_mode: EnumProperty(
-        name="VRM Version",
-        description="Version of VRM to be edited",
-        items=(
-            ("0", "0.x", "Edit the VRM data of version 0.x"),
-            ("1", "1.x", "Edit the VRM data of version 1.x"),
-        ),
-        default="0",
-        options={"HIDDEN"},
-    )
+    # vrm_mode: EnumProperty(
+    #     name="VRM Version",
+    #     description="Version of VRM to be edited",
+    #     items=(
+    #         ("0", "0.x", "Edit the VRM data of version 0.x"),
+    #         ("1", "1.x", "Edit the VRM data of version 1.x"),
+    #     ),
+    #     # default="1",
+    #     options={"HIDDEN"},
+    # )
+
+    vrm_mode: Literal[0, 1]
 
     bl_options = {"UNDO"}
 
@@ -207,29 +213,36 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             対象となるUIリストの種類
 
         """
-        match target_type:
-            case "FIRST_PERSON":
+
+        pattern = (int(self.vrm_mode), target_type)
+        logger.debug(pattern)
+
+        match pattern:
+            case (0, "FIRST_PERSON"):
+                vrm0_add_items2annotation_ui_list()
+
+            case (1, "FIRST_PERSON"):
                 vrm1_add_items2annotation_ui_list()
 
-            case "EXPRESSION":
+            case (1, "EXPRESSION"):
                 add_items2expression_ui_list()
 
-            case "EXPRESSION_MORPH":
+            case (1, "EXPRESSION_MORPH"):
                 add_items2expression_morph_ui_list()
 
-            case "EXPRESSION_MATERIAL":
+            case (1, "EXPRESSION_MATERIAL"):
                 add_items2expression_material_ui_list()
 
-            case "COLLIDER":
+            case (1, "COLLIDER"):
                 add_items2collider_ui_list()
 
-            case "COLLIDER_GROUP":
+            case (1, "COLLIDER_GROUP"):
                 add_items2collider_group_ui_list()
 
-            case "SPRING":
+            case (1, "SPRING"):
                 add_items2spring_ui_list()
 
-            case "CONSTRAINT":
+            case (1, "CONSTRAINT"):
                 constraint_type = get_scene_vrm1_constraint_prop().constraint_type
                 add_items2constraint_ui_list(constraint_type)
 
@@ -357,35 +370,48 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_first_person_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm0_first_person_base(VRMHELPER_operator_base):
+    vrm_mode = 0
     component_type: str = "FIRST_PERSON"
 
 
-class VRMHELPER_expression_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_first_person_base(VRMHELPER_operator_base):
+    vrm_mode = 1
+    component_type: str = "FIRST_PERSON"
+
+
+class VRMHELPER_vrm1_expression_base(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "EXPRESSION"
 
 
-class VRMHELPER_expression_sub_morph(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_expression_sub_morph(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "EXPRESSION_MORPH"
 
 
-class VRMHELPER_expression_sub_material(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_expression_sub_material(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "EXPRESSION_MATERIAL"
 
 
-class VRMHELPER_collider_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_collider_base(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "COLLIDER"
 
 
-class VRMHELPER_collider_group_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_collider_group_base(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "COLLIDER_GROUP"
 
 
-class VRMHELPER_spring_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_spring_base(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "SPRING"
 
 
-class VRMHELPER_constraint_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm1_constraint_base(VRMHELPER_operator_base):
+    vrm_mode = 1
     component_type: str = "CONSTRAINT"
 
     constraint_type_dict: ConstraintTypeDict = {

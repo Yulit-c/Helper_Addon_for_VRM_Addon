@@ -116,16 +116,16 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
     )
 
     tool_mode_items = (
-        ("0", "0.x", "Setup VRM for version 0.x"),
-        ("1", "1.x", "Setup VRM for version 1.x"),
-        # ("2", "Misc", "Use other utility tools."),
+        ("0", "0.x", "Setup VRM for version 0.x", 0),
+        ("1", "1.x", "Setup VRM for version 1.x", 1),
+        # ("2", "Misc", "Use other utility tools.", 2),
     )
 
     tool_mode: EnumProperty(
         name="Tool Mode",
         description="Property for selecting the UI item to draw",
         items=tool_mode_items,
-        default="1",
+        default=1,
         update=update_vrm_extension_version,
     )
 

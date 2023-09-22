@@ -75,7 +75,13 @@ from ..operators import (
 
 
 from .vrm0_operators import (
+    # ----------------------------------------------------------
+    #    First Person
+    # ----------------------------------------------------------
     VRMHELPER_OT_vrm0_first_person_set_annotation,
+    VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list,
+    VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects,
+    VRMHELPER_OT_vrm0_first_person_clear_annotation,
 )
 
 """
@@ -136,16 +142,16 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
         rows=define_ui_list_rows(rows),
     )
     col = row.column()
-    # col.operator(
-    #     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list.bl_idname,
-    #     text="",
-    #     icon="REMOVE",
-    # )
-    # col.operator(
-    #     VRMHELPER_OT_vrm0_first_person_clear_annotation.bl_idname,
-    #     text="",
-    #     icon="PANEL_CLOSE",
-    # )
+    col.operator(
+        VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list.bl_idname,
+        text="",
+        icon="REMOVE",
+    )
+    col.operator(
+        VRMHELPER_OT_vrm0_first_person_clear_annotation.bl_idname,
+        text="",
+        icon="PANEL_CLOSE",
+    )
 
     layout.separator()
     col = layout.column(align=True)
@@ -154,11 +160,11 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
         text="Set from Selected Objects",
         icon="IMPORT",
     )
-    # col.operator(
-    #     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects.bl_idname,
-    #     text="Remove by Selected Objects",
-    #     icon="EXPORT",
-    # )
+    col.operator(
+        VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects.bl_idname,
+        text="Remove by Selected Objects",
+        icon="EXPORT",
+    )
 
 
 class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
