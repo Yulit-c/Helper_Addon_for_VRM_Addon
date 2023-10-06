@@ -37,6 +37,8 @@ from bpy.types import (
 
 
 from .addon_classes import (
+    ReferenceVrm0BlendShapeMasterPropertyGroup,
+    # ----------------------------------------------------------
     MToon1MaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
     ReferenceVrm1ExpressionPropertyGroup,
@@ -53,8 +55,8 @@ from .addon_classes import (
 )
 
 from .addon_constants import (
-    MTOON_ATTRIBUTE_NAMES,
-    MTOON_DEFAULT_VALUES,
+    MTOON1_ATTRIBUTE_NAMES,
+    MTOON1_DEFAULT_VALUES,
 )
 
 from .property_groups import (
@@ -305,6 +307,26 @@ def get_vrm_extension_root_property(
 ---------------------------------------------------------"""
 
 
+# ----------------------------------------------------------
+#    VRM0
+# ----------------------------------------------------------
+def get_vrm0_extension_root_property() -> ReferenceVrm1PropertyGroup:
+    vrm_all_root = get_vrm_extension_all_root_property()
+    vrm0_root = vrm_all_root.vrm0
+    return vrm0_root
+
+
+def get_vrm0_extension_property_blend_shape() -> (
+    ReferenceVrm0BlendShapeMasterPropertyGroup
+):
+    vrm0_extension = get_vrm0_extension_root_property()
+    vrm0_blend_shapes = vrm0_extension.blend_shapes
+    return vrm0_blend_shapes
+
+
+# ----------------------------------------------------------
+#    VRM1
+# ----------------------------------------------------------
 def get_vrm1_extension_root_property() -> ReferenceVrm1PropertyGroup:
     vrm_all_root = get_vrm_extension_all_root_property()
     vrm1_root = vrm_all_root.vrm1
@@ -457,22 +479,22 @@ def get_mtoon_attr_name_from_bind_type(
     mtoon1_attr_name = None
     match color_bind_type:
         case "color" | "lit_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["lit_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["lit_color"]
 
         case "shadeColor" | "shade_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["shade_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["shade_color"]
 
         case "emissionColor" | "emission_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["emission_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["emission_color"]
 
         case "matcapColor" | "matcap_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["matcap_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["matcap_color"]
 
         case "rimColor" | "rim_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["rim_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["rim_color"]
 
         case "outlineColor" | "outline_color":
-            mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES["outline_color"]
+            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["outline_color"]
 
     return mtoon1_attr_name
 
@@ -502,7 +524,7 @@ def store_mtoon1_current_values(
     mtoon1 = source_material.vrm_addon_extension.mtoon1
 
     for name in stored_parameter_names:
-        mtoon1_attr_name = MTOON_ATTRIBUTE_NAMES[name]
+        mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES[name]
         value = attrgetter(mtoon1_attr_name)(mtoon1)
         # value = [abs(i) for i in value]
 
@@ -547,14 +569,14 @@ def get_mtoon1_default_values(
         default_outline_factor = stored_mtoon_parameters.outline_color
 
     else:
-        default_texture_scale = MTOON_DEFAULT_VALUES["texture_scale"]
-        default_texture_offset = MTOON_DEFAULT_VALUES["texture_offset"]
-        default_lit_factor = MTOON_DEFAULT_VALUES["lit_color"]
-        default_shade_factor = MTOON_DEFAULT_VALUES["shade_color"]
-        default_emissive_factor = MTOON_DEFAULT_VALUES["emission_color"]
-        default_matcap_factor = MTOON_DEFAULT_VALUES["matcap_color"]
-        default_rim_factor = MTOON_DEFAULT_VALUES["rim_color"]
-        default_outline_factor = MTOON_DEFAULT_VALUES["outline_color"]
+        default_texture_scale = MTOON1_DEFAULT_VALUES["texture_scale"]
+        default_texture_offset = MTOON1_DEFAULT_VALUES["texture_offset"]
+        default_lit_factor = MTOON1_DEFAULT_VALUES["lit_color"]
+        default_shade_factor = MTOON1_DEFAULT_VALUES["shade_color"]
+        default_emissive_factor = MTOON1_DEFAULT_VALUES["emission_color"]
+        default_matcap_factor = MTOON1_DEFAULT_VALUES["matcap_color"]
+        default_rim_factor = MTOON1_DEFAULT_VALUES["rim_color"]
+        default_outline_factor = MTOON1_DEFAULT_VALUES["outline_color"]
 
     obtained_default_parameters: MToon1MaterialParameters = {
         "texture_scale": list(default_texture_scale),
@@ -596,22 +618,22 @@ def get_mtoon_color_current_parameters(
 
     # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
     current_lit_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["lit_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["lit_color"])
     )
     current_shade_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["shade_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"])
     )
     current_emissive_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["emission_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"])
     )
     current_matcap_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["matcap_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["matcap_color"])
     )
     current_rim_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["rim_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"])
     )
     current_outline_factor = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["outline_color"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"])
     )
     #####################################################################################################
 
@@ -690,11 +712,11 @@ def get_mtoon_transform_current_parameters(
 
     # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
     current_texture_offset = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"])
     )
     # current_texture_offset = [abs(i) for i in current_texture_offset]
     current_texture_scale = list(
-        get_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"])
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"])
     )
     #####################################################################################################
     # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
@@ -728,8 +750,8 @@ def return_default_values_of_mtoon1_properties(target_material: Material):
     for (
         parameter_name,
         attr_name,
-    ) in MTOON_ATTRIBUTE_NAMES.items():
-        default_value = MTOON_DEFAULT_VALUES.get(parameter_name)
+    ) in MTOON1_ATTRIBUTE_NAMES.items():
+        default_value = MTOON1_DEFAULT_VALUES.get(parameter_name)
         set_attr_from_strings(mtoon1, attr_name, default_value)
 
 
@@ -751,7 +773,7 @@ def set_mtoon1_default_values(target_material: Material):
     source_patameters = stored_material_dict.get(target_material)
 
     mtoon1 = target_material.vrm_addon_extension.mtoon1
-    for stored_parameter_name, mtoon1_attr_name in MTOON_ATTRIBUTE_NAMES.items():
+    for stored_parameter_name, mtoon1_attr_name in MTOON1_ATTRIBUTE_NAMES.items():
         if source_patameters:
             value = source_patameters.get(stored_parameter_name)
             logger.debug(f"Restore Stored Values : {target_material.name}")

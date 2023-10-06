@@ -574,10 +574,10 @@ class VRMHELPER_UL_expression_list(UIList):
     ):
         expression: ReferenceVrm1ExpressionPropertyGroup = item.expressions_list[index]
 
-        # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
         sp = layout.split(factor=0.4)
         row = sp.row(align=True)
 
+        # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
         vrm1_expressions = get_vrm1_extension_property_expression()
         # プリセットエクスプレッションの場合
         if item.expression_index[1] < 0:

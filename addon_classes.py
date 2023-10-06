@@ -68,7 +68,7 @@ class ReferenceVrm0FirstPersonPropertyGroup:
     first_person_bone: ReferenceBonePropertyGroup
 
     first_person_bone_offset: list[bpy.types.FloatProperty]
-    mesh_annotations: bpy.types.CollectionProperty  # ReferenceVrm0MeshAnnotationPropertyGroup
+    mesh_annotations: bpy.types.CollectionProperty  # Vrm0MeshAnnotationPropertyGroup
     look_at_type_name_items = [
         ("Bone", "Bone", "Use bones to eye movement", "BONE_DATA", 0),
         (
@@ -94,7 +94,57 @@ class ReferenceVrm0FirstPersonPropertyGroup:
 #    Blend Shape
 # ----------------------------------------------------------
 class ReferenceVrm0BlendShapeMasterPropertyGroup:
-    pass
+    blend_shape_groups: bpy.types.CollectionProperty  # Vrm0BlendShapeGroupPropertyGroup
+    active_blend_shape_group_index: bpy.types.IntProperty
+
+
+class ReferenceVrm0BlendShapeGroupPropertyGroup:
+    preset_name_items = Literal[
+        "unknown",
+        "neutral",
+        "a",
+        "i",
+        "u",
+        "e",
+        "o",
+        "blink",
+        "joy",
+        "angry",
+        "sorrow",
+        "fun",
+        "lookup",
+        "lookdown",
+        "lookleft",
+        "lookright",
+        "blink_l",
+        "blink_r",
+    ]
+    preset_name: preset_name_items
+    binds: bpy.types.CollectionProperty  # Vrm0BlendShapeBindPropertyGroup
+    material_values: bpy.types.CollectionProperty  # Vrm0MaterialValueBindPropertyGroup
+    is_binary: bpy.types.BoolProperty
+    active_bind_index: bpy.types.IntProperty
+    active_material_value_index: bpy.types.IntProperty
+    preview: bpy.types.FloatProperty
+
+
+class ReferenceVrm0BlendShapeBindPropertyGroup:
+    mesh: ReferenceMeshObjectPropertyGroup
+    index: bpy.types.StringProperty
+    weight: bpy.types.FloatProperty
+
+
+class ReferenceVrm0MaterialValueBindPropertyGroup:
+    material: bpy.types.Material
+    property_name = bpy.types.StringProperty
+    target_value: bpy.types.CollectionProperty  # FloatPropertyGroup
+
+
+class BlendShapeCandidateUIList(TypedDict, total=False):
+    name: str
+    expressions: ReferenceVrm0BlendShapeGroupPropertyGroup
+    has_morph_bind: bool
+    has_material_bind: bool
 
 
 # ----------------------------------------------------------
@@ -246,7 +296,7 @@ class ReferenceVrm1PropertyGroup:
     humanoid: ReferenceVrm1HumanoidPropertyGroup
     first_person: ReferenceVrm1FirstPersonPropertyGroup
     look_at: ReferenceVrm1LookAtPropertyGroup
-    expressions: ReferenceVrm1ExpressionPropertyGroup
+    blend_shapes: ReferenceVrm1ExpressionPropertyGroup
 
 
 """---------------------------------------------------------

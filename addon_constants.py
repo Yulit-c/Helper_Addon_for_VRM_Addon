@@ -71,6 +71,48 @@ VRM1_FIRST_PERSON_ANNOTATION_TYPES = {
 """---------------------------------------------------------
     Expression
 ---------------------------------------------------------"""
+PRESET_BLEND_SHAPE_NAME_DICT = {
+    "unknown": "Unknown",
+    "neutral": "Neutral",
+    "a": "A",
+    "i": "I",
+    "u": "U",
+    "e": "E",
+    "o": "O",
+    "blink": "Blink",
+    "joy": "Joy",
+    "angry": "Angry",
+    "sorrow": "Sorrow",
+    "fun": "Fun",
+    "lookup": "Look Up",
+    "lookdown": "Look Down",
+    "lookleft": "Look Left",
+    "lookright": "Look Right",
+    "blink_l": "Blink",
+    "blink_r": "Blink",
+}
+
+BLEND_SHAPE_ICON_DICT = {
+    "unknown": "SHAPEKEY_DATA",
+    "neutral": "VEW_ORTHO",
+    "a": "A",
+    "i": "I",
+    "u": "U",
+    "e": "E",
+    "o": "O",
+    "blink": "HIDE_ON",
+    "joy": "HEART",
+    "angry": "ORPHAN_DATA",
+    "sorrow": "MOD_FLUIDSIM",
+    "fun": "LIGHT_SUN",
+    "lookup": "ANCHOR_TOP",
+    "lookdown": "ANCHOR_BOTTOM",
+    "lookleft": "ANCHOR_RIGHT",
+    "lookright": "ANCHOR_LEFT",
+    "blink_l": "HIDE_ON",
+    "blink_r": "HIDE_ON",
+}
+
 PRESET_EXPRESSION_NAME_DICT = {
     "happy": "Happy",
     "angry": "Angry",
@@ -140,7 +182,7 @@ JOINT_PROP_NAMES = (
 """---------------------------------------------------------
     MToon
 ---------------------------------------------------------"""
-MTOON_ATTRIBUTE_NAMES: MToon1ParameterNames = {
+MTOON1_ATTRIBUTE_NAMES: MToon1ParameterNames = {
     "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
     "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
     "lit_color": "pbr_metallic_roughness.base_color_factor",
@@ -151,7 +193,7 @@ MTOON_ATTRIBUTE_NAMES: MToon1ParameterNames = {
     "outline_color": "extensions.vrmc_materials_mtoon.outline_color_factor",
 }
 
-MTOON_DEFAULT_VALUES: MToon1MaterialParameters = {
+MTOON1_DEFAULT_VALUES: MToon1MaterialParameters = {
     "texture_scale": [1.0, 1.0],
     "texture_offset": [0.0, 0.0],
     "lit_color": [1.0, 1.0, 1.0, 1.0],

@@ -33,15 +33,13 @@ from ..addon_classes import (
 )
 
 from ..addon_constants import (
-    PRESET_EXPRESSION_NAME_DICT,
-    EXPRESSION_ICON_DICT,
-    EXPRESSION_OPTION_ICON,
-    MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME,
-    MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME,
-    JOINT_PROP_NAMES,
+    PRESET_BLEND_SHAPE_NAME_DICT,
 )
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm0_first_person_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_list_items,
+    # ----------------------------------------------------------    get_target_armature,
     get_target_armature,
     get_target_armature_data,
     get_vrm0_scene_root_prop,
@@ -57,7 +55,6 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
-    get_vrm1_extension_property_expression,
     is_existing_target_armature,
     check_addon_mode,
 )
@@ -66,6 +63,10 @@ from ..utils_vrm_base import (
 from .utils_vrm0_first_person import (
     vrm0_add_items2annotation_ui_list,
     vrm0_search_same_name_mesh_annotation,
+)
+
+from .utils_vrm0_blend_shape import (
+    get_source_vrm0_blend_shape4ui_list,
 )
 
 
@@ -167,11 +168,50 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
     )
 
 
+def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
+    """
+    VRM1のExpressionに関する設定/オペレーターを描画する
+    """
+
+    # Property Groupの取得｡
+    target_armature = get_target_armature()
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    active_indexes = scene_vrm0_prop.active_indexes
+    blend_shape_prop = scene_vrm0_prop.blend_shape_settings
+    blend_shapes = get_source_vrm0_blend_shape4ui_list()
+
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = len(blend_shapes)
+
+    # ----------------------------------------------------------
+    #    登録されているExpressionのリスト描画
+    # ----------------------------------------------------------
+    row = layout.row()
+    row.template_list(
+        "VRMHELPER_UL_expression_list",
+        "",
+        wm_vrm0_prop,
+        "expression_list_items4custom_filter",
+        active_indexes,
+        "expression",
+        rows=define_ui_list_rows(rows),
+    )
+
+
 class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
     """First Person Mesh Annotationを表示するUI List"""
 
     def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
+        self,
+        context,
+        layout,
+        data,
+        item: VRMHELPER_WM_vrm0_first_person_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
     ):
         annotation = vrm0_search_same_name_mesh_annotation(item.name)
 
@@ -180,6 +220,26 @@ class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
             sp = layout.split(align=True, factor=0.7)
             sp.label(text=annotation.mesh.mesh_object_name, icon="OUTLINER_OB_MESH")
             sp.prop(annotation, "first_person_flag", text="")
+
+
+class VRMHELPER_UL_expression_list(bpy.types.UIList):
+    """Expressionを表示するUI List"""
+
+    def draw_item(
+        self,
+        context,
+        layout: bpy.types.UILayout,
+        data,
+        item: VRMHELPER_WM_vrm0_blend_shape_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        sp = layout.split(factor=0.4)
+        row = sp.row(align=True)
+
+        # アイコンの描画
 
 
 """---------------------------------------------------------

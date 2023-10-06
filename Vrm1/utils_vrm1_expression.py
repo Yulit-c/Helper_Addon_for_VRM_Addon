@@ -4,7 +4,8 @@ if "bpy" in locals():
     reloadable_modules = [
         "preparation_logger",
         "addon_classes",
-        "addon_constants" "utils_common",
+        "addon_constants",
+        "utils_common",
         "utils_vrm_base",
     ]
 
@@ -74,7 +75,7 @@ from ..utils_common import (
 
 from ..utils_vrm_base import (
     MToon1MaterialParameters,
-    MTOON_ATTRIBUTE_NAMES,
+    MTOON1_ATTRIBUTE_NAMES,
     get_vrm1_extension_property_expression,
     get_mtoon_attr_name_from_bind_type,
     get_mtoon_color_current_parameters,
@@ -106,6 +107,15 @@ logger = preparating_logger(__name__)
 def get_active_list_item_in_expression() -> (
     Optional[VRMHELPER_WM_vrm1_expression_list_items]
 ):
+    """
+    UIリスト内のアクティブアイテムを取得する｡カスタムエクスプレッションの判別に利用する｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm1_expression_list_items]
+        取得されたUIリスト要素｡存在しない場合はNone｡
+
+    """
     if expressions_list := get_ui_vrm1_expression_prop():
         return expressions_list[get_vrm1_active_index_prop("EXPRESSION")]
     else:
@@ -223,12 +233,12 @@ def add_items2expression_ui_list() -> int:
 
     # カスタムエクスプレッションの情報を追加
     custom_expressions = []
-    for m, custom_exp_info in enumerate(candidate_custom_expressions):
+    for n, custom_exp_info in enumerate(candidate_custom_expressions):
         new_item: VRMHELPER_WM_vrm1_expression_list_items = items.add()
         new_item.name = custom_exp_info["name"]
         new_item.has_morph_bind = custom_exp_info["has_morph_bind"]
         new_item.has_material_bind = custom_exp_info["has_material_bind"]
-        new_item.expression_index[1] = m
+        new_item.expression_index[1] = n
 
         custom_expressions.append(custom_exp_info["custom_expression"])
 
@@ -790,6 +800,8 @@ def set_mtoon1_texture_transform_from_bind(
     offset_value = transform_bind.offset
 
     set_attr_from_strings(
-        mtoon1, MTOON_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
+        mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
     )
-    set_attr_from_strings(mtoon1, MTOON_ATTRIBUTE_NAMES["texture_offset"], offset_value)
+    set_attr_from_strings(
+        mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"], offset_value
+    )

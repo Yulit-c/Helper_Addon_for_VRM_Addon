@@ -253,6 +253,25 @@ class VRMHELPER_SCENE_vrm0_first_person_settigs(bpy.types.PropertyGroup):
 
 
 # ----------------------------------------------------------
+#    Blend Shape
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_blend_shape_settigs(bpy.types.PropertyGroup):
+    """
+    Expressionの設定に関するプロパティ
+    """
+
+    editing_target: EnumProperty(
+        name="Editing Targets",
+        description="Select the bind to be edited",
+        items=(
+            ("MORPH", "Morph Target", "Edit Morph Target Bind"),
+            ("MATERIAL", "Material", "Edit Material Binds"),
+        ),
+        default="MORPH",
+    )
+
+
+# ----------------------------------------------------------
 #    UI List
 # ----------------------------------------------------------
 class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
@@ -488,6 +507,13 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
         description="Group of properties for First_Person Annotation Settings",
         type=VRMHELPER_SCENE_vrm0_first_person_settigs,
     )
+
+    blend_shape_settings: PointerProperty(
+        name="Blend Shape Settings",
+        description="Group of properties for Blend Shape Annotation Settings",
+        type=VRMHELPER_SCENE_vrm0_blend_shape_settigs,
+    )
+
 
     active_indexes: PointerProperty(
         name="Active Item Indexes",
@@ -1210,6 +1236,146 @@ class VRMHELPER_WM_vrm0_first_person_list_items(bpy.types.PropertyGroup):
     """
 
 
+# ----------------------------------------------------------
+#    Blend_Shape
+# ----------------------------------------------------------
+class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup):
+    """
+    Blend Shape ProxyのMaterial Color/TextureTransform Bind設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: is_color, [2]: is_texture_transform",
+        size=3,
+    )
+
+    bind_index: IntProperty(
+        name="Item Index",
+        description="Index of item in VRM extension compornent",
+        default=0,
+    )
+
+    bind_material_name: StringProperty(
+        name="Bind Material Name",
+        description="Material name of material bind",
+        default="",
+    )
+
+
+class VRMHELPER_WM_vrm0_blend_shape_morph_list_items(bpy.types.PropertyGroup):
+    """
+    ExpressionのMorph Target設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: is_shape_key",
+        size=2,
+    )
+
+    bind_index: IntProperty(
+        name="Item Index",
+        description="Index of item in VRM extension compornent",
+        default=0,
+    )
+
+    shape_key_name: StringProperty(
+        name="Shape Key",
+        description="Shape key registered in BindDescription",
+        default="",
+    )
+
+
+class VRMHELPER_WM_vrm0_blend_shape_list_items(bpy.types.PropertyGroup):
+    """
+    Blend Shape設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    preset_name: StringProperty(
+        name="Preset Name",
+        description="Blend Shapes's preset name",
+        default="",
+    )
+
+    has_morph_bind: BoolProperty(
+        name="Has Morph Bind",
+        description="This Blend Shape has one or more Morph Binds",
+        default=False,
+    )
+
+    has_material_bind: BoolProperty(
+        name="Has Material Bind",
+        description="This Blend Shape has one or more Color or Texture Transform Binds",
+        default=False,
+    )
+
+    is_custom: BoolProperty(
+        name="Is Custom",
+        description="This item is custom blend shape",
+        default=False,
+    )
+
+
+# ----------------------------------------------------------
+#    Spring Bone
+# ----------------------------------------------------------
+class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
+    """
+    Collider Group設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label,[1]: is_collider_group, [2]: is_collider",
+        size=3,
+        default=(0, 0, 0),
+    )
+
+    item_name: StringProperty(
+        name="Collider Group Name",
+        description=(
+            "Name of the collider group component registered in the VRM Extension"
+        ),
+        default="",
+    )
+
+    item_indexes: IntVectorProperty(
+        name="Item Index",
+        description="Indexes of item in VRM extension compornent.[0]:Collider Groups, [1]:Collider",
+        size=2,
+        default=(0, 0),
+        min=0,
+    )
+
+
+class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
+    """
+    Spring Bone設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: is_spring, [2]: is_joint, [3]: is_collider_group",
+        size=4,
+        default=(0, 0, 0, 0),
+    )
+
+    item_name: StringProperty(
+        name="Item Name",
+        description="Name of the springs component registered in the VRM extension",
+        default="",
+    )
+
+    item_indexes: IntVectorProperty(
+        name="Item Indexes",
+        description="Indexes of item in VRM extension compornent.[0]:Springs, [1]:Joints, [2]:Collider Groups",
+        size=3,
+        default=(0, 0, 0),
+        min=0,
+    )
+
+
 class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     WindowManager階層下のVRM0用プロパティグループ群
@@ -1219,6 +1385,36 @@ class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
         name="Candidate First Person List Items",
         description="Elements registered with this collection property are displayed in the UI List",
         type=VRMHELPER_WM_vrm0_first_person_list_items,
+    )
+
+    blend_shape_list_items4custom_filter: CollectionProperty(
+        name="Candidate Blend Shape List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_blend_shape_list_items,
+    )
+
+    blend_shape_morph_list_items4custom_filter: CollectionProperty(
+        name="Candidate Blend Shape Morph Target Bind List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    )
+
+    blend_shape_material_list_items4custom_filter: CollectionProperty(
+        name="Candidate Blend Shape Material Bind List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    )
+
+    collider_group_list_items4custom_filter: CollectionProperty(
+        name="Candidate Collider Group List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_collider_group_list_items,
+    )
+
+    spring_bone_list_items4custom_filter: CollectionProperty(
+        name="Candidate Spring Bone List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_spring_bone_list_items,
     )
 
 
@@ -1819,10 +2015,52 @@ def get_vrm0_wm_root_prop() -> VRMHELPER_WM_vrm0_root_property_group:
     return vrm0_wm_root_prop
 
 
-def get_ui_vrm0_first_person_prop() -> VRMHELPER_WM_vrm0_first_person_list_items:
+def get_ui_vrm0_first_person_prop() -> (
+    bpy.types.CollectionProperty
+):  # VRMHELPER_WM_vrm0_first_person_list_items
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     first_person_filter = wm_vrm0_root_prop.first_person_list_items4custom_filter
     return first_person_filter
+
+
+def get_ui_vrm0_blend_shape_prop() -> (
+    bpy.types.CollectionProperty
+):  # VRMHELPER_WM_vrm0_blend_shape_list_items
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    blend_shape_filter = wm_vrm0_root_prop.blend_shape_list_items4custom_filter
+    return blend_shape_filter
+
+
+def get_ui_vrm0_blend_shape_morph_prop() -> (
+    bpy.types.CollectionProperty  # VRMHELPER_WM_vrm0_blend_shape_morph_list_items
+):
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    morph_filter = wm_vrm0_root_prop.blend_shape_morph_list_items4custom_filter
+    return morph_filter
+
+
+def get_ui_vrm0_blend_shape_material_prop() -> (
+    bpy.types.CollectionProperty  # VRMHELPER_WM_vrm0_blend_shape_material_list_items
+):
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    material_filter = wm_vrm0_root_prop.blend_shape_material_list_items4custom_filter
+    return material_filter
+
+
+def get_ui_vrm0_collider_group_prop() -> (
+    bpy.types.CollectionProperty
+):  # VRMHELPER_WM_vrm0_collider_group_list_items
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    collider_group_filter = wm_vrm0_root_prop.collider_group_list_items4custom_filter
+    return collider_group_filter
+
+
+def get_ui_vrm0_spring_prop() -> (
+    bpy.types.CollectionProperty
+):  # VRMHELPER_WM_vrm0_spring_bone_list_items
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    spring_bone_filter = wm_vrm0_root_prop.spring_bone_list_items4custom_filter
+    return spring_bone_filter
 
 
 def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
@@ -1848,25 +2086,25 @@ def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
             list_items = get_ui_vrm0_first_person_prop()
             index = vrm0_index_prop.first_person
 
-        # case "BLEND_SHAPE":
-        #     list_items = get_ui_vrm0_expression_prop()
-        #     index = vrm0_index_prop.expression
+        case "BLEND_SHAPE":
+            list_items = get_ui_vrm0_blend_shape_prop()
+            index = vrm0_index_prop.expression
 
-        # case "BLEND_SHAPE_MORPH":
-        #     list_items = get_ui_vrm0_expression_morph_prop()
-        #     index = vrm0_index_prop.expression_morph
+        case "BLEND_SHAPE_MORPH":
+            list_items = get_ui_vrm0_blend_shape_morph_prop()
+            index = vrm0_index_prop.expression_morph
 
-        # case "BLEND_SHAPE_MATERIAL":
-        #     list_items = get_ui_vrm0_expression_material_prop()
-        #     index = vrm0_index_prop.expression_material
+        case "BLEND_SHAPE_MATERIAL":
+            list_items = get_ui_vrm0_blend_shape_material_prop()
+            index = vrm0_index_prop.expression_material
 
-        # case "BONE_GROUPS":
-        #     list_items = get_ui_vrm0_spring_prop()
-        #     index = vrm0_index_prop.spring
+        case "BONE_GROUPS":
+            list_items = get_ui_vrm0_spring_prop()
+            index = vrm0_index_prop.spring
 
-        # case "COLLIDER_GROUP":
-        #     list_items = get_ui_vrm0_collider_group_prop()
-        #     index = vrm0_index_prop.collider_group
+        case "COLLIDER_GROUP":
+            list_items = get_ui_vrm0_collider_group_prop()
+            index = vrm0_index_prop.collider_group
 
     active_index = evaluation_active_index_prop(list_items, index)
     return active_index
@@ -2154,6 +2392,7 @@ CLASSES = (
     VRMHELPER_SCENE_misc_tools_settigs,
     # ---------------------------------------------------------------------------------
     VRMHELPER_SCENE_vrm0_first_person_settigs,
+    VRMHELPER_SCENE_vrm0_blend_shape_settigs,
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
