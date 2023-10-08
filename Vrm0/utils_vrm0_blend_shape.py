@@ -126,3 +126,10 @@ def add_items2blend_shapes_ui_list() -> int:
         new_item.has_material_bind = bool(bs.material_values)
 
     return len(items)
+
+
+# ----------------------------------------------------------
+#    MToon
+# ----------------------------------------------------------
+def set_mtoon0_default_values():
+    pass

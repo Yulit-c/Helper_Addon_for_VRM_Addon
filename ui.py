@@ -64,6 +64,7 @@ from .operators import (
 
 from .Vrm0.vrm0_ui import (
     draw_panel_vrm0_first_person,
+    draw_panel_vrm0_blend_shape,
 )
 
 
@@ -284,7 +285,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                             box = layout.box()
                             box.label(text="Blend Shape Tools", icon="SHAPEKEY_DATA")
                             box_sub = box.box()
-                            # draw_panel_vrm1_expression(self, context, box_sub)
+                            draw_panel_vrm0_blend_shape(self, context, box_sub)
 
                         case "COLLIDER_GROUP":
                             box_spring = draw_spring_setting_box(

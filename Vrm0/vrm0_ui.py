@@ -27,13 +27,14 @@ import bpy
 
 
 from ..addon_classes import (
-    ReferenceVrm1ExpressionPropertyGroup,
+    ReferenceVrm0BlendShapeGroupPropertyGroup,
     # ----------------------------------------------------------
     VRMHELPER_UL_base,
 )
 
 from ..addon_constants import (
     PRESET_BLEND_SHAPE_NAME_DICT,
+    BLEND_SHAPE_ICON_DICT,
 )
 
 from ..property_groups import (
@@ -53,10 +54,10 @@ from ..utils_common import (
 )
 
 from ..utils_vrm_base import (
-    get_vrm_extension_root_property,
-    get_vrm_extension_property,
     is_existing_target_armature,
     check_addon_mode,
+    get_vrm_extension_root_property,
+    get_vrm0_extension_property_blend_shape,
 )
 
 
@@ -71,6 +72,7 @@ from .utils_vrm0_blend_shape import (
 
 
 from ..operators import (
+    VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_reset_shape_keys_on_selected_objects,
 )
 
@@ -83,6 +85,12 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list,
     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects,
     VRMHELPER_OT_vrm0_first_person_clear_annotation,
+    # ----------------------------------------------------------
+    #    Blend Shape
+    # ----------------------------------------------------------
+    VRMHELPER_OT_0_blend_shape_create_blend_shape,
+    VRMHELPER_OT_0_blend_shape_remove_blend_shape,
+    VRMHELPER_OT_0_blend_shape_clear_blend_shape,
 )
 
 """
@@ -168,37 +176,6 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
     )
 
 
-def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
-    """
-    VRM1のExpressionに関する設定/オペレーターを描画する
-    """
-
-    # Property Groupの取得｡
-    target_armature = get_target_armature()
-    wm_vrm0_prop = get_vrm0_wm_root_prop()
-    scene_vrm0_prop = get_vrm0_scene_root_prop()
-    active_indexes = scene_vrm0_prop.active_indexes
-    blend_shape_prop = scene_vrm0_prop.blend_shape_settings
-    blend_shapes = get_source_vrm0_blend_shape4ui_list()
-
-    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-    rows = len(blend_shapes)
-
-    # ----------------------------------------------------------
-    #    登録されているExpressionのリスト描画
-    # ----------------------------------------------------------
-    row = layout.row()
-    row.template_list(
-        "VRMHELPER_UL_expression_list",
-        "",
-        wm_vrm0_prop,
-        "expression_list_items4custom_filter",
-        active_indexes,
-        "expression",
-        rows=define_ui_list_rows(rows),
-    )
-
-
 class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
     """First Person Mesh Annotationを表示するUI List"""
 
@@ -222,7 +199,61 @@ class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
             sp.prop(annotation, "first_person_flag", text="")
 
 
-class VRMHELPER_UL_expression_list(bpy.types.UIList):
+"""---------------------------------------------------------
+    Blend Shape
+---------------------------------------------------------"""
+
+
+def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
+    """
+    VRM1のExpressionに関する設定/オペレーターを描画する
+    """
+
+    # Property Groupの取得｡
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    active_indexes = scene_vrm0_prop.active_indexes
+    blend_shape_prop = scene_vrm0_prop.blend_shape_settings
+    blend_shape_master = get_vrm0_extension_property_blend_shape()
+    blend_shapes = blend_shape_master.blend_shape_groups
+
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = len(blend_shapes)
+
+    # ----------------------------------------------------------
+    #    登録されているBlend Shapeのリスト描画
+    # ----------------------------------------------------------
+    row = layout.row()
+    row.template_list(
+        "VRMHELPER_UL_Blend_Shape_list",
+        "",
+        blend_shape_master,
+        "blend_shape_groups",
+        blend_shape_master,
+        "active_blend_shape_group_index",
+        rows=define_ui_list_rows(rows),
+    )
+
+    col_list = row.column(align=True)
+    # col_list.separator(factor=0.5)
+    col_list.operator(
+        VRMHELPER_OT_0_blend_shape_create_blend_shape.bl_idname, text="", icon="ADD"
+    )
+    col_list.operator(
+        VRMHELPER_OT_0_blend_shape_remove_blend_shape.bl_idname, text="", icon="REMOVE"
+    )
+    col_list.operator(
+        VRMHELPER_OT_0_blend_shape_clear_blend_shape.bl_idname,
+        text="",
+        icon="PANEL_CLOSE",
+    )
+
+    layout.operator(
+        VRMHELPER_OT_empty_operator.bl_idname, text="Assign Active Blen Shape"
+    )
+
+
+class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
     """Expressionを表示するUI List"""
 
     def draw_item(
@@ -230,16 +261,43 @@ class VRMHELPER_UL_expression_list(bpy.types.UIList):
         context,
         layout: bpy.types.UILayout,
         data,
-        item: VRMHELPER_WM_vrm0_blend_shape_list_items,
+        item: ReferenceVrm0BlendShapeGroupPropertyGroup,
         icon,
         active_data,
         active_propname,
         index,
     ):
         sp = layout.split(factor=0.4)
-        row = sp.row(align=True)
 
-        # アイコンの描画
+        # アイコンと名前の描画
+        row = sp.row(align=True)
+        row.alignment = "LEFT"
+        row.prop(item, "name", text="", emboss=False)
+        row.label(text=" / ")
+        row.prop(item, "preset_name", text="")
+
+        # 各種バインドが存在する場合にアイコンを描画
+        row_parameters = sp.row(align=False)
+        row_parameters.alignment = "RIGHT"
+        row_bind = row_parameters.row(align=True)
+        row_bind.alignment = "RIGHT"
+
+        if item.binds:
+            row_bind.label(text="", icon="MESH_DATA")
+        else:
+            row_bind.label(text="")
+
+        if item.material_values:
+            row_bind.label(text="", icon="MATERIAL")
+        else:
+            row_bind.label(text="")
+
+        # Blend Shapeが持つ各パラメーターの描画
+        row_binary = row_parameters.row(align=True)
+        row_binary.prop(item, "is_binary", icon="IPO_CONSTANT", icon_only=True)
+
+        row_preview = row_parameters.row(align=True)
+        row_preview.prop(item, "preview", text="Preview")
 
 
 """---------------------------------------------------------
@@ -252,4 +310,5 @@ CLASSES = (
     #    UI List
     # ----------------------------------------------------------
     VRMHELPER_UL_vrm0_first_person_list,
+    VRMHELPER_UL_Blend_Shape_list,
 )

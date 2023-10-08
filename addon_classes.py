@@ -296,7 +296,7 @@ class ReferenceVrm1PropertyGroup:
     humanoid: ReferenceVrm1HumanoidPropertyGroup
     first_person: ReferenceVrm1FirstPersonPropertyGroup
     look_at: ReferenceVrm1LookAtPropertyGroup
-    blend_shapes: ReferenceVrm1ExpressionPropertyGroup
+    blend_shape_master: ReferenceVrm1ExpressionPropertyGroup
 
 
 """---------------------------------------------------------

@@ -66,12 +66,15 @@ class VRMHELPER_PREF_addon_preferences(AddonPreferences):
     #    Property Group
     # ----------------------------------------------------------
     addon_collection_dict: dict[str, str] = {
-        "ROOT": "VRM_Helper_Collection",
-        "VRM0_ROOT": "VRM_Helper_VRM0",
-        "VRM1_ROOT": "VRM_Helper_VRM1",
-        "VRM1_COLLIDER": "VRM_Helper_VRM1_Collider",
-        "VRM1_EXPRESSION_MORPH": "VRM_Helper_VRM1_Expression_Morph",
-        "VRM1_EXPRESSION_MATERIAL": "VRM_Helper_VRM1_Expression_Material",
+        "ROOT": "VRMHelper_Collection",
+        "VRM0_ROOT": "VRMHelper_VRM0",
+        "VRM0_BLENDSHAPE_MORPH": "VRMHelper_VRM0_Collider",
+        "VRM0_BLENDSHAPE_MATERIAL": "VRMHelper_VRM0_BlendShape_Morph",
+        "VRM0_COLLIDER": "VRMHelper_VRM0_BlendShape_Material",
+        "VRM1_ROOT": "VRMHelper_VRM1",
+        "VRM1_COLLIDER": "VRMHelper_VRM1_Collider",
+        "VRM1_EXPRESSION_MORPH": "VRMHelper_VRM1_Expression_Morph",
+        "VRM1_EXPRESSION_MATERIAL": "VRMHelper_VRM1_Expression_Material",
     }
 
     bone_group_filter_name: StringProperty(
@@ -118,10 +121,13 @@ def get_addon_collection_name(
     target_name: Literal[
         "ROOT",
         "VRM0_ROOT",
+        "VRM0_BLENDSHAPE_MORPH",
+        "VRM0_BLENDSHAPE_MATERIAL",
+        "VRM0_COLLIDER",
         "VRM1_ROOT",
-        "VRM1_COLLIDER",
         "VRM1_EXPRESSION_MORPH",
         "VRM1_EXPRESSION_MATERIAL",
+        "VRM1_COLLIDER",
     ],
 ) -> str:
     """
@@ -133,10 +139,13 @@ def get_addon_collection_name(
     target_name: Literal[
         "ROOT",
         "VRM0_ROOT",
+        "VRM0_BLENDSHAPE_MORPH",
+        "VRM0_BLENDSHAPE_MATERIAL",
+        "VRM0_COLLIDER",
         "VRM1_ROOT",
-        "VRM1_COLLIDER",
         "VRM1_EXPRESSION_MORPH"
         "VRM1_EXPRESSION_MATERIAL",
+        "VRM1_COLLIDER",
     ]
         取得するコレクション名に対応するキー
 

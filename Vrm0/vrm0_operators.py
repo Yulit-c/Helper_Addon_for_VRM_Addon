@@ -42,8 +42,13 @@ from ..preferences import (
     get_addon_collection_name,
 )
 
+from ..addon_classes import (
+    ReferenceVrm0BlendShapeGroupPropertyGroup,
+    ReferenceVrm0BlendShapeBindPropertyGroup,
+    ReferenceVrm0MaterialValueBindPropertyGroup,
+)
+
 from ..property_groups import (
-    VRMHELPER_WM_vrm1_constraint_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
@@ -68,13 +73,9 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
-    get_vrm_extension_property,
-    get_vrm1_extension_property_expression,
-    is_existing_target_armature_and_mode,
-    get_bones_for_each_branch_by_type,
-    store_mtoon1_current_values,
-    set_mtoon1_default_values,
-    re_link_all_collider_object2collection,
+    get_vrm0_extension_property_first_person,
+    get_vrm0_extension_property_blend_shape,
+    reset_shape_keys_value_in_morph_binds,
 )
 
 from .utils_vrm0_first_person import (
@@ -86,9 +87,9 @@ from .utils_vrm0_first_person import (
 from ..operators import (
     VRMHELPER_operator_base,
     VRMHELPER_vrm0_first_person_base,
-    # VRMHELPER_vrm0_expression_base,
-    # VRMHELPER_vrm0_expression_sub_morph,
-    # VRMHELPER_vrm0_expression_sub_material,
+    VRMHELPER_vrm0_blend_shape_base,
+    VRMHELPER_vrm0_blend_shape_sub_morph,
+    VRMHELPER_vrm1_blend_shape_sub_material,
     # VRMHELPER_vrm0_collider_base,
     # VRMHELPER_vrm0_collider_group_base,
     # VRMHELPER_vrm0_spring_base,
@@ -128,7 +129,7 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_
         return [obj for obj in context.selected_objects if filtering_mesh_type(obj)]
 
     def execute(self, context):
-        mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        mesh_annotations = get_vrm0_extension_property_first_person().mesh_annotations
         annotation_type = get_scene_vrm0_first_person_prop().annotation_type
 
         # 選択オブジェクトの数だけMesh Annotationを追加する｡
@@ -171,7 +172,7 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        return get_vrm0_extension_property_first_person().mesh_annotations
 
     def execute(self, context):
         # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
@@ -202,7 +203,7 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        return get_vrm0_extension_property_first_person().mesh_annotations
 
     def execute(self, context):
         # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
@@ -229,13 +230,139 @@ class VRMHELPER_OT_vrm0_first_person_clear_annotation(VRMHELPER_vrm0_first_perso
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        return get_vrm0_extension_property_first_person().mesh_annotations
 
     def execute(self, context):
-        mesh_annotations = get_vrm_extension_property("FIRST_PERSON").mesh_annotations
+        mesh_annotations = get_vrm0_extension_property_first_person().mesh_annotations
         mesh_annotations.clear()
 
         self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_0_blend_shape_create_blend_shape(VRMHELPER_vrm0_blend_shape_base):
+    bl_idname = "vrm_helper.vrm0_blend_shape_create_blend_shape"
+    bl_label = "Create Blend Shape"
+    bl_description = "Create a new Blend Shape Proxy to the target armature"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        target_armature = get_target_armature()
+
+        bpy.ops.vrm.add_vrm0_blend_shape_group(
+            armature_name=target_armature.name, name="new"
+        )
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_0_blend_shape_remove_blend_shape(VRMHELPER_vrm0_blend_shape_base):
+    bl_idname = "vrm_helper.vrm0_blend_shape_remove_blend_shape"
+    bl_label = "Remove Blend_Shape"
+    bl_description = "Remove the active blend_shape from the target armature"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        # ブレンドシェイプが1つ以上存在している
+        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        return blend_shapes
+
+    def execute(self, context):
+        target_armature = get_target_armature()
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        target_index = blend_shape_master.active_blend_shape_group_index
+
+        bpy.ops.vrm.remove_vrm0_blend_shape_group(
+            armature_name=target_armature.name, blend_shape_group_index=target_index
+        )
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_0_blend_shape_clear_blend_shape(VRMHELPER_vrm0_blend_shape_base):
+    bl_idname = "vrm_helper.vrm_blend_shape_clear_blend_shape"
+    bl_label = "Clear Custom Blend Shape"
+    bl_description = "Clear all blend_shapes from the target armature"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        # ブレンドシェイプが1つ以上存在している
+        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        return blend_shapes
+
+    def execute(self, context):
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shapes = blend_shape_master.blend_shape_groups
+        blend_shapes.clear()
+        blend_shape_master.active_blend_shape_group_index = 0
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
+    VRMHELPER_vrm0_blend_shape_base
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_assign_blend_shape_to_scene"
+    bl_label = "Assign Blend Shape"
+    bl_description = "Active blend_shape settings are reflected on the scene"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        # ブレンドシェイプが1つ以上存在している
+        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        return blend_shapes
+
+    def execute(self, context):
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_groups = blend_shape_master.blend_shape_groups
+        target_index = blend_shape_master.active_blend_shape_group_index
+        active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = (
+            blend_shape_groups[target_index]
+        )
+
+        # ----------------------------------------------------------
+        #    Morph Target Binds
+        # ----------------------------------------------------------
+        # アクティブエクスプレッションのMorpth Target Bindsの全てのBindの
+        # メッシュ/シェイプキーに対してウェイトを反映する｡
+        # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
+        reset_shape_keys_value_in_morph_binds(blend_shape_groups)
+
+        # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
+        morph_binds = active_blend_shape.binds
+        existing_bind_info = {}
+        # Bindsに登録されている全メッシュとそれに関連付けられたシェイプキー､ウェイトを取得する｡
+        for bind in morph_binds:
+            bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
+            bind_mesh = bpy.data.objects.get(bind.mesh.mesh_object_name).data
+            existing_bind_info.setdefault(bind_mesh, [].append(bind.index, bind.weight))
+
+        # 取得したデータをシーン上に反映する｡
+        for mesh, sk_info in existing_bind_info.items():
+            for sk_name, sk_value in sk_info:
+                sk = mesh.shape_keys.key_blocks.get(sk_name)
+                sk.value = sk_value
+
+        # ----------------------------------------------------------
+        #    Material Values
+        # ----------------------------------------------------------
+        # Color/Transform Bindで指定されている全てのマテリアルの特定パラメーターは一度すべて初期値にセットする｡
+        material_values = active_blend_shape.material_values
+        existing_bind_material = set()
+        #
+        for value in material_values:
+            value: ReferenceVrm0MaterialValueBindPropertyGroup = value
+            existing_bind_material.add(value.material)
+
+        for mat in existing_bind_material:
+            if not mat:
+                continue
+            logger.debug(f"Reset Values : {mat.name}")
+            set_mtoon0_default_values(mat)
 
         return {"FINISHED"}
 
@@ -256,4 +383,10 @@ CLASSES = (
     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list,
     VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects,
     VRMHELPER_OT_vrm0_first_person_clear_annotation,
+    # ----------------------------------------------------------
+    #    Blend Shape
+    # ----------------------------------------------------------
+    VRMHELPER_OT_0_blend_shape_create_blend_shape,
+    VRMHELPER_OT_0_blend_shape_remove_blend_shape,
+    VRMHELPER_OT_0_blend_shape_clear_blend_shape,
 )

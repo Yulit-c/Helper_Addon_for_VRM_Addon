@@ -99,6 +99,7 @@ from ..utils_vrm_base import (
     get_vrm1_extension_property_expression,
     is_existing_target_armature_and_mode,
     get_bones_for_each_branch_by_type,
+    reset_shape_keys_value_in_morph_binds,
     store_mtoon1_current_values,
     set_mtoon1_default_values,
     re_link_all_collider_object2collection,
@@ -115,7 +116,6 @@ from .utils_vrm1_expression import (
     get_active_list_item_in_expression,
     get_active_expression,
     search_existing_morph_bind_and_update,
-    reset_shape_keys_value_in_morpth_binds,
     convert_str2color_bind_type,
     search_existing_material_color_bind_and_update,
     convert_str2transform_bind_type,
@@ -1238,7 +1238,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
         # アクティブエクスプレッションのMorpth Target Bindsの全てのBindの
         # メッシュ/シェイプキーに対してウェイトを反映する｡
         # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
-        reset_shape_keys_value_in_morpth_binds(morph_target_binds)
+        reset_shape_keys_value_in_morph_binds(morph_target_binds)
 
         # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}

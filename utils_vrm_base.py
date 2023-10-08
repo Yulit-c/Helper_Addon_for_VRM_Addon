@@ -23,6 +23,7 @@ from pprint import (
 from typing import (
     Literal,
     Optional,
+    Any,
 )
 import bpy
 from bpy.types import (
@@ -37,6 +38,7 @@ from bpy.types import (
 
 
 from .addon_classes import (
+    ReferenceVrm0FirstPersonPropertyGroup,
     ReferenceVrm0BlendShapeMasterPropertyGroup,
     # ----------------------------------------------------------
     MToon1MaterialParameters,
@@ -77,6 +79,7 @@ from .utils_common import (
     unlink_object_from_all_collections,
     setting_vrm_helper_collection,
     get_addon_collection_name,
+    reset_shape_keys_value,
 )
 
 
@@ -109,11 +112,20 @@ def evaluation_expression_morph_collection() -> bool:
         条件を満たしていればTrue､そうでなければFalseを返す｡
     """
 
-    if collection_mat := bpy.data.collections.get(
-        get_addon_collection_name("VRM1_EXPRESSION_MORPH")
-    ):
+    addon_mode = check_addon_mode()
+
+    match addon_mode:
+        case "0":
+            source_collection_name = get_addon_collection_name("VRM0_BLENDSHAPE_MORPH")
+        case "1":
+            source_collection_name = get_addon_collection_name("VRM1_EXPRESSION_MORPH")
+        case "2":
+            return False
+
+    if collection_mat := bpy.data.collections.get(source_collection_name):
         if collection_mat.all_objects:
             return True
+
     return False
 
 
@@ -128,11 +140,24 @@ def evaluation_expression_material_collection() -> bool:
         条件を満たしていればTrue､そうでなければFalseを返す｡
     """
 
-    if collection_mat := bpy.data.collections.get(
-        get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-    ):
+    addon_mode = check_addon_mode()
+
+    match addon_mode:
+        case "0":
+            source_collection_name = get_addon_collection_name(
+                "VRM0_BLENDSHAPE_MATERIAL"
+            )
+        case "1":
+            source_collection_name = get_addon_collection_name(
+                "VRM1_EXPRESSION_MATERIAL"
+            )
+        case "2":
+            return False
+
+    if collection_mat := bpy.data.collections.get(source_collection_name):
         if collection_mat.all_objects:
             return True
+
     return False
 
 
@@ -303,7 +328,7 @@ def get_vrm_extension_root_property(
 
 
 """---------------------------------------------------------
-    Cnndidaete Replacing
+    Cnndidaete Replacing Get Extension Property
 ---------------------------------------------------------"""
 
 
@@ -316,11 +341,17 @@ def get_vrm0_extension_root_property() -> ReferenceVrm1PropertyGroup:
     return vrm0_root
 
 
+def get_vrm0_extension_property_first_person() -> ReferenceVrm0FirstPersonPropertyGroup:
+    vrm0_extension = get_vrm0_extension_root_property()
+    vrm0_first_person = vrm0_extension.first_person
+    return vrm0_first_person
+
+
 def get_vrm0_extension_property_blend_shape() -> (
     ReferenceVrm0BlendShapeMasterPropertyGroup
 ):
     vrm0_extension = get_vrm0_extension_root_property()
-    vrm0_blend_shapes = vrm0_extension.blend_shapes
+    vrm0_blend_shapes = vrm0_extension.blend_shape_master
     return vrm0_blend_shapes
 
 
@@ -388,7 +419,7 @@ def get_vrm_extension_property(
                 return vrm_extension.first_person
 
             case "BLEND_SHAPE":
-                return vrm_extension.blend_shape_master.blend_shape_groups
+                return vrm_extension.blend_shape_master
 
             case "EXPRESSION":
                 return vrm_extension.expressions
@@ -442,6 +473,34 @@ def is_existing_target_armature_and_mode() -> bool:
         return False
 
     return True
+
+
+def reset_shape_keys_value_in_morph_binds(source_morph_binds: Any):
+    """
+    'source_morph_binds'内に登録されているオブジェクトに存在する全てのシェイプキーの値を0にセットする｡
+
+    Parameters
+    ----------
+    source_morph_binds : Any
+        処理対象のMorph Target Binds
+
+    """
+
+    addon_mode = check_addon_mode()
+
+    match addon_mode:
+        case "0":
+            bind_object_names = {
+                bind.mesh.mesh_object_name for bind in source_morph_binds
+            }
+        case "1":
+            bind_object_names = {
+                bind.node.mesh_object_name for bind in source_morph_binds
+            }
+
+    for object_name in bind_object_names:
+        if target_object := bpy.data.objects.get(object_name):
+            reset_shape_keys_value(target_object.data)
 
 
 def get_mtoon_attr_name_from_bind_type(

@@ -410,22 +410,6 @@ def search_existing_morph_bind_and_update(
     return False
 
 
-def reset_shape_keys_value_in_morpth_binds(source_morph_binds: Any):
-    """
-    'source_morph_binds'内に登録されているオブジェクトに存在する全てのシェイプキーの値を0にセットする｡
-
-    Parameters
-    ----------
-    source_morph_binds : Any
-        処理対象のMorph Target Binds
-
-    """
-
-    for bind_object_name in {bind.node.mesh_object_name for bind in source_morph_binds}:
-        if target_object := bpy.data.objects.get(bind_object_name):
-            reset_shape_keys_value(target_object.data)
-
-
 # ----------------------------------------------------------
 #    Material
 # ----------------------------------------------------------

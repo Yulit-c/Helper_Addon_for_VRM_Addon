@@ -66,10 +66,8 @@ VRM1_FIRST_PERSON_ANNOTATION_TYPES = {
     "thirdPersonOnly",
     "firstPersonOnly",
 }
-
-
 """---------------------------------------------------------
-    Expression
+    Blend Shape
 ---------------------------------------------------------"""
 PRESET_BLEND_SHAPE_NAME_DICT = {
     "unknown": "Unknown",
@@ -94,12 +92,12 @@ PRESET_BLEND_SHAPE_NAME_DICT = {
 
 BLEND_SHAPE_ICON_DICT = {
     "unknown": "SHAPEKEY_DATA",
-    "neutral": "VEW_ORTHO",
-    "a": "A",
-    "i": "I",
-    "u": "U",
-    "e": "E",
-    "o": "O",
+    "neutral": "VIEW_ORTHO",
+    "a": "EVENT_A",
+    "i": "EVENT_I",
+    "u": "EVENT_U",
+    "e": "EVENT_E",
+    "o": "EVENT_O",
     "blink": "HIDE_ON",
     "joy": "HEART",
     "angry": "ORPHAN_DATA",
@@ -113,6 +111,10 @@ BLEND_SHAPE_ICON_DICT = {
     "blink_r": "HIDE_ON",
 }
 
+
+"""---------------------------------------------------------
+    Expression
+---------------------------------------------------------"""
 PRESET_EXPRESSION_NAME_DICT = {
     "happy": "Happy",
     "angry": "Angry",

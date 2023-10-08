@@ -370,11 +370,32 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 ---------------------------------------------------------"""
 
 
+# ----------------------------------------------------------
+#    VRM0
+# ----------------------------------------------------------
 class VRMHELPER_vrm0_first_person_base(VRMHELPER_operator_base):
     vrm_mode = 0
     component_type: str = "FIRST_PERSON"
 
 
+class VRMHELPER_vrm0_blend_shape_base(VRMHELPER_operator_base):
+    vrm_mode = 0
+    component_type: str = "BLEND_SHAPE"
+
+
+class VRMHELPER_vrm0_blend_shape_sub_morph(VRMHELPER_operator_base):
+    vrm_mode = 0
+    component_type: str = "BLEND_SHAPE_MORPH"
+
+
+class VRMHELPER_vrm1_blend_shape_sub_material(VRMHELPER_operator_base):
+    vrm_mode = 0
+    component_type: str = "BLEND_SHAPE_MATERIAL"
+
+
+# ----------------------------------------------------------
+#    VRM1
+# ----------------------------------------------------------
 class VRMHELPER_vrm1_first_person_base(VRMHELPER_operator_base):
     vrm_mode = 1
     component_type: str = "FIRST_PERSON"
@@ -436,7 +457,7 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Common
     # ----------------------------------------------------------
-    # VRMHELPER_OT_empty_operator,
+    VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
     VRMHELPER_OT_reset_shape_keys_on_selected_objects,
 )
