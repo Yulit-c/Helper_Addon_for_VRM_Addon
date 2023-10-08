@@ -330,16 +330,18 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
         # アクティブエクスプレッションのMorpth Target Bindsの全てのBindの
         # メッシュ/シェイプキーに対してウェイトを反映する｡
         # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
-        reset_shape_keys_value_in_morph_binds(blend_shape_groups)
+        morph_binds = active_blend_shape.binds
+        reset_shape_keys_value_in_morph_binds(morph_binds)
 
         # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
-        morph_binds = active_blend_shape.binds
         existing_bind_info = {}
         # Bindsに登録されている全メッシュとそれに関連付けられたシェイプキー､ウェイトを取得する｡
         for bind in morph_binds:
             bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
             bind_mesh = bpy.data.objects.get(bind.mesh.mesh_object_name).data
-            existing_bind_info.setdefault(bind_mesh, [].append(bind.index, bind.weight))
+            existing_bind_info.setdefault(bind_mesh, []).append(
+                (bind.index, bind.weight)
+            )
 
         # 取得したデータをシーン上に反映する｡
         for mesh, sk_info in existing_bind_info.items():
@@ -362,7 +364,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
             if not mat:
                 continue
             logger.debug(f"Reset Values : {mat.name}")
-            set_mtoon0_default_values(mat)
+            # set_mtoon0_default_values(mat)
 
         return {"FINISHED"}
 
@@ -389,4 +391,5 @@ CLASSES = (
     VRMHELPER_OT_0_blend_shape_create_blend_shape,
     VRMHELPER_OT_0_blend_shape_remove_blend_shape,
     VRMHELPER_OT_0_blend_shape_clear_blend_shape,
+    VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene,
 )

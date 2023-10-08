@@ -39,7 +39,7 @@ from .addon_constants import (
 
 
 from .property_groups import (
-    VRMHELPER_SCENE_basic_settigs,
+    VRMHELPER_SCENE_basic_settings,
     get_scene_basic_prop,
     get_target_armature_data,
 )
@@ -99,7 +99,7 @@ logger = preparating_logger(__name__)
 def draw_spring_setting_box(
     target_box: bpy.types.UILayout,
     layout: bpy.types.UILayout,
-    basic_prop: VRMHELPER_SCENE_basic_settigs,
+    basic_prop: VRMHELPER_SCENE_basic_settings,
 ) -> bpy.types.UILayout:
     """
     スプリング設定ツールをグルーピングするためのboxが存在しない場合に新たに描画する｡
@@ -112,7 +112,7 @@ def draw_spring_setting_box(
     layout : UILayout
         boxを描画する対象となるUILayout
 
-    basic_prop:VRMHELPER_SCENE_basic_settigs
+    basic_prop:VRMHELPER_SCENE_basic_settings
         アドオンの基本設定を行なうプロパティグループ｡
 
     Returns

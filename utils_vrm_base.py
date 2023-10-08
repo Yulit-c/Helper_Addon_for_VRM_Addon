@@ -40,6 +40,7 @@ from bpy.types import (
 from .addon_classes import (
     ReferenceVrm0FirstPersonPropertyGroup,
     ReferenceVrm0BlendShapeMasterPropertyGroup,
+    ReferenceVrm0BlendShapeGroupPropertyGroup,
     # ----------------------------------------------------------
     MToon1MaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
@@ -353,6 +354,16 @@ def get_vrm0_extension_property_blend_shape() -> (
     vrm0_extension = get_vrm0_extension_root_property()
     vrm0_blend_shapes = vrm0_extension.blend_shape_master
     return vrm0_blend_shapes
+
+
+def get_vrm0_extension_active_blend_shape_group() -> (
+    ReferenceVrm0BlendShapeGroupPropertyGroup
+):
+    vrm0_blend_shape_master = get_vrm0_extension_property_blend_shape()
+    active_blend_shape = vrm0_blend_shape_master.blend_shape_groups[
+        vrm0_blend_shape_master.active_blend_shape_group_index
+    ]
+    return active_blend_shape
 
 
 # ----------------------------------------------------------

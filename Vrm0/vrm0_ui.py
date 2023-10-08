@@ -7,6 +7,7 @@ if "bpy" in locals():
         "utils_common",
         "operators",
         "utils_vrm0_first_person",
+        "utils_vrm0_blend_shape",
         "vrm0_operators",
     ]
 
@@ -20,6 +21,7 @@ else:
     from .. import utils_common
     from .. import operators
     from . import utils_vrm0_first_person
+    from . import utils_vrm0_blend_shape
     from . import vrm0_operators
 
 
@@ -28,6 +30,8 @@ import bpy
 
 from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
+    ReferenceVrm0BlendShapeBindPropertyGroup,
+    ReferenceVrm0MaterialValueBindPropertyGroup,
     # ----------------------------------------------------------
     VRMHELPER_UL_base,
 )
@@ -38,12 +42,18 @@ from ..addon_constants import (
 )
 
 from ..property_groups import (
+    VRMHELPER_SCENE_vrm0_blend_shape_settings,
+    VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
-    VRMHELPER_WM_vrm0_blend_shape_list_items,
-    # ----------------------------------------------------------    get_target_armature,
+    VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
     get_vrm0_scene_root_prop,
+    get_wm_vrm0_material_value_prop,
+    initialize_material_value_prop,
     get_vrm0_wm_root_prop,
 )
 
@@ -58,6 +68,7 @@ from ..utils_vrm_base import (
     check_addon_mode,
     get_vrm_extension_root_property,
     get_vrm0_extension_property_blend_shape,
+    get_vrm0_extension_active_blend_shape_group,
 )
 
 
@@ -67,7 +78,11 @@ from .utils_vrm0_first_person import (
 )
 
 from .utils_vrm0_blend_shape import (
-    get_source_vrm0_blend_shape4ui_list,
+    get_scene_vrm0_mtoon_prop,
+    get_source_vrm0_blend_shape_morph4ui_list,
+    add_items2blend_shape_morph_ui_list,
+    get_source_vrm0_blend_shape_material4ui_list,
+    add_items2blend_shape_material_ui_list,
 )
 
 
@@ -91,6 +106,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_0_blend_shape_create_blend_shape,
     VRMHELPER_OT_0_blend_shape_remove_blend_shape,
     VRMHELPER_OT_0_blend_shape_clear_blend_shape,
+    VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene,
 )
 
 """
@@ -212,8 +228,12 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
     # Property Groupの取得｡
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
-    active_indexes = scene_vrm0_prop.active_indexes
-    blend_shape_prop = scene_vrm0_prop.blend_shape_settings
+    active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = (
+        scene_vrm0_prop.active_indexes
+    )
+    blend_shape_prop: VRMHELPER_SCENE_vrm0_blend_shape_settings = (
+        scene_vrm0_prop.blend_shape_settings
+    )
     blend_shape_master = get_vrm0_extension_property_blend_shape()
     blend_shapes = blend_shape_master.blend_shape_groups
 
@@ -247,10 +267,51 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
         text="",
         icon="PANEL_CLOSE",
     )
-
     layout.operator(
-        VRMHELPER_OT_empty_operator.bl_idname, text="Assign Active Blen Shape"
+        VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene.bl_idname,
+        text="Assign Active Blen Shape",
     )
+
+    # ----------------------------------------------------------
+    #    選択された編集対象のリストとオペレーターを描画
+    # ----------------------------------------------------------
+    box = layout.box()
+    box.label(text="Editing Target:")
+    row = box.row(align=True)
+    row.prop(blend_shape_prop, "editing_target", text=" ", expand=True)
+
+    match blend_shape_prop.editing_target:
+        ######################################
+        # Binds
+        ######################################
+        case "BIND":
+            rows = add_items2blend_shape_morph_ui_list()
+            row = box.row(align=True)
+            row.template_list(
+                "VRMHELPER_UL_blend_shape_morph_list",
+                "",
+                wm_vrm0_prop,
+                "blend_shape_morph_list_items4custom_filter",
+                active_indexes,
+                "blend_shape_morph",
+                rows=define_ui_list_rows(rows),
+            )
+
+        ######################################
+        # Material Value
+        ######################################
+        case "MATERIAL":
+            rows = add_items2blend_shape_material_ui_list()
+            row = box.row(align=True)
+            row.template_list(
+                "VRMHELPER_UL_blend_shape_material_list",
+                "",
+                wm_vrm0_prop,
+                "blend_shape_material_list_items4custom_filter",
+                active_indexes,
+                "blend_shape_material",
+                rows=define_ui_list_rows(rows),
+            )
 
 
 class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
@@ -300,6 +361,124 @@ class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
         row_preview.prop(item, "preview", text="Preview")
 
 
+class VRMHELPER_UL_blend_shape_morph_list(bpy.types.UIList):
+    """Morph Target Bindsを表示するUI List"""
+
+    def draw_item(
+        self,
+        context,
+        layout: bpy.types.UILayout,
+        data,
+        item: VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        row = layout.row(align=True)
+        # Morph Target Bindが関連付けられているオブジェクト名のラベル
+        if item.item_type[0]:
+            row.label(text=item.name, icon="OUTLINER_OB_MESH")
+            return
+
+        # Morph Target Bindの各プロパティを描画する
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_groups = blend_shape_master.blend_shape_groups
+        active_index = blend_shape_master.active_blend_shape_group_index
+        active_blend_shape_binds = blend_shape_groups[active_index].binds
+        source_bind: ReferenceVrm0BlendShapeBindPropertyGroup = (
+            active_blend_shape_binds[item.bind_index]
+        )
+        if item.item_type[1]:
+            row.separator(factor=3.0)
+            sp = row.split(factor=0.65)
+            if not source_bind.mesh.mesh_object_name or not (
+                target_object := bpy.data.objects.get(item.name).data.shape_keys
+            ):
+                sp.label(text="No ShapeKeys", icon="SHAPEKEY_DATA")
+            else:
+                sp.prop_search(
+                    source_bind,
+                    "index",
+                    target_object,
+                    "key_blocks",
+                    text="",
+                )
+                sp.prop(source_bind, "weight", slider=True)
+
+
+class VRMHELPER_UL_blend_shape_material_list(bpy.types.UIList, VRMHELPER_UL_base):
+    """Material Color/TextureTransform Bindsを表示するUI List"""
+
+    def draw_item(
+        self,
+        context,
+        layout: bpy.types.UILayout,
+        data,
+        item: VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        row = layout.row(align=True)
+        separator_facator = 2.5
+
+        # ラベルの描画
+        if item.item_type[0]:
+            label_icon = "MATERIAL"
+            match item.name:
+                case "Material Color":
+                    row.separator(factor=separator_facator)
+                    label_icon = "COLOR"
+
+                case "Texture Transform":
+                    row.separator(factor=separator_facator)
+                    label_icon = "TEXTURE"
+
+                case "Blank":
+                    return
+
+            row.label(text=item.name, icon=label_icon)
+            return
+
+        # Material Valueの各プロパティを描画する
+        if item.item_type[1]:
+            active_blend_shape = get_vrm0_extension_active_blend_shape_group()
+            material_values = active_blend_shape.material_values
+            self.add_blank_labels(row, 3)
+            mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values[
+                item.bind_index
+            ]
+
+            initialize_material_value_prop()
+            property_names = get_wm_vrm0_material_value_prop()
+            row.prop_search(
+                mat_value,
+                "property_name",
+                property_names,
+                "mtoon_props",
+                text="",
+                icon="PROPERTIES",
+                results_are_suggestions=True,
+            )
+
+            #         material_value_column.prop_search(
+            # material_value,
+            # "property_name",
+            # context.scene.vrm_addon_extension,
+            # "vrm0_material_gltf_property_names",
+            # icon="PROPERTIES",
+            # resu
+
+            if "Color" in mat_value.property_name:
+                row.prop(item, "material_color", text="")
+
+            else:
+                row.prop(item, "uv_scale", text="")
+                row.prop(item, "uv_offset", text="")
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -311,4 +490,6 @@ CLASSES = (
     # ----------------------------------------------------------
     VRMHELPER_UL_vrm0_first_person_list,
     VRMHELPER_UL_Blend_Shape_list,
+    VRMHELPER_UL_blend_shape_morph_list,
+    VRMHELPER_UL_blend_shape_material_list,
 )

@@ -319,12 +319,12 @@ def add_items2expression_morph_ui_list() -> int:
     source_morph_binds_dict = get_source_vrm1_expression_morph4ui_list()
     items.clear()
 
-    for obj_name, bind_list in source_morph_binds_dict.items():
+    for obj_name, bind_info in source_morph_binds_dict.items():
         target_item = items.add()
         target_item.item_type[0] = True
         target_item.name = obj_name
 
-        for bind, index in bind_list:
+        for bind, index in bind_info:
             target_item = items.add()
             target_item.item_type[1] = True
             target_item.name = obj_name

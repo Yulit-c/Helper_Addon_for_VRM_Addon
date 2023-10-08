@@ -140,13 +140,6 @@ class ReferenceVrm0MaterialValueBindPropertyGroup:
     target_value: bpy.types.CollectionProperty  # FloatPropertyGroup
 
 
-class BlendShapeCandidateUIList(TypedDict, total=False):
-    name: str
-    expressions: ReferenceVrm0BlendShapeGroupPropertyGroup
-    has_morph_bind: bool
-    has_material_bind: bool
-
-
 # ----------------------------------------------------------
 #    Secondary Animation
 # ----------------------------------------------------------

@@ -56,8 +56,8 @@ from ..addon_constants import (
 )
 
 from ..property_groups import (
-    VRMHELPER_SCENE_vrm1_collider_settigs,
-    VRMHELPER_SCENE_vrm1_spring_settigs,
+    VRMHELPER_SCENE_vrm1_collider_settings,
+    VRMHELPER_SCENE_vrm1_spring_settings,
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
@@ -703,16 +703,17 @@ class VRMHELPER_UL_expressin_material_list(UIList, VRMHELPER_UL_base):
         # ラベルの描画
         if item.item_type[0]:
             label_icon = "MATERIAL"
-            if item.name == "Material Color":
-                row.separator(factor=separator_facator)
-                label_icon = "COLOR"
+            match item.name:
+                case "Material Color":
+                    row.separator(factor=separator_facator)
+                    label_icon = "COLOR"
 
-            if item.name == "Texture Transform":
-                row.separator(factor=separator_facator)
-                label_icon = "TEXTURE"
+                case "Texture Transform":
+                    row.separator(factor=separator_facator)
+                    label_icon = "TEXTURE"
 
-            if item.name == "Blank":
-                return
+                case "Blank":
+                    return
 
             row.label(text=item.name, icon=label_icon)
             return
@@ -756,7 +757,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     # active_index = get_vrm1_active_index_prop("COLLIDER")
     active_index = scene_vrm1_prop.active_indexes.collider
-    collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs = (
+    collider_prop: VRMHELPER_SCENE_vrm1_collider_settings = (
         scene_vrm1_prop.collider_settings
     )
 
@@ -1025,7 +1026,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_vrm1_prop = get_vrm1_scene_root_prop()
-    spring_settings: VRMHELPER_SCENE_vrm1_spring_settigs = (
+    spring_settings: VRMHELPER_SCENE_vrm1_spring_settings = (
         scene_vrm1_prop.spring_settings
     )
     joint_properties = get_properties_to_dict(spring_settings, JOINT_PROP_NAMES)

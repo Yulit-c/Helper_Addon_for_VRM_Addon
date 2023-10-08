@@ -112,6 +112,15 @@ BLEND_SHAPE_ICON_DICT = {
 }
 
 
+MTOON0_PARAMETER_NAMES = (
+    "_Color",
+    "_ShadeColor",
+    "_RimColor",
+    "_EmissionColor",
+    "_OutlineColor",
+    "_MainTex_ST",
+)
+
 """---------------------------------------------------------
     Expression
 ---------------------------------------------------------"""

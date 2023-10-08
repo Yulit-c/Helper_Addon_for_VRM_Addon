@@ -81,7 +81,7 @@ logger = preparating_logger(__name__)
 # ----------------------------------------------------------
 #    Basic Settings
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_basic_settings(bpy.types.PropertyGroup):
     """
     アドオンの基本設定を行なうプロパティ
     """
@@ -190,7 +190,7 @@ class VRMHELPER_SCENE_basic_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Misc Tools
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_misc_tools_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_misc_tools_settings(bpy.types.PropertyGroup):
     """
     Misc Toolsに関するプロパティ
     """
@@ -212,7 +212,7 @@ class VRMHELPER_SCENE_misc_tools_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm0_first_person_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm0_first_person_settings(bpy.types.PropertyGroup):
     """
     First Personの設定に関するプロパティ
     """
@@ -255,7 +255,7 @@ class VRMHELPER_SCENE_vrm0_first_person_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Blend Shape
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm0_blend_shape_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm0_blend_shape_settings(bpy.types.PropertyGroup):
     """
     Expressionの設定に関するプロパティ
     """
@@ -264,15 +264,64 @@ class VRMHELPER_SCENE_vrm0_blend_shape_settigs(bpy.types.PropertyGroup):
         name="Editing Targets",
         description="Select the bind to be edited",
         items=(
-            ("MORPH", "Morph Target", "Edit Morph Target Bind"),
+            ("BIND", "Bind", "Edit Binds"),
             ("MATERIAL", "Material", "Edit Material Binds"),
         ),
-        default="MORPH",
+        default="BIND",
+    )
+
+
+class VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters(bpy.types.PropertyGroup):
+    material: PointerProperty(
+        name="Material",
+        description="Material stored parameters",
+        type=bpy.types.Material,
+    )
+
+    color: FloatVectorProperty(
+        name="Color",
+        description="MToon0 Color",
+        default=(1.0, 1.0, 1.0, 1.0),
+        size=4,
+    )
+
+    shade_color: FloatVectorProperty(
+        name="Shade Color",
+        description="MToon0 Shade Color",
+        default=(1.0, 1.0, 1.0, 1.0),
+        size=4,
+    )
+
+    rim_color: FloatVectorProperty(
+        name="RIm Color",
+        description="MToon0 Rim Color",
+        default=(0.0, 0.0, 0.0, 0.0),
+        size=4,
+    )
+    emission_color: FloatVectorProperty(
+        name="Emission Color",
+        description="MToon0 Emission Color",
+        default=(0.0, 0.0, 0.0, 0.0),
+        size=4,
+    )
+    outline_color: FloatVectorProperty(
+        name="Outline Color",
+        description="MToon0 Outline Color",
+        default=(0.0, 0.0, 0.0, 0.0),
+        size=4,
+    )
+
+    uv_coordinate: FloatVectorProperty(
+        name="UV Coordinate",
+        description="MToon0 UV Coordinate",
+        default=(1.0, 1.0, 0.0, 0.0),
+        size=4,
+        # [0],[1] : Scale, [2],[3] : Offset
     )
 
 
 # ----------------------------------------------------------
-#    UI List
+#    for UI List
 # ----------------------------------------------------------
 class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
     """
@@ -281,7 +330,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
 
     # def update_active_collider_radius(
     #     self,
-    #     collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs,
+    #     collider_prop: VRMHELPER_SCENE_vrm1_collider_settings,
     #     collider: ReferenceVrm1ColliderPropertyGroup,
     # ):
     #     """
@@ -290,7 +339,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
 
     #     Parameters
     #     ----------
-    #     collider_prop : VRMHELPER_SCENE_vrm1_collider_settigs
+    #     collider_prop : VRMHELPER_SCENE_vrm1_collider_settings
     #         プロパティ更新の対象となるプロパティグループ
 
     #     collider : ReferenceVrm1ColliderPropertyGroup
@@ -444,31 +493,23 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         min=0,
     )
 
-    expression: IntProperty(
-        name="List Index of Expression",
-        description="Index of active items in Expression UI List",
+    blend_shape: IntProperty(
+        name="List Index of Blend_Shape",
+        description="Index of active items in blend_shape UI List",
         default=0,
         min=0,
     )
-    expression_morph: IntProperty(
+    blend_shape_morph: IntProperty(
         name="List Index of Morph Target Bind",
-        description="Index of active items in Expression Morph Target UI List",
+        description="Index of active items in Blend Shape Morph Target UI List",
         default=0,
         min=0,
     )
-    expression_material: IntProperty(
+    blend_shape_material: IntProperty(
         name="List Index of Material Bind",
-        description="Index of active items in Expression Material Color UI List",
+        description="Index of active items in Blend Shape Material Color UI List",
         default=0,
         min=0,
-    )
-
-    collider: IntProperty(
-        name="List Index of Collider",
-        description="Index of active items in Colliderin UI List",
-        default=0,
-        min=0,
-        update=select_collider_object_by_ui_list,
     )
 
     collider_group: IntProperty(
@@ -485,14 +526,6 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         min=0,
     )
 
-    constraint: IntProperty(
-        name="List Index of Object Constraint",
-        description="Index of active items in Object Constraint UI List",
-        default=0,
-        min=0,
-        update=select_constraint_by_ui_list,
-    )
-
 
 # ----------------------------------------------------------
 #    VRM0 Root Property
@@ -505,15 +538,20 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
     first_person_settings: PointerProperty(
         name="First_Person Settings",
         description="Group of properties for First_Person Annotation Settings",
-        type=VRMHELPER_SCENE_vrm0_first_person_settigs,
+        type=VRMHELPER_SCENE_vrm0_first_person_settings,
     )
 
     blend_shape_settings: PointerProperty(
         name="Blend Shape Settings",
         description="Group of properties for Blend Shape Annotation Settings",
-        type=VRMHELPER_SCENE_vrm0_blend_shape_settigs,
+        type=VRMHELPER_SCENE_vrm0_blend_shape_settings,
     )
 
+    mtoon0_stored_parameters: CollectionProperty(
+        name="MToon1 Stored Parameters",
+        description="Allows  MToon0 parameters of the target material to be saved and restored as default values",
+        type=VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
+    )
 
     active_indexes: PointerProperty(
         name="Active Item Indexes",
@@ -530,7 +568,7 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    First Person
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_first_person_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_first_person_settings(bpy.types.PropertyGroup):
     """
     First Personの設定に関するプロパティ
     """
@@ -573,7 +611,7 @@ class VRMHELPER_SCENE_vrm1_first_person_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Expression
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_expression_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_expression_settings(bpy.types.PropertyGroup):
     """
     Expressionの設定に関するプロパティ
     """
@@ -592,7 +630,7 @@ class VRMHELPER_SCENE_vrm1_expression_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_collider_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_collider_settings(bpy.types.PropertyGroup):
     """
     Colliderの設定に関するプロパティ
     """
@@ -742,7 +780,7 @@ class VRMHELPER_SCENE_vrm1_collider_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_collider_group_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_collider_group_settings(bpy.types.PropertyGroup):
     """
     Collider Groupの設定に関するプロパティ
     """
@@ -751,7 +789,7 @@ class VRMHELPER_SCENE_vrm1_collider_group_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_spring_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
     """
     Springの設定に関するプロパティ
     """
@@ -821,7 +859,7 @@ class VRMHELPER_SCENE_vrm1_spring_settigs(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Constraint
 # ----------------------------------------------------------
-class VRMHELPER_SCENE_vrm1_constraint_settigs(bpy.types.PropertyGroup):
+class VRMHELPER_SCENE_vrm1_constraint_settings(bpy.types.PropertyGroup):
     """
     Constraintの設定に関するプロパティ
     """
@@ -853,7 +891,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
 
     def update_active_collider_radius(
         self,
-        collider_prop: VRMHELPER_SCENE_vrm1_collider_settigs,
+        collider_prop: VRMHELPER_SCENE_vrm1_collider_settings,
         collider: ReferenceVrm1ColliderPropertyGroup,
     ):
         """
@@ -862,7 +900,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
 
         Parameters
         ----------
-        collider_prop : VRMHELPER_SCENE_vrm1_collider_settigs
+        collider_prop : VRMHELPER_SCENE_vrm1_collider_settings
             プロパティ更新の対象となるプロパティグループ
 
         collider : ReferenceVrm1ColliderPropertyGroup
@@ -1138,37 +1176,37 @@ class VRMHELPER_SCENE_vrm1_root_property_group(bpy.types.PropertyGroup):
     first_person_settings: PointerProperty(
         name="First_Person Settings",
         description="Group of properties for First_Person Annotation Settings",
-        type=VRMHELPER_SCENE_vrm1_first_person_settigs,
+        type=VRMHELPER_SCENE_vrm1_first_person_settings,
     )
 
     expression_settings: PointerProperty(
         name="Expression Annotation Settings",
         description="Group of properties for Expression Settings",
-        type=VRMHELPER_SCENE_vrm1_expression_settigs,
+        type=VRMHELPER_SCENE_vrm1_expression_settings,
     )
 
     collider_settings: PointerProperty(
         name="Collider Settings",
         description="Group of properties for Collider Settings",
-        type=VRMHELPER_SCENE_vrm1_collider_settigs,
+        type=VRMHELPER_SCENE_vrm1_collider_settings,
     )
 
     collider_group_settings: PointerProperty(
         name="Spring Bone Collider Settings",
         description="Group of properties for Spring Bone Collider Settings",
-        type=VRMHELPER_SCENE_vrm1_collider_group_settigs,
+        type=VRMHELPER_SCENE_vrm1_collider_group_settings,
     )
 
     spring_settings: PointerProperty(
         name="Spring Bone Settings",
         description="Group of properties for Spring Bone Settings",
-        type=VRMHELPER_SCENE_vrm1_spring_settigs,
+        type=VRMHELPER_SCENE_vrm1_spring_settings,
     )
 
     constraint_settings: PointerProperty(
         name="Constraint Settings",
         description="Group of properties for Constraint Settings",
-        type=VRMHELPER_SCENE_vrm1_constraint_settigs,
+        type=VRMHELPER_SCENE_vrm1_constraint_settings,
     )
 
     active_indexes: PointerProperty(
@@ -1197,13 +1235,13 @@ class VRMHELPER_SCENE_root_property_group(bpy.types.PropertyGroup):
     basic_settings: PointerProperty(
         name="Basic Settings",
         description="Group of properties for Basic Tool Settings",
-        type=VRMHELPER_SCENE_basic_settigs,
+        type=VRMHELPER_SCENE_basic_settings,
     )
 
     misc_settings: PointerProperty(
         name="Misc Settings",
         description="Misc Tools Settings",
-        type=VRMHELPER_SCENE_misc_tools_settigs,
+        type=VRMHELPER_SCENE_misc_tools_settings,
     )
 
     vrm0_props: PointerProperty(
@@ -1239,28 +1277,6 @@ class VRMHELPER_WM_vrm0_first_person_list_items(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 #    Blend_Shape
 # ----------------------------------------------------------
-class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup):
-    """
-    Blend Shape ProxyのMaterial Color/TextureTransform Bind設定･確認用UI Listに表示する候補アイテム｡
-    """
-
-    item_type: BoolVectorProperty(
-        name="Item Type",
-        description="[0]: is_label, [1]: is_color, [2]: is_texture_transform",
-        size=3,
-    )
-
-    bind_index: IntProperty(
-        name="Item Index",
-        description="Index of item in VRM extension compornent",
-        default=0,
-    )
-
-    bind_material_name: StringProperty(
-        name="Bind Material Name",
-        description="Material name of material bind",
-        default="",
-    )
 
 
 class VRMHELPER_WM_vrm0_blend_shape_morph_list_items(bpy.types.PropertyGroup):
@@ -1287,34 +1303,137 @@ class VRMHELPER_WM_vrm0_blend_shape_morph_list_items(bpy.types.PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm0_blend_shape_list_items(bpy.types.PropertyGroup):
+class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup):
     """
-    Blend Shape設定･確認用UI Listに表示する候補アイテム｡
+    Blend Shape ProxyのMaterial Color/TextureTransform Bind設定･確認用UI Listに表示する候補アイテム｡
     """
 
-    preset_name: StringProperty(
-        name="Preset Name",
-        description="Blend Shapes's preset name",
-        default="",
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: material_value",
+        size=2,
     )
 
-    has_morph_bind: BoolProperty(
-        name="Has Morph Bind",
-        description="This Blend Shape has one or more Morph Binds",
-        default=False,
+    bind_index: IntProperty(
+        name="Item Index",
+        description="Index of item in VRM extension compornent",
+        default=0,
     )
 
-    has_material_bind: BoolProperty(
-        name="Has Material Bind",
-        description="This Blend Shape has one or more Color or Texture Transform Binds",
-        default=False,
+    material_color: FloatVectorProperty(
+        name="Material Color",
+        description="Material Color of Material Value",
+        default=(0.0, 0.0, 0.0, 0.0),
+        size=4,
     )
 
-    is_custom: BoolProperty(
-        name="Is Custom",
-        description="This item is custom blend shape",
-        default=False,
+    uv_scale: FloatVectorProperty(
+        name="UV Scale",
+        description="UV Scale of Material Value",
+        default=(1.0, 1.0),
+        size=2,
     )
+
+    uv_offset: FloatVectorProperty(
+        name="UV Offset",
+        description="UV Offset of Material Value",
+        default=(0.0, 0.0),
+        size=2,
+    )
+
+
+class VRMHELPER_WM_vrm0_material_value_prop_name(bpy.types.PropertyGroup):
+    pass
+
+
+class VRMHELPER_WM_vrm0_material_value_prop_names(bpy.types.PropertyGroup):
+    property_name: StringProperty(
+        name="Property Name",
+        description="Description",
+        default="your text",
+    )
+
+    gltf_props: CollectionProperty(
+        name="GLTF Props",
+        description="Names of GlTF Material Property Names",
+        type=VRMHELPER_WM_vrm0_material_value_prop_name,
+    )
+
+    mtoon_props: CollectionProperty(
+        name="MToon Props",
+        description="Names of MToon Material Property Names",
+        type=VRMHELPER_WM_vrm0_material_value_prop_name,
+    )
+
+    gltf_property_names = [
+        "_Color",
+        "_MainTex_ST",
+        "_MainTex_ST_S",
+        "_MainTex_ST_T",
+        "_MetallicGlossMap_ST",
+        "_MetallicGlossMap_ST_S",
+        "_MetallicGlossMap_ST_T",
+        "_BumpMap_ST",
+        "_BumpMap_ST_S",
+        "_BumpMap_ST_T",
+        "_ParallaxMap_ST",
+        "_ParallaxMap_ST_S",
+        "_ParallaxMap_ST_T",
+        "_OcclusionMap_ST",
+        "_OcclusionMap_ST_S",
+        "_OcclusionMap_ST_T",
+        "_EmissionColor",
+        "_EmissionMap_ST",
+        "_EmissionMap_ST_S",
+        "_EmissionMap_ST_T",
+        "_DetailMask_ST",
+        "_DetailMask_ST_S",
+        "_DetailMask_ST_T",
+        "_DetailAlbedoMap_ST",
+        "_DetailAlbedoMap_ST_S",
+        "_DetailAlbedoMap_ST_T",
+        "_DetailNormalMap_ST",
+        "_DetailNormalMap_ST_S",
+        "_DetailNormalMap_ST_T",
+    ]
+
+    mtoon0_property_names = [
+        "_Color",
+        "_ShadeColor",
+        "_MainTex_ST",
+        "_MainTex_ST_S",
+        "_MainTex_ST_T",
+        "_ShadeTexture_ST",
+        "_ShadeTexture_ST_S",
+        "_ShadeTexture_ST_T",
+        "_BumpMap_ST",
+        "_BumpMap_ST_S",
+        "_BumpMap_ST_T",
+        "_ReceiveShadowTexture_ST",
+        "_ReceiveShadowTexture_ST_S",
+        "_ReceiveShadowTexture_ST_T",
+        "_ShadingGradeTexture_ST",
+        "_ShadingGradeTexture_ST_S",
+        "_ShadingGradeTexture_ST_T",
+        "_RimColor",
+        "_RimTexture_ST",
+        "_RimTexture_ST_S",
+        "_RimTexture_ST_T",
+        "_SphereAdd_ST",
+        "_SphereAdd_ST_S",
+        "_SphereAdd_ST_T",
+        "_EmissionColor",
+        "_EmissionMap_ST",
+        "_EmissionMap_ST_S",
+        "_EmissionMap_ST_T",
+        "_OutlineWidthTexture_ST",
+        "_OutlineWidthTexture_ST_S",
+        "_OutlineWidthTexture_ST_T",
+        "_OutlineColor",
+        "_UvAnimMaskTexture_ST",
+        "_UvAnimMaskTexture_ST_S",
+        "_UvAnimMaskTexture_ST_T",
+    ]
 
 
 # ----------------------------------------------------------
@@ -1387,16 +1506,16 @@ class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
         type=VRMHELPER_WM_vrm0_first_person_list_items,
     )
 
-    blend_shape_list_items4custom_filter: CollectionProperty(
-        name="Candidate Blend Shape List Items",
-        description="Elements registered with this collection property are displayed in the UI List",
-        type=VRMHELPER_WM_vrm0_blend_shape_list_items,
-    )
-
     blend_shape_morph_list_items4custom_filter: CollectionProperty(
         name="Candidate Blend Shape Morph Target Bind List Items",
         description="Elements registered with this collection property are displayed in the UI List",
         type=VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    )
+
+    material_value_prop: PointerProperty(
+        name="Material Value prop",
+        description="Group of Material Value Property Name",
+        type=VRMHELPER_WM_vrm0_material_value_prop_names,
     )
 
     blend_shape_material_list_items4custom_filter: CollectionProperty(
@@ -1937,7 +2056,7 @@ def get_scene_prop_root() -> VRMHELPER_SCENE_root_property_group:
     return scene_root_prop
 
 
-def get_scene_basic_prop() -> VRMHELPER_SCENE_basic_settigs:
+def get_scene_basic_prop() -> VRMHELPER_SCENE_basic_settings:
     scene_root_prop = get_scene_prop_root()
     scene_basic_prop = scene_root_prop.basic_settings
     return scene_basic_prop
@@ -1973,7 +2092,7 @@ def get_target_armature_data() -> Optional[bpy.types.Armature]:
         return target_armature.data
 
 
-def get_scene_misc_prop() -> VRMHELPER_SCENE_misc_tools_settigs:
+def get_scene_misc_prop() -> VRMHELPER_SCENE_misc_tools_settings:
     scene_root_prop = get_scene_prop_root()
     scene_misc_prop = scene_root_prop.misc_settings
     return scene_misc_prop
@@ -1999,10 +2118,22 @@ def get_vrm0_index_root_prop() -> VRMHELPER_SCENE_vrm0_ui_list_active_indexes:
     return vrm0_index_root_prop
 
 
-def get_scene_vrm0_first_person_prop() -> VRMHELPER_SCENE_vrm0_first_person_settigs:
+def get_scene_vrm0_first_person_prop() -> VRMHELPER_SCENE_vrm0_first_person_settings:
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     first_person_prop = scene_vrm0_prop.first_person_settings
     return first_person_prop
+
+
+def get_scene_vrm0_blend_shape_prop() -> VRMHELPER_SCENE_vrm0_blend_shape_settings:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    blend_shape_prop = scene_vrm0_prop.blend_shape_settings
+    return blend_shape_prop
+
+
+def get_scene_vrm0_mtoon_prop() -> VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    mtoon_prop = scene_vrm0_prop.mtoon0_stored_parameters
+    return mtoon_prop
 
 
 # ----------------------------------------------------------
@@ -2023,20 +2154,12 @@ def get_ui_vrm0_first_person_prop() -> (
     return first_person_filter
 
 
-def get_ui_vrm0_blend_shape_prop() -> (
-    bpy.types.CollectionProperty
-):  # VRMHELPER_WM_vrm0_blend_shape_list_items
-    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
-    blend_shape_filter = wm_vrm0_root_prop.blend_shape_list_items4custom_filter
-    return blend_shape_filter
-
-
 def get_ui_vrm0_blend_shape_morph_prop() -> (
     bpy.types.CollectionProperty  # VRMHELPER_WM_vrm0_blend_shape_morph_list_items
 ):
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
-    morph_filter = wm_vrm0_root_prop.blend_shape_morph_list_items4custom_filter
-    return morph_filter
+    binds_filter = wm_vrm0_root_prop.blend_shape_morph_list_items4custom_filter
+    return binds_filter
 
 
 def get_ui_vrm0_blend_shape_material_prop() -> (
@@ -2045,6 +2168,29 @@ def get_ui_vrm0_blend_shape_material_prop() -> (
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     material_filter = wm_vrm0_root_prop.blend_shape_material_list_items4custom_filter
     return material_filter
+
+
+def get_wm_vrm0_material_value_prop() -> VRMHELPER_WM_vrm0_material_value_prop_names:
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    material_value_prop = wm_vrm0_prop.material_value_prop
+    return material_value_prop
+
+
+def initialize_material_value_prop():
+    material_value_prop = get_wm_vrm0_material_value_prop()
+    gltf = material_value_prop.gltf_props
+    gltf.clear()
+    gltf_prop_names = material_value_prop.gltf_property_names
+    for name in gltf_prop_names:
+        target_item: VRMHELPER_WM_vrm0_material_value_prop_name = gltf.add()
+        target_item.name = name
+
+    mtoon = material_value_prop.mtoon_props
+    mtoon.clear()
+    mtoon_prop_names = material_value_prop.mtoon0_property_names
+    for name in mtoon_prop_names:
+        target_item: VRMHELPER_WM_vrm0_material_value_prop_name = mtoon.add()
+        target_item.name = name
 
 
 def get_ui_vrm0_collider_group_prop() -> (
@@ -2086,17 +2232,13 @@ def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
             list_items = get_ui_vrm0_first_person_prop()
             index = vrm0_index_prop.first_person
 
-        case "BLEND_SHAPE":
-            list_items = get_ui_vrm0_blend_shape_prop()
-            index = vrm0_index_prop.expression
-
         case "BLEND_SHAPE_MORPH":
             list_items = get_ui_vrm0_blend_shape_morph_prop()
-            index = vrm0_index_prop.expression_morph
+            index = vrm0_index_prop.blend_shape_morph
 
         case "BLEND_SHAPE_MATERIAL":
             list_items = get_ui_vrm0_blend_shape_material_prop()
-            index = vrm0_index_prop.expression_material
+            index = vrm0_index_prop.blend_shape_material
 
         case "BONE_GROUPS":
             list_items = get_ui_vrm0_spring_prop()
@@ -2185,19 +2327,19 @@ def get_vrm1_active_index_prop(component_type: VRM1_COMPONENT_TYPES) -> int:
     return active_index
 
 
-def get_scene_vrm1_first_person_prop() -> VRMHELPER_SCENE_vrm1_first_person_settigs:
+def get_scene_vrm1_first_person_prop() -> VRMHELPER_SCENE_vrm1_first_person_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     first_person_prop = scene_vrm1_prop.first_person_settings
     return first_person_prop
 
 
-def get_scene_vrm1_expression_prop() -> VRMHELPER_SCENE_vrm1_expression_settigs:
+def get_scene_vrm1_expression_prop() -> VRMHELPER_SCENE_vrm1_expression_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     expression_prop = scene_vrm1_prop.expression_settings
     return expression_prop
 
 
-def get_scene_vrm1_collider_prop() -> VRMHELPER_SCENE_vrm1_collider_settigs:
+def get_scene_vrm1_collider_prop() -> VRMHELPER_SCENE_vrm1_collider_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     collider_prop = scene_vrm1_prop.collider_settings
     return collider_prop
@@ -2261,19 +2403,21 @@ def find_collider_from_empty_name(
     return collider
 
 
-def get_scene_vrm1_collider_group_prop() -> VRMHELPER_SCENE_vrm1_collider_group_settigs:
+def get_scene_vrm1_collider_group_prop() -> (
+    VRMHELPER_SCENE_vrm1_collider_group_settings
+):
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     collider_group_prop = scene_vrm1_prop.collider_group_settings
     return collider_group_prop
 
 
-def get_scene_vrm1_spring_prop() -> VRMHELPER_SCENE_vrm1_spring_settigs:
+def get_scene_vrm1_spring_prop() -> VRMHELPER_SCENE_vrm1_spring_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     spring_prop = scene_vrm1_prop.spring_settings
     return spring_prop
 
 
-def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settigs:
+def get_scene_vrm1_constraint_prop() -> VRMHELPER_SCENE_vrm1_constraint_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     constraint_prop = scene_vrm1_prop.constraint_settings
     return constraint_prop
@@ -2388,20 +2532,21 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Scene
     # ----------------------------------------------------------
-    VRMHELPER_SCENE_basic_settigs,
-    VRMHELPER_SCENE_misc_tools_settigs,
+    VRMHELPER_SCENE_basic_settings,
+    VRMHELPER_SCENE_misc_tools_settings,
     # ---------------------------------------------------------------------------------
-    VRMHELPER_SCENE_vrm0_first_person_settigs,
-    VRMHELPER_SCENE_vrm0_blend_shape_settigs,
+    VRMHELPER_SCENE_vrm0_first_person_settings,
+    VRMHELPER_SCENE_vrm0_blend_shape_settings,
+    VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
-    VRMHELPER_SCENE_vrm1_first_person_settigs,
-    VRMHELPER_SCENE_vrm1_expression_settigs,
-    VRMHELPER_SCENE_vrm1_collider_settigs,
-    VRMHELPER_SCENE_vrm1_collider_group_settigs,
-    VRMHELPER_SCENE_vrm1_spring_settigs,
-    VRMHELPER_SCENE_vrm1_constraint_settigs,
+    VRMHELPER_SCENE_vrm1_first_person_settings,
+    VRMHELPER_SCENE_vrm1_expression_settings,
+    VRMHELPER_SCENE_vrm1_collider_settings,
+    VRMHELPER_SCENE_vrm1_collider_group_settings,
+    VRMHELPER_SCENE_vrm1_spring_settings,
+    VRMHELPER_SCENE_vrm1_constraint_settings,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
     VRMHELPER_SCENE_vrm1_root_property_group,
@@ -2411,6 +2556,10 @@ CLASSES = (
     #    Window Manager
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    VRMHELPER_WM_vrm0_material_value_prop_name,
+    VRMHELPER_WM_vrm0_material_value_prop_names,
     VRMHELPER_WM_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm1_first_person_list_items,
