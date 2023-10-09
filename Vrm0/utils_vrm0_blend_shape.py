@@ -61,9 +61,8 @@ from ..utils_common import (
 )
 
 from ..utils_vrm_base import (
-    MToon1MaterialParameters,
-    MTOON1_ATTRIBUTE_NAMES,
     get_vrm0_extension_property_blend_shape,
+    serach_vrm_shader_node,
 )
 
 
@@ -172,9 +171,9 @@ def get_source_vrm0_blend_shape_material4ui_list() -> (
     """
 
     # データ取得対象となる'morph_target_binds'から取得する｡
-    active_item = get_active_blend_shape()
+    active_blend_shape = get_active_blend_shape()
     material_value_dict = {}
-    for n, mat_value in enumerate(active_item.material_values):
+    for n, mat_value in enumerate(active_blend_shape.material_values):
         mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = mat_value
         material = mat_value.material if mat_value.material else "Non Selected"
         # material = mat_value.material
@@ -203,49 +202,81 @@ def add_items2blend_shape_material_ui_list() -> int:
     for n, value_info in enumerate(source_material_value_dict.items()):
         material, value_list = value_info
         mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = value_list[0]
-        material_name = (
-            material.name if isinstance(material, bpy.types.Material) else ""
-        )
+        # マテリアルが参照されていない場合は専用のラベル
+        if isinstance(material, bpy.types.Material):
+            material_name = material.name
+            item_type = (1, 0, 0, 0)
+        else:
+            material_name = "Not Selected"
+            item_type = (1, 0, 0, 1)
+
         # 先頭出ない場合は空白行挿入
         if n != 0:
-            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = (
-                items.add()
-            )
+            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
             target_label.item_type[0] = True
             target_label.name = "Blank"
 
         target_label = items.add()
-        target_label.item_type[0] = True
+        target_label.item_type = tuple(map(bool, item_type))
         target_label.name = material_name
 
         # Material Valueの登録をする｡
         for mat_value, index in value_list:
             mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = mat_value
             target_item: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
-            target_item.item_type[1] = True
-            target_item.name = "Material Value"
             target_item.bind_index = index
 
-            if "Color" in mat_value.property_name:
-                source_color = (
-                    mat_value.target_value[0].value,
-                    mat_value.target_value[1].value,
-                    mat_value.target_value[2].value,
-                    mat_value.target_value[3].value,
-                )
-                target_item.material_color = source_color
+            # UI List用アイテム登録の間はUpdateコールバックをロックする｡
+            target_item.is_locked_color = True
+            target_item.is_locked_uv_scale = True
+            target_item.is_locked_uv_offset = True
 
-            else:
-                source_scale = (
-                    mat_value.target_value[0].value,
-                    mat_value.target_value[1].value,
-                )
-                source_offset = (
-                    mat_value.target_value[2].value,
-                    mat_value.target_value[3].value,
-                )
-                target_item.uv_scale = source_scale
-                target_item.uv_offset = source_offset
+            # マテリアルがMToonであるかどうかの判定
+            mat_vrm_ext = mat_value.material.vrm_addon_extension if mat_value.material else None
+            if mat_vrm_ext != None:
+                if vrm_node := serach_vrm_shader_node(mat_value.material):
+                    if mat_vrm_ext.mtoon1.enabled or (vrm_node.node_tree["SHADER"] == "MToon_unversioned"):
+                        target_item.material_type = "MTOON"
+
+            # マテリアルが参照されていない場合の処理
+            if item_type[3]:
+                target_item.material_type = "NONE"
+                target_item.item_type[3] = True
+                continue
+
+            try:
+                if "Color" in mat_value.property_name:
+                    target_item.item_type[1] = True
+                    target_item.name = "Color"
+                    source_color = (
+                        mat_value.target_value[0].value,
+                        mat_value.target_value[1].value,
+                        mat_value.target_value[2].value,
+                        mat_value.target_value[3].value,
+                    )
+                    target_item.material_color = source_color
+
+                else:
+                    target_item.item_type[2] = True
+                    target_item.name = "UV"
+                    source_scale = (
+                        mat_value.target_value[0].value,
+                        mat_value.target_value[1].value,
+                    )
+                    target_item.uv_scale = source_scale
+
+                    source_offset = (
+                        mat_value.target_value[2].value,
+                        mat_value.target_value[3].value,
+                    )
+                    target_item.uv_offset = source_offset
+
+            except:
+                pass
+
+            target_item.is_locked_color = False
+            target_item.is_locked_uv_scale = False
+            target_item.is_locked_uv_offset = False
 
     return len(items)
 

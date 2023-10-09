@@ -405,9 +405,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
 
             # アクティブアイテムがコライダーであればそれを選択する｡
             case (0, 0, 1, 0):
-                if collider := find_collider_from_empty_name(
-                    colliders, active_item.collider_name
-                ):
+                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
                     self.update_active_collider_radius(collider_prop, collider)
 
                 if collider := bpy.data.objects.get(active_item.collider_name):
@@ -418,9 +416,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
 
             # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
             case (0, 0, 0, 1):
-                if collider := find_collider_from_empty_name(
-                    colliders, active_item.collider_name
-                ):
+                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
                     self.update_active_collider_radius(collider_prop, collider)
 
                 if collider_object := bpy.data.objects.get(active_item.collider_name):
@@ -445,9 +441,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         if len(constraint_ui_list) - 1 < active_index:
             return
 
-        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
-            active_index
-        ]
+        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[active_index]
         # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
         if active_item.is_blank or active_item.is_label:
             return
@@ -458,9 +452,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
                 return
 
             # アクティブアイテムが参照しているコンストレイントが付与されたオブジェクトを選択する｡
-            constrainted_object: bpy.types.Object = bpy.data.objects.get(
-                active_item.name
-            )
+            constrainted_object: bpy.types.Object = bpy.data.objects.get(active_item.name)
             context.view_layer.objects.active = constrainted_object
             bpy.ops.object.select_all(action="DESELECT")
             constrainted_object.select_set(True)
@@ -681,9 +673,7 @@ class VRMHELPER_SCENE_vrm1_collider_settings(bpy.types.PropertyGroup):
         collider_list = get_ui_vrm1_collider_prop()
         active_index = get_vrm1_active_index_prop("COLLIDER")
         try:
-            active_collider: VRMHELPER_WM_vrm1_collider_list_items = collider_list[
-                active_index
-            ]
+            active_collider: VRMHELPER_WM_vrm1_collider_list_items = collider_list[active_index]
         except:
             return
 
@@ -966,9 +956,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
 
             # アクティブアイテムがコライダーであればそれを選択する｡
             case (0, 0, 1, 0):
-                if collider := find_collider_from_empty_name(
-                    colliders, active_item.collider_name
-                ):
+                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
                     self.update_active_collider_radius(collider_prop, collider)
 
                 if collider := bpy.data.objects.get(active_item.collider_name):
@@ -979,9 +967,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
 
             # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
             case (0, 0, 0, 1):
-                if collider := find_collider_from_empty_name(
-                    colliders, active_item.collider_name
-                ):
+                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
                     self.update_active_collider_radius(collider_prop, collider)
 
                 if collider_object := bpy.data.objects.get(active_item.collider_name):
@@ -1006,9 +992,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
         if len(constraint_ui_list) - 1 < active_index:
             return
 
-        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
-            active_index
-        ]
+        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[active_index]
         # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
         if active_item.is_blank or active_item.is_label:
             return
@@ -1019,9 +1003,7 @@ class VRMHELPER_SCENE_vrm1_ui_list_active_indexes(bpy.types.PropertyGroup):
                 return
 
             # アクティブアイテムが参照しているコンストレイントが付与されたオブジェクトを選択する｡
-            constrainted_object: bpy.types.Object = bpy.data.objects.get(
-                active_item.name
-            )
+            constrainted_object: bpy.types.Object = bpy.data.objects.get(active_item.name)
             context.view_layer.objects.active = constrainted_object
             bpy.ops.object.select_all(action="DESELECT")
             constrainted_object.select_set(True)
@@ -1308,23 +1290,141 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
     Blend Shape ProxyのMaterial Color/TextureTransform Bind設定･確認用UI Listに表示する候補アイテム｡
     """
 
+    def update_material_value_color(self, context):
+        """
+        material_colorの値が変更された際に､対応するColor系のMaterial Valueの値に反映する｡
+        """
+        if self.is_locked_color:
+            return
+
+        target_armature_data = get_target_armature_data()
+        blend_shape_master = target_armature_data.vrm_addon_extension.vrm0.blend_shape_master
+        blend_shape_groups = blend_shape_master.blend_shape_groups
+        material_values = blend_shape_groups[
+            blend_shape_master.active_blend_shape_group_index
+        ].material_values
+        active_material_value = material_values[self.bind_index]
+        target_value = active_material_value.target_value
+
+        while len(target_value) < 4:
+            target_value.add()
+
+        for n, value in enumerate(self.material_color):
+            try:
+                target_value[n].value = value
+            except:
+                pass
+                # target_value.add()
+                # target_value[n].value = value
+
+    def update_uv_scale(self, context):
+        """
+        uv_scaleの値が変更された際に､対応するUV Coordinate系のUV Scale部分の値に反映する｡
+        """
+        if self.is_locked_uv_scale:
+            self.is_locked_uv_scale = False
+            return
+
+        target_armature_data = get_target_armature_data()
+        blend_shape_master = target_armature_data.vrm_addon_extension.vrm0.blend_shape_master
+        blend_shape_groups = blend_shape_master.blend_shape_groups
+        material_values = blend_shape_groups[
+            blend_shape_master.active_blend_shape_group_index
+        ].material_values
+        active_material_value = material_values[self.bind_index]
+        target_value = active_material_value.target_value
+
+        while len(target_value) < 4:
+            target_value.add()
+
+        for n, value in enumerate(self.uv_scale):
+            try:
+                target_value[n].value = value
+            except:
+                pass
+                # target_value.add()
+                # target_value[n].value = value
+
+    def update_uv_offset(self, context):
+        """
+        uv_offsetの値が変更された際に､対応するUV Coordinate系のUV Offset部分の値に反映する｡
+        """
+        if self.is_locked_uv_offset:
+            self.is_locked_uv_offset = False
+            return
+
+        target_armature_data = get_target_armature_data()
+        blend_shape_master = target_armature_data.vrm_addon_extension.vrm0.blend_shape_master
+        blend_shape_groups = blend_shape_master.blend_shape_groups
+        material_values = blend_shape_groups[
+            blend_shape_master.active_blend_shape_group_index
+        ].material_values
+        active_material_value = material_values[self.bind_index]
+        target_value = active_material_value.target_value
+
+        while len(target_value) < 4:
+            target_value.add()
+
+        for n, value in enumerate(self.uv_offset):
+            try:
+                target_value[n + 2].value = value
+            except:
+                pass
+                # target_value.add()
+                # target_value[n + 2].value = value
+
+    # ---------------------------------------------------------------------------------
+
+    is_locked_color: BoolProperty(
+        name="Is Locked Color",
+        description="Lock updating callback for material color",
+        default=False,
+    )
+
+    is_locked_uv_scale: BoolProperty(
+        name="Is Locked UV Scale",
+        description="Lock updating callback for UV Scale",
+        default=False,
+    )
+
+    is_locked_uv_offset: BoolProperty(
+        name="Is Locked UV Offset",
+        description="Lock updating callback for UV Offset",
+        default=False,
+    )
+
     item_type: BoolVectorProperty(
         name="Item Type",
-        description="[0]: is_label, [1]: material_value",
-        size=2,
+        description="[0]: is_label, [1]: Material Color [2]: UV Coordinate, [3]: Undefined",
+        size=4,
     )
 
     bind_index: IntProperty(
         name="Item Index",
         description="Index of item in VRM extension compornent",
-        default=0,
+        default=-1,
+    )
+
+    material_type: EnumProperty(
+        name="Material Type",
+        description="MToon or GLTF",
+        items=(
+            ("MTOON", "MToon", "This item is MToon Material"),
+            ("GLTF", "GLTF", "This item is GLTF Material"),
+            ("NONE", "None", "This item is not assigned material"),
+        ),
+        default="GLTF",
     )
 
     material_color: FloatVectorProperty(
         name="Material Color",
         description="Material Color of Material Value",
-        default=(0.0, 0.0, 0.0, 0.0),
+        default=(0.0, 0.0, 0.0, 1.0),
         size=4,
+        subtype="COLOR",
+        min=0,
+        max=1,
+        update=update_material_value_color,
     )
 
     uv_scale: FloatVectorProperty(
@@ -1332,6 +1432,7 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         description="UV Scale of Material Value",
         default=(1.0, 1.0),
         size=2,
+        update=update_uv_scale,
     )
 
     uv_offset: FloatVectorProperty(
@@ -1339,11 +1440,14 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         description="UV Offset of Material Value",
         default=(0.0, 0.0),
         size=2,
+        update=update_uv_offset,
     )
 
-
-class VRMHELPER_WM_vrm0_material_value_prop_name(bpy.types.PropertyGroup):
-    pass
+    prop_dict = {
+        "MTOON": "mtoon_props",
+        "GLTF": "gltf_props",
+        "NONE": "none_props",
+    }
 
 
 class VRMHELPER_WM_vrm0_material_value_prop_names(bpy.types.PropertyGroup):
@@ -1356,13 +1460,19 @@ class VRMHELPER_WM_vrm0_material_value_prop_names(bpy.types.PropertyGroup):
     gltf_props: CollectionProperty(
         name="GLTF Props",
         description="Names of GlTF Material Property Names",
-        type=VRMHELPER_WM_vrm0_material_value_prop_name,
+        type=bpy.types.PropertyGroup,
     )
 
     mtoon_props: CollectionProperty(
         name="MToon Props",
         description="Names of MToon Material Property Names",
-        type=VRMHELPER_WM_vrm0_material_value_prop_name,
+        type=bpy.types.PropertyGroup,
+    )
+
+    none_props: CollectionProperty(
+        name="None Props",
+        description="This item is not assigned material",
+        type=bpy.types.PropertyGroup,
     )
 
     gltf_property_names = [
@@ -1453,9 +1563,7 @@ class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
 
     item_name: StringProperty(
         name="Collider Group Name",
-        description=(
-            "Name of the collider group component registered in the VRM Extension"
-        ),
+        description=("Name of the collider group component registered in the VRM Extension"),
         default="",
     )
 
@@ -1560,8 +1668,7 @@ class VRMHELPER_WM_vrm1_expression_list_items(bpy.types.PropertyGroup):
     """
 
     expressions_list: list[
-        ReferenceVrm1ExpressionPropertyGroup
-        | ReferenceVrm1CustomExpressionPropertyGroup
+        ReferenceVrm1ExpressionPropertyGroup | ReferenceVrm1CustomExpressionPropertyGroup
     ] = []  # 全エクスプレッションを格納したリスト
 
     has_morph_bind: BoolProperty(
@@ -1713,9 +1820,7 @@ class VRMHELPER_WM_vrm1_collider_group_list_items(bpy.types.PropertyGroup):
 
     item_name: StringProperty(
         name="Collider Group Name",
-        description=(
-            "Name of the collider group component registered in the VRM Extension"
-        ),
+        description=("Name of the collider group component registered in the VRM Extension"),
         default="",
     )
 
@@ -1772,9 +1877,7 @@ class VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items(bpy.types.Property
     )
 
 
-class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(
-    bpy.types.PropertyGroup
-):
+class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(bpy.types.PropertyGroup):
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
@@ -1819,16 +1922,12 @@ class VRMHELPER_WM_vrm1_constraint_properties(bpy.types.PropertyGroup):
             case "OBJECT":
                 active_item = constraint_list[active_index]
                 target_object = bpy.data.objects.get(active_item.name)
-                source_constraint = target_object.constraints[
-                    active_item.constraint_index
-                ]
+                source_constraint = target_object.constraints[active_item.constraint_index]
 
             case "BONE":
                 target_armature = get_target_armature()
                 target_bone = target_armature.pose.bones.get(active_item.name)
-                source_constraint = target_bone.constraints[
-                    active_item.constraint_index
-                ]
+                source_constraint = target_bone.constraints[active_item.constraint_index]
 
         source_constraint.use_x = False
         source_constraint.use_y = False
@@ -2182,14 +2281,14 @@ def initialize_material_value_prop():
     gltf.clear()
     gltf_prop_names = material_value_prop.gltf_property_names
     for name in gltf_prop_names:
-        target_item: VRMHELPER_WM_vrm0_material_value_prop_name = gltf.add()
+        target_item: bpy.types.PropertyGroup = gltf.add()
         target_item.name = name
 
     mtoon = material_value_prop.mtoon_props
     mtoon.clear()
     mtoon_prop_names = material_value_prop.mtoon0_property_names
     for name in mtoon_prop_names:
-        target_item: VRMHELPER_WM_vrm0_material_value_prop_name = mtoon.add()
+        target_item: bpy.types.PropertyGroup = mtoon.add()
         target_item.name = name
 
 
@@ -2201,9 +2300,7 @@ def get_ui_vrm0_collider_group_prop() -> (
     return collider_group_filter
 
 
-def get_ui_vrm0_spring_prop() -> (
-    bpy.types.CollectionProperty
-):  # VRMHELPER_WM_vrm0_spring_bone_list_items
+def get_ui_vrm0_spring_prop() -> bpy.types.CollectionProperty:  # VRMHELPER_WM_vrm0_spring_bone_list_items
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     spring_bone_filter = wm_vrm0_root_prop.spring_bone_list_items4custom_filter
     return spring_bone_filter
@@ -2403,9 +2500,7 @@ def find_collider_from_empty_name(
     return collider
 
 
-def get_scene_vrm1_collider_group_prop() -> (
-    VRMHELPER_SCENE_vrm1_collider_group_settings
-):
+def get_scene_vrm1_collider_group_prop() -> VRMHELPER_SCENE_vrm1_collider_group_settings:
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     collider_group_prop = scene_vrm1_prop.collider_group_settings
     return collider_group_prop
@@ -2457,23 +2552,15 @@ def get_ui_vrm1_expression_prop() -> VRMHELPER_WM_vrm1_expression_list_items:
     return expression_filter
 
 
-def get_ui_vrm1_expression_morph_prop() -> (
-    VRMHELPER_WM_vrm1_expression_morph_list_items
-):
+def get_ui_vrm1_expression_morph_prop() -> VRMHELPER_WM_vrm1_expression_morph_list_items:
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_morph_filter = (
-        wm_vrm1_root_prop.expression_morph_list_items4custom_filter
-    )
+    expression_morph_filter = wm_vrm1_root_prop.expression_morph_list_items4custom_filter
     return expression_morph_filter
 
 
-def get_ui_vrm1_expression_material_prop() -> (
-    VRMHELPER_WM_vrm1_expression_material_list_items
-):
+def get_ui_vrm1_expression_material_prop() -> VRMHELPER_WM_vrm1_expression_material_list_items:
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    expression_material_filter = (
-        wm_vrm1_root_prop.expression_material_list_items4custom_filter
-    )
+    expression_material_filter = wm_vrm1_root_prop.expression_material_list_items4custom_filter
     return expression_material_filter
 
 
@@ -2495,17 +2582,13 @@ def get_ui_vrm1_spring_prop() -> VRMHELPER_WM_vrm1_spring_list_items:
     return spring_filter
 
 
-def get_ui_vrm1_operator_bone_group_prop() -> (
-    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
-):
+def get_ui_vrm1_operator_bone_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items:
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
     bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
     return bone_group_filter
 
 
-def get_ui_vrm1_operator_collider_group_prop() -> (
-    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
-):
+def get_ui_vrm1_operator_collider_group_prop() -> VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items:
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
     collider_group_filter = wm_vrm1_root_prop.collider_group_list4operator
     return collider_group_filter
@@ -2558,7 +2641,6 @@ CLASSES = (
     VRMHELPER_WM_vrm0_first_person_list_items,
     VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
-    VRMHELPER_WM_vrm0_material_value_prop_name,
     VRMHELPER_WM_vrm0_material_value_prop_names,
     VRMHELPER_WM_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------

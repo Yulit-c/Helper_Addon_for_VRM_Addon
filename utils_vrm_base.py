@@ -853,6 +853,31 @@ def set_mtoon1_default_values(target_material: Material):
             return_default_values_of_mtoon1_properties(target_material)
 
 
+# https://github.com/saturday06/VRM-Addon-for-Blender
+def serach_vrm_shader_node(
+    material: bpy.types.Material,
+) -> Optional[bpy.types.ShaderNodeGroup]:
+    if not material.node_tree or not material.node_tree.nodes:
+        return None
+    for node in material.node_tree.nodes:
+        if not isinstance(node, bpy.types.ShaderNodeOutputMaterial):
+            continue
+        surface = node.inputs.get("Surface")
+        if not surface:
+            continue
+        links = surface.links
+        if not links:
+            continue
+        link = links[0]
+        group_node = link.from_node
+        if not isinstance(group_node, bpy.types.ShaderNodeGroup):
+            continue
+        if "SHADER" not in group_node.node_tree:
+            continue
+        return group_node
+    return None
+
+
 def get_all_collider_objects_from_scene() -> list[Object]:
     """
     Target ArmatureのVRM Extensionに登録された全てのコライダーオブジェクトのリストを返す｡
