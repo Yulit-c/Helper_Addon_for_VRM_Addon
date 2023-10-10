@@ -221,9 +221,7 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
     rows = vrm1_add_items2annotation_ui_list()
 
     row = layout.row()
-    row.prop(
-        first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type"
-    )
+    row.prop(first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type")
     row = layout.row()
     row.scale_y = 1.4
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
@@ -266,9 +264,7 @@ def draw_panel_vrm1_first_person(self, context: Context, layout: UILayout):
 class VRMHELPER_UL_vrm1_first_person_list(UIList):
     """First Person Mesh Annotationを表示するUI List"""
 
-    def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
-    ):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         annotation = vrm1_search_same_name_mesh_annotation(item.name)
 
         # リスト内の項目のレイアウトを定義する｡
@@ -475,15 +471,11 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
 
                 case (0, 1, 0):  # Material Color Bind
                     ui_draw_flag = "Material_Color_Bind"
-                    active_expression_binds = (
-                        get_active_expression().material_color_binds
-                    )
+                    active_expression_binds = get_active_expression().material_color_binds
 
                 case (0, 0, 1):  # Texture Transfor Bind
                     ui_draw_flag = "Texture_Transform_Bind"
-                    active_expression_binds = (
-                        get_active_expression().texture_transform_binds
-                    )
+                    active_expression_binds = get_active_expression().texture_transform_binds
 
                 case _:  # 'Blank' Label
                     ui_draw_flag = None
@@ -492,9 +484,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
             match ui_draw_flag:
                 case "Material":
                     box_bind_material = box.box()
-                    box_bind_material.label(
-                        text=f"Binded Material : {active_item.bind_material_name}"
-                    )
+                    box_bind_material.label(text=f"Binded Material : {active_item.bind_material_name}")
                     box_bind_material.operator(
                         VRMHELPER_OT_vrm1_expression_change_bind_material.bl_idname,
                         text="Change Bind Material",
@@ -588,9 +578,9 @@ class VRMHELPER_UL_expression_list(UIList):
         # カスタムエクスプレッションの場合
         elif item.expression_index[0] < 0:
             custom_expressions = vrm1_expressions.custom
-            custom_expression: ReferenceVrm1ExpressionPropertyGroup = (
-                custom_expressions[item.expression_index[1]]
-            )
+            custom_expression: ReferenceVrm1ExpressionPropertyGroup = custom_expressions[
+                item.expression_index[1]
+            ]
             prop_icon = EXPRESSION_ICON_DICT["custom"]
             row.prop(
                 custom_expression,
@@ -621,31 +611,23 @@ class VRMHELPER_UL_expression_list(UIList):
         # row = sp.row(align=True)
         row_override = row_parameters.row(align=True)
         row_override.alignment = "RIGHT"
-        row_override.prop(
-            expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True
-        )
+        row_override.prop(expression, "is_binary", text="", icon="IPO_CONSTANT", icon_only=True)
         row_override.separator()
 
         icon_blink = EXPRESSION_OPTION_ICON[expression.override_blink]
         row_blink = row_override.row(align=True)
         row_blink.alignment = "RIGHT"
-        row_blink.prop(
-            expression, "override_blink", text="", icon=icon_blink, icon_only=True
-        )
+        row_blink.prop(expression, "override_blink", text="", icon=icon_blink, icon_only=True)
         row_blink.separator(factor=0.5)
         icon_look_at = EXPRESSION_OPTION_ICON[expression.override_look_at]
         row_look_at = row_override.row(align=True)
         row_look_at.alignment = "RIGHT"
-        row_look_at.prop(
-            expression, "override_look_at", text="", icon=icon_look_at, icon_only=True
-        )
+        row_look_at.prop(expression, "override_look_at", text="", icon=icon_look_at, icon_only=True)
         row_look_at.separator(factor=0.5)
         icon_mouth = EXPRESSION_OPTION_ICON[expression.override_mouth]
         row_mouth = row_override.row(align=True)
         row_mouth.alignment = "RIGHT"
-        row_mouth.prop(
-            expression, "override_mouth", text="", icon=icon_mouth, icon_only=True
-        )
+        row_mouth.prop(expression, "override_mouth", text="", icon=icon_mouth, icon_only=True)
 
         row_preview = row_parameters.row(align=True)
         row_preview.prop(expression, "preview", text="Preview")
@@ -654,9 +636,7 @@ class VRMHELPER_UL_expression_list(UIList):
 class VRMHELPER_UL_expressin_morph_list(UIList):
     """Morph Target Bindsを表示するUI List"""
 
-    def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
-    ):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
         # Morph Target Bindが関連付けられているオブジェクト名のラベル
         if item.item_type[0]:
@@ -757,9 +737,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     scene_vrm1_prop = get_vrm1_scene_root_prop()
     # active_index = get_vrm1_active_index_prop("COLLIDER")
     active_index = scene_vrm1_prop.active_indexes.collider
-    collider_prop: VRMHELPER_SCENE_vrm1_collider_settings = (
-        scene_vrm1_prop.collider_settings
-    )
+    collider_prop: VRMHELPER_SCENE_vrm1_collider_settings = scene_vrm1_prop.collider_settings
 
     # UI描画
     layout.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
@@ -850,9 +828,7 @@ class VRMHELPER_UL_vrm1_collider_list(UIList, VRMHELPER_UL_base):
 
         # ラベルにArmature名を表示｡
         if item.item_type[0]:
-            row.label(
-                text=get_target_armature_data().name, icon="OUTLINER_DATA_ARMATURE"
-            )
+            row.label(text=get_target_armature_data().name, icon="OUTLINER_DATA_ARMATURE")
 
         # 親ボーン名の描画
         if item.item_type[1]:
@@ -939,9 +915,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         # UI List右に描画
         col = row.column(align=True)
         col.label(icon="OVERLAY")
-        col.operator(
-            VRMHELPER_OT_collider_group_add_group.bl_idname, text="", icon="ADD"
-        )
+        col.operator(VRMHELPER_OT_collider_group_add_group.bl_idname, text="", icon="ADD")
         col.operator(
             VRMHELPER_OT_collider_group_remove_active_group.bl_idname,
             text="",
@@ -954,9 +928,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         )
         col.separator(factor=2.0)
         col.label(icon="MESH_UVSPHERE")
-        col.operator(
-            VRMHELPER_OT_collider_group_add_collider.bl_idname, text="", icon="ADD"
-        )
+        col.operator(VRMHELPER_OT_collider_group_add_collider.bl_idname, text="", icon="ADD")
         col.operator(
             VRMHELPER_OT_collider_group_remove_collider.bl_idname,
             text="",
@@ -976,9 +948,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
 class VRMHELPER_UL_vrm1_collider_group_list(UIList, VRMHELPER_UL_base):
     """Vrm1のSpring Bone Collider Groupを表示するUI List"""
 
-    def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
-    ):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
 
         # ラベルの描画｡
@@ -1002,9 +972,7 @@ class VRMHELPER_UL_vrm1_collider_group_list(UIList, VRMHELPER_UL_base):
         if item.item_type[2]:
             self.add_blank_labels(row, 2)
             row.prop_search(
-                spring1.collider_groups[item.item_indexes[0]].colliders[
-                    item.item_indexes[1]
-                ],
+                spring1.collider_groups[item.item_indexes[0]].colliders[item.item_indexes[1]],
                 "collider_name",
                 spring1,
                 "colliders",
@@ -1026,9 +994,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
     # Property Groupの取得｡
     wm_vrm1_prop = get_vrm1_wm_root_prop()
     scene_vrm1_prop = get_vrm1_scene_root_prop()
-    spring_settings: VRMHELPER_SCENE_vrm1_spring_settings = (
-        scene_vrm1_prop.spring_settings
-    )
+    spring_settings: VRMHELPER_SCENE_vrm1_spring_settings = scene_vrm1_prop.spring_settings
     joint_properties = get_properties_to_dict(spring_settings, JOINT_PROP_NAMES)
 
     # UI描画
@@ -1057,12 +1023,8 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
 
         # スプリングの作成/削除に関するオペレーター
         col_side.operator(VRMHELPER_OT_spring_add_spring.bl_idname, text="", icon="ADD")
-        col_side.operator(
-            VRMHELPER_OT_spring_remove_spring.bl_idname, text="", icon="REMOVE"
-        )
-        col_side.operator(
-            VRMHELPER_OT_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE"
-        )
+        col_side.operator(VRMHELPER_OT_spring_remove_spring.bl_idname, text="", icon="REMOVE")
+        col_side.operator(VRMHELPER_OT_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
         col_side.separator(factor=2.0)
 
         # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する｡
@@ -1086,15 +1048,11 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 col_side.label(icon="BONE_DATA")
 
                 # ジョイント作成/削除に関するオペレーター
-                op = col_side.operator(
-                    VRMHELPER_OT_spring_add_joint.bl_idname, text="", icon="ADD"
-                )
+                op = col_side.operator(VRMHELPER_OT_spring_add_joint.bl_idname, text="", icon="ADD")
                 set_properties_to_from_dict(op, joint_properties)
                 op.use_auto_joint_parametter = spring_settings.use_auto_joint_parametter
 
-                col_side.operator(
-                    VRMHELPER_OT_spring_remove_joint.bl_idname, text="", icon="REMOVE"
-                )
+                col_side.operator(VRMHELPER_OT_spring_remove_joint.bl_idname, text="", icon="REMOVE")
                 col_side.operator(
                     VRMHELPER_OT_spring_clear_joint.bl_idname,
                     text="",
@@ -1219,9 +1177,7 @@ class VRMHELPER_UL_vrm1_spring_list(UIList, VRMHELPER_UL_base):
     Vrm1のSpring Bone Springを表示するUI List
     """
 
-    def draw_item(
-        self, context, layout, data, item, icon, active_data, active_propname, index
-    ):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
 
         # ラベルの描画
@@ -1312,9 +1268,7 @@ def draw_panel_vrm1_constraint_ui_list(self, context: Context, layout: UILayout)
     active_index = get_vrm1_index_root_prop().constraint
     active_item = None
     if constraint_list:
-        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_list[
-            active_index
-        ]
+        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_list[active_index]
 
     # UI Listが空であれば処理終了｡
     if not active_item:
@@ -1335,16 +1289,12 @@ def draw_panel_vrm1_constraint_ui_list(self, context: Context, layout: UILayout)
         match constraint_prop.constraint_type:
             case "OBJECT":
                 target_object = bpy.data.objects.get(active_item.name)
-                source_constraint = target_object.constraints[
-                    active_item.constraint_index
-                ]
+                source_constraint = target_object.constraints[active_item.constraint_index]
 
             case "BONE":
                 target_armature = get_target_armature()
                 target_bone = target_armature.pose.bones.get(active_item.name)
-                source_constraint = target_bone.constraints[
-                    active_item.constraint_index
-                ]
+                source_constraint = target_bone.constraints[active_item.constraint_index]
 
         match active_item.constraint_type:
             case 0:
@@ -1379,9 +1329,7 @@ def draw_panel_vrm1_constraint_operator(self, context: Context, layout: UILayout
     op_rot.constraint_type = "ROTATION"
 
     layout.separator()
-    layout.operator(
-        VRMHELPER_OT_constraint_remove_vrm_constraint.bl_idname, icon="REMOVE"
-    )
+    layout.operator(VRMHELPER_OT_constraint_remove_vrm_constraint.bl_idname, icon="REMOVE")
 
 
 class VRMHELPER_UL_vrm1_constraint_list(UIList, VRMHELPER_UL_base):

@@ -335,12 +335,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
             if active_item.bind_index > -1:
                 active_material_value = active_blend_shape.material_values[active_item.bind_index]
             match tuple(active_item.item_type):
-                case (
-                    1,
-                    0,
-                    0,
-                    0,
-                ) if active_item.name != "Blank":  # Label Exclude 'Blank'
+                case (1, 0, 0, 0) | (1, 0, 0, 1) if active_item.name != "Blank":  # Label Exclude 'Blank'
                     box_bind_material = box.box()
                     box_bind_material.label(text=f"Binded Material : {active_item.name}")
                     box_bind_material.operator(
@@ -349,7 +344,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
                         icon="MATERIAL",
                     )
 
-                case (0, 1, 0, 0) | (0, 0, 1, 0) | (0, 0, 0, 1):
+                case (0, 1, 0, 0) | (0, 1, 0, 0) | (0, 0, 1, 0):
                     box_bind_material = box.box()
                     col_box_bind_material = box_bind_material.column(align=True)
                     col_box_bind_material.label(text="Active Bind's Material:")
@@ -362,8 +357,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
                         icon="MATERIAL",
                     )
 
-            # 'Blank'のラベル以外であれば追加のプロパティを描画する｡
-
+    # 'Blank'のラベル以外であれば追加のプロパティを描画する｡
     col_button = row.column(align=True)
     col_button.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="ADD")
     col_button.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")

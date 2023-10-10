@@ -202,6 +202,13 @@ def add_items2blend_shape_material_ui_list() -> int:
     for n, value_info in enumerate(source_material_value_dict.items()):
         material, value_list = value_info
         mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = value_list[0]
+
+        # 先頭でない場合は空白行挿入
+        if n != 0:
+            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
+            target_label.item_type[0] = True
+            target_label.name = "Blank"
+
         # マテリアルが参照されていない場合は専用のラベル
         if isinstance(material, bpy.types.Material):
             material_name = material.name
@@ -210,17 +217,12 @@ def add_items2blend_shape_material_ui_list() -> int:
             material_name = "Not Selected"
             item_type = (1, 0, 0, 1)
 
-        # 先頭出ない場合は空白行挿入
-        if n != 0:
-            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
-            target_label.item_type[0] = True
-            target_label.name = "Blank"
-
+        # マテリアル毎のグルーピング用ラベルの登録
         target_label = items.add()
         target_label.item_type = tuple(map(bool, item_type))
         target_label.name = material_name
 
-        # Material Valueの登録をする｡
+        # マテリアル毎に紐付けられているMaterial Valueの登録をする｡
         for mat_value, index in value_list:
             mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = mat_value
             target_item: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
@@ -231,20 +233,24 @@ def add_items2blend_shape_material_ui_list() -> int:
             target_item.is_locked_uv_scale = True
             target_item.is_locked_uv_offset = True
 
-            # マテリアルがMToonであるかどうかの判定
+            # マテリアルがMToonである場合はタグ付け
             mat_vrm_ext = mat_value.material.vrm_addon_extension if mat_value.material else None
             if mat_vrm_ext != None:
-                if vrm_node := serach_vrm_shader_node(mat_value.material):
-                    if mat_vrm_ext.mtoon1.enabled or (vrm_node.node_tree["SHADER"] == "MToon_unversioned"):
-                        target_item.material_type = "MTOON"
+                if mat_vrm_ext.mtoon1.enabled:
+                    target_item.material_type = "MTOON"
 
-            # マテリアルが参照されていない場合の処理
+            if vrm_node := serach_vrm_shader_node(mat_value.material):
+                if vrm_node.node_tree["SHADER"] == "MToon_unversioned":
+                    target_item.material_type = "MTOON"
+
+            # マテリアルが参照されていない場合のタグ付け
             if item_type[3]:
                 target_item.material_type = "NONE"
                 target_item.item_type[3] = True
                 continue
 
             try:
+                # Material Colorの場合のタグ付け
                 if "Color" in mat_value.property_name:
                     target_item.item_type[1] = True
                     target_item.name = "Color"
@@ -256,6 +262,7 @@ def add_items2blend_shape_material_ui_list() -> int:
                     )
                     target_item.material_color = source_color
 
+                # UV Coordinateの場合のタグ付け7
                 else:
                     target_item.item_type[2] = True
                     target_item.name = "UV"
