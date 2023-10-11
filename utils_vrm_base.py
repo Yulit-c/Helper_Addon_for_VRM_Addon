@@ -145,9 +145,13 @@ def evaluation_expression_material_collection() -> bool:
 
     match addon_mode:
         case "0":
-            source_collection_name = get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
+            source_collection_name = get_addon_collection_name(
+                "VRM0_BLENDSHAPE_MATERIAL"
+            )
         case "1":
-            source_collection_name = get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
+            source_collection_name = get_addon_collection_name(
+                "VRM1_EXPRESSION_MATERIAL"
+            )
         case "2":
             return False
 
@@ -184,11 +188,16 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
 
     bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
 
-    target_group_index_list = [i.group_index for i in bone_group_collection if i.is_target]
+    target_group_index_list = [
+        i.group_index for i in bone_group_collection if i.is_target
+    ]
     target_bone_list = [
         bone
-        for (bone, pose_bone) in zip(target_armature.data.bones, target_armature.pose.bones)
-        if pose_bone.bone_group and pose_bone.bone_group_index in target_group_index_list
+        for (bone, pose_bone) in zip(
+            target_armature.data.bones, target_armature.pose.bones
+        )
+        if pose_bone.bone_group
+        and pose_bone.bone_group_index in target_group_index_list
     ]
 
     return target_bone_list
@@ -260,7 +269,9 @@ def check_addon_mode() -> str:
     return basic_prop.tool_mode
 
 
-def get_vrm_extension_all_root_property() -> Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]:
+def get_vrm_extension_all_root_property() -> (
+    Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]
+):
     """
     Target Armatureに登録されているVRM Addonの全体のルートプロパティを取得する｡
 
@@ -337,13 +348,17 @@ def get_vrm0_extension_property_first_person() -> ReferenceVrm0FirstPersonProper
     return vrm0_first_person
 
 
-def get_vrm0_extension_property_blend_shape() -> ReferenceVrm0BlendShapeMasterPropertyGroup:
+def get_vrm0_extension_property_blend_shape() -> (
+    ReferenceVrm0BlendShapeMasterPropertyGroup
+):
     vrm0_extension = get_vrm0_extension_root_property()
     vrm0_blend_shapes = vrm0_extension.blend_shape_master
     return vrm0_blend_shapes
 
 
-def get_vrm0_extension_active_blend_shape_group() -> ReferenceVrm0BlendShapeGroupPropertyGroup:
+def get_vrm0_extension_active_blend_shape_group() -> (
+    ReferenceVrm0BlendShapeGroupPropertyGroup
+):
     vrm0_blend_shape_master = get_vrm0_extension_property_blend_shape()
     active_blend_shape = vrm0_blend_shape_master.blend_shape_groups[
         vrm0_blend_shape_master.active_blend_shape_group_index
@@ -486,9 +501,13 @@ def reset_shape_keys_value_in_morph_binds(source_morph_binds: Any):
 
     match addon_mode:
         case "0":
-            bind_object_names = {bind.mesh.mesh_object_name for bind in source_morph_binds}
+            bind_object_names = {
+                bind.mesh.mesh_object_name for bind in source_morph_binds
+            }
         case "1":
-            bind_object_names = {bind.node.mesh_object_name for bind in source_morph_binds}
+            bind_object_names = {
+                bind.node.mesh_object_name for bind in source_morph_binds
+            }
 
     for object_name in bind_object_names:
         if target_object := bpy.data.objects.get(object_name):
@@ -668,32 +687,60 @@ def get_mtoon_color_current_parameters(
     default_value_dict = get_mtoon1_default_values(source_material)
 
     # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
-    current_lit_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["lit_color"]))
-    current_shade_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"]))
-    current_emissive_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"]))
-    current_matcap_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["matcap_color"]))
-    current_rim_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"]))
-    current_outline_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"]))
+    current_lit_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["lit_color"])
+    )
+    current_shade_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"])
+    )
+    current_emissive_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"])
+    )
+    current_matcap_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["matcap_color"])
+    )
+    current_rim_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"])
+    )
+    current_outline_factor = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"])
+    )
     #####################################################################################################
 
     # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
-    color_factor = current_lit_factor if current_lit_factor != default_value_dict["lit_color"] else None
+    color_factor = (
+        current_lit_factor
+        if current_lit_factor != default_value_dict["lit_color"]
+        else None
+    )
 
     shade_color_factor = (
-        current_shade_factor if current_shade_factor != default_value_dict["shade_color"] else None
+        current_shade_factor
+        if current_shade_factor != default_value_dict["shade_color"]
+        else None
     )
 
     emissive_color_factor = (
-        current_emissive_factor if current_emissive_factor != default_value_dict["emission_color"] else None
+        current_emissive_factor
+        if current_emissive_factor != default_value_dict["emission_color"]
+        else None
     )
     matcap_color_factor = (
-        current_matcap_factor if current_matcap_factor != default_value_dict["matcap_color"] else None
+        current_matcap_factor
+        if current_matcap_factor != default_value_dict["matcap_color"]
+        else None
     )
 
-    rim_color_factor = current_rim_factor if current_rim_factor != default_value_dict["rim_color"] else None
+    rim_color_factor = (
+        current_rim_factor
+        if current_rim_factor != default_value_dict["rim_color"]
+        else None
+    )
 
     outline_color_factor = (
-        current_outline_factor if current_outline_factor != default_value_dict["outline_color"] else None
+        current_outline_factor
+        if current_outline_factor != default_value_dict["outline_color"]
+        else None
     )
     #####################################################################################################
 
@@ -734,9 +781,13 @@ def get_mtoon_transform_current_parameters(
     default_value_dict = get_mtoon1_default_values(source_material)
 
     # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
-    current_texture_offset = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"]))
+    current_texture_offset = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"])
+    )
     # current_texture_offset = [abs(i) for i in current_texture_offset]
-    current_texture_scale = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"]))
+    current_texture_scale = list(
+        get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"])
+    )
     #####################################################################################################
     # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
     default_offset = default_value_dict["texture_offset"]
@@ -826,6 +877,19 @@ def serach_vrm_shader_node(
         return group_node
 
     return None
+
+
+def check_vrm_material_mode(
+    material: bpy.types.Material,
+) -> Literal["GLTF", "MTOON", "NONE"]:
+    if not material:
+        return "NONE"
+
+    if vrm_node := serach_vrm_shader_node(material):
+        if vrm_node.node_tree["SHADER"] == "MToon_unversioned":
+            return "MTOON"
+
+    return "GLTF"
 
 
 def get_all_collider_objects_from_scene() -> list[Object]:

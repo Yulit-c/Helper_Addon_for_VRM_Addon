@@ -6,6 +6,7 @@ if "bpy" in locals():
         "utils_common",
         "utils_vrm_base",
         "utils_vrm0_first_person",
+        "utils_vrm0_blend_shape",
     ]
 
     for module in reloadable_modules:
@@ -16,6 +17,8 @@ else:
     from ..Logging import preparation_logger
     from .. import utils_common
     from .. import utils_vrm_base
+    from . import utils_vrm0_first_person
+    from . import utils_vrm0_blend_shape
 
 
 import os, time, uuid
@@ -49,11 +52,17 @@ from ..addon_classes import (
 )
 
 from ..property_groups import (
+    VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
+    VRMHELPER_SCENE_vrm0_blend_shape_settings,
+    VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
+    get_vrm0_wm_root_prop,
+    get_vrm0_scene_root_prop,
     # ----------------------------------------------------------
     get_ui_vrm0_first_person_prop,
+    get_ui_vrm0_blend_shape_material_prop,
     # ----------------------------------------------------------
     get_vrm0_index_root_prop,
     get_scene_vrm0_first_person_prop,
@@ -84,12 +93,18 @@ from .utils_vrm0_first_person import (
     vrm0_sort_mesh_annotations,
 )
 
+from .utils_vrm0_blend_shape import (
+    get_active_blend_shape,
+    get_ui_vrm0_blend_shape_morph_prop,
+    get_active_bind_in_ui,
+    get_active_material_value_in_ui,
+)
+
 from ..operators import (
     VRMHELPER_operator_base,
     VRMHELPER_vrm0_first_person_base,
     VRMHELPER_vrm0_blend_shape_base,
-    VRMHELPER_vrm0_blend_shape_sub_morph,
-    VRMHELPER_vrm1_blend_shape_sub_material,
+    VRMHELPER_vrm0_blend_shape_sub,
     # VRMHELPER_vrm0_collider_base,
     # VRMHELPER_vrm0_collider_group_base,
     # VRMHELPER_vrm0_spring_base,
@@ -364,8 +379,118 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
             if not mat:
                 continue
             logger.debug(f"Reset Values : {mat.name}")
+            # TODO : Material Valueの設定
             # set_mtoon0_default_values(mat)
 
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(
+    VRMHELPER_vrm0_blend_shape_sub
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_create"
+    bl_label = "Create  Item"
+    bl_description = "Create a Bind or Material Value to the active Blend Shape"
+    bl_options = {"UNDO"}
+
+    mode: EnumProperty(
+        name="Bind or Material",
+        description="Choose Operator Mode",
+        items=(
+            ("BIND", "Bind", "Create new Bind"),
+            ("MATERIAL", "Material Value", "Create new Material Value"),
+        ),
+        default="BIND",
+    )
+
+    @classmethod
+    def poll(cls, context):
+        # アクティブなブレンドシェイプが存在する
+        return get_active_blend_shape()
+
+    def execute(self, context):
+        armature_data_name = get_target_armature_data().name
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        active_index = blend_shape_master.active_blend_shape_group_index
+
+        match self.mode:
+            case "BIND":
+                bpy.ops.vrm.add_vrm0_blend_shape_bind(
+                    armature_name=armature_data_name,
+                    blend_shape_group_index=active_index,
+                )
+            case "MATERIAL":
+                bpy.ops.vrm.add_vrm0_material_value_bind(
+                    armature_name=armature_data_name,
+                    blend_shape_group_index=active_index,
+                )
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(
+    VRMHELPER_vrm0_blend_shape_sub
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_remove"
+    bl_label = "Remove  Item"
+    bl_description = (
+        "Remove the active Bind or Material Value in the active Blend Shape"
+    )
+    bl_options = {"UNDO"}
+
+    mode: EnumProperty(
+        name="Bind or Material",
+        description="Choose Operator Mode",
+        items=(
+            ("BIND", "Bind", "Create new Bind"),
+            ("MATERIAL", "Material Value", "Create new Material Value"),
+        ),
+        default="BIND",
+    )
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(
+    VRMHELPER_vrm0_blend_shape_sub
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_clear"
+    bl_label = "Clear  Items"
+    bl_description = "clear the all Binds or Material Values in the active Blend Shape"
+    bl_options = {"UNDO"}
+
+    mode: EnumProperty(
+        name="Bind or Material",
+        description="Choose Operator Mode",
+        items=(
+            ("BIND", "Bind", "Create new Bind"),
+            ("MATERIAL", "Material Value", "Create new Material Value"),
+        ),
+        default="BIND",
+    )
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(
+    VRMHELPER_vrm0_blend_shape_sub
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_change_bind_material"
+    bl_label = "Change Bind Material"
+    bl_description = "Change the material of the active bind"
+    bl_options = {"UNDO"}
+    bl_property = "material_name"
+
+    material_name: EnumProperty(
+        name="Target Material",
+        description="Materials to be applied for binding",
+        items=get_all_materials,
+    )
+
+    def execute(self, context):
+        self.report({"INFO"}, "Change Bind Material")
         return {"FINISHED"}
 
 
@@ -392,4 +517,8 @@ CLASSES = (
     VRMHELPER_OT_0_blend_shape_remove_blend_shape,
     VRMHELPER_OT_0_blend_shape_clear_blend_shape,
     VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene,
+    VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create,
+    VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove,
+    VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear,
+    VRMHELPER_OT_vrm0_blend_shape_change_bind_material,
 )

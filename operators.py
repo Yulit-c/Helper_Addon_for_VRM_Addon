@@ -383,14 +383,9 @@ class VRMHELPER_vrm0_blend_shape_base(VRMHELPER_operator_base):
     component_type: str = "BLEND_SHAPE"
 
 
-class VRMHELPER_vrm0_blend_shape_sub_morph(VRMHELPER_operator_base):
+class VRMHELPER_vrm0_blend_shape_sub(VRMHELPER_operator_base):
     vrm_mode = 0
-    component_type: str = "BLEND_SHAPE_MORPH"
-
-
-class VRMHELPER_vrm1_blend_shape_sub_material(VRMHELPER_operator_base):
-    vrm_mode = 0
-    component_type: str = "BLEND_SHAPE_MATERIAL"
+    component_type: str = "BLEND_SHAPE_SUB"
 
 
 # ----------------------------------------------------------

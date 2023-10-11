@@ -63,6 +63,7 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     get_vrm0_extension_property_blend_shape,
     serach_vrm_shader_node,
+    check_vrm_material_mode,
 )
 
 
@@ -152,6 +153,14 @@ def add_items2blend_shape_morph_ui_list() -> int:
     return len(items)
 
 
+def get_active_bind_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_morph_list_items:
+    active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MORPH")
+    bind_ui_list = get_ui_vrm0_blend_shape_morph_prop()
+    active_bind = bind_ui_list[active_index]
+
+    return active_bind
+
+
 # ----------------------------------------------------------
 #    Material
 # ----------------------------------------------------------
@@ -205,7 +214,9 @@ def add_items2blend_shape_material_ui_list() -> int:
 
         # 先頭でない場合は空白行挿入
         if n != 0:
-            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
+            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = (
+                items.add()
+            )
             target_label.item_type[0] = True
             target_label.name = "Blank"
 
@@ -234,14 +245,14 @@ def add_items2blend_shape_material_ui_list() -> int:
             target_item.is_locked_uv_offset = True
 
             # マテリアルがMToonである場合はタグ付け
-            mat_vrm_ext = mat_value.material.vrm_addon_extension if mat_value.material else None
+            mat_vrm_ext = (
+                mat_value.material.vrm_addon_extension if mat_value.material else None
+            )
             if mat_vrm_ext != None:
                 if mat_vrm_ext.mtoon1.enabled:
                     target_item.material_type = "MTOON"
 
-            if vrm_node := serach_vrm_shader_node(mat_value.material):
-                if vrm_node.node_tree["SHADER"] == "MToon_unversioned":
-                    target_item.material_type = "MTOON"
+            target_item.material_type = check_vrm_material_mode(mat_value.material)
 
             # マテリアルが参照されていない場合のタグ付け
             if item_type[3]:
@@ -286,6 +297,16 @@ def add_items2blend_shape_material_ui_list() -> int:
             target_item.is_locked_uv_offset = False
 
     return len(items)
+
+
+def get_active_material_value_in_ui() -> (
+    VRMHELPER_WM_vrm0_blend_shape_material_list_items
+):
+    active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
+    material_value_ui_list = get_ui_vrm0_blend_shape_material_prop()
+    active_value = material_value_ui_list[active_index]
+
+    return active_value
 
 
 # ----------------------------------------------------------
