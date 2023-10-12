@@ -491,7 +491,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         default=0,
         min=0,
     )
-    blend_shape_morph: IntProperty(
+    blend_shape_bind: IntProperty(
         name="List Index of Morph Target Bind",
         description="Index of active items in Blend Shape Morph Target UI List",
         default=0,
@@ -1261,7 +1261,7 @@ class VRMHELPER_WM_vrm0_first_person_list_items(bpy.types.PropertyGroup):
 # ----------------------------------------------------------
 
 
-class VRMHELPER_WM_vrm0_blend_shape_morph_list_items(bpy.types.PropertyGroup):
+class VRMHELPER_WM_vrm0_blend_shape_bind_list_items(bpy.types.PropertyGroup):
     """
     ExpressionのMorph Target設定･確認用UI Listに表示する候補アイテム｡
     """
@@ -1614,10 +1614,10 @@ class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
         type=VRMHELPER_WM_vrm0_first_person_list_items,
     )
 
-    blend_shape_morph_list_items4custom_filter: CollectionProperty(
+    blend_shape_bind_list_items4custom_filter: CollectionProperty(
         name="Candidate Blend Shape Morph Target Bind List Items",
         description="Elements registered with this collection property are displayed in the UI List",
-        type=VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+        type=VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     )
 
     material_value_prop: PointerProperty(
@@ -2253,11 +2253,11 @@ def get_ui_vrm0_first_person_prop() -> (
     return first_person_filter
 
 
-def get_ui_vrm0_blend_shape_morph_prop() -> (
-    bpy.types.CollectionProperty  # VRMHELPER_WM_vrm0_blend_shape_morph_list_items
+def get_ui_vrm0_blend_shape_bind_prop() -> (
+    bpy.types.CollectionProperty  # VRMHELPER_WM_vrm0_blend_shape_bind_list_items
 ):
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
-    binds_filter = wm_vrm0_root_prop.blend_shape_morph_list_items4custom_filter
+    binds_filter = wm_vrm0_root_prop.blend_shape_bind_list_items4custom_filter
     return binds_filter
 
 
@@ -2329,9 +2329,9 @@ def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
             list_items = get_ui_vrm0_first_person_prop()
             index = vrm0_index_prop.first_person
 
-        case "BLEND_SHAPE_MORPH":
-            list_items = get_ui_vrm0_blend_shape_morph_prop()
-            index = vrm0_index_prop.blend_shape_morph
+        case "blend_shape_bind":
+            list_items = get_ui_vrm0_blend_shape_bind_prop()
+            index = vrm0_index_prop.blend_shape_bind
 
         case "BLEND_SHAPE_MATERIAL":
             list_items = get_ui_vrm0_blend_shape_material_prop()
@@ -2639,7 +2639,7 @@ CLASSES = (
     #    Window Manager
     # ----------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
-    VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     VRMHELPER_WM_vrm0_material_value_prop_names,
     VRMHELPER_WM_vrm0_root_property_group,

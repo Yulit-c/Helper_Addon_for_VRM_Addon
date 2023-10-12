@@ -36,9 +36,11 @@ from bpy.props import (
 
 from .addon_classes import (
     ConstraintTypeDict,
+    BlendShapeModeDict,
 )
 
 from .property_groups import (
+    get_vrm0_index_root_prop,
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_constraint_prop,
@@ -63,6 +65,11 @@ from .utils_vrm_base import (
 
 from .Vrm0.utils_vrm0_first_person import (
     vrm0_add_items2annotation_ui_list,
+)
+
+from .Vrm0.utils_vrm0_blend_shape import (
+    vrm0_add_items2blend_shape_bind_ui_list,
+    vrm0_add_items2blend_shape_material_ui_list,
 )
 
 from .Vrm1.utils_vrm1_first_person import (
@@ -132,9 +139,7 @@ class VRMHELPER_OT_empty_operator(bpy.types.Operator):
 class VRMHELPER_OT_evaluate_addon_collections(bpy.types.Operator):
     bl_idname = "vrmhelper.evaluate_addon_collections"
     bl_label = "Evaluate Addon's Collections"
-    bl_description = (
-        "Creates a collection defined by this addon, and a defined hierarchy"
-    )
+    bl_description = "Creates a collection defined by this addon, and a defined hierarchy"
     bl_options = {"UNDO"}
 
     def execute(self, context):
@@ -165,17 +170,6 @@ class VRMHELPER_operator_base(bpy.types.Operator):
     オペレーター用基底クラス
     """
 
-    # vrm_mode: EnumProperty(
-    #     name="VRM Version",
-    #     description="Version of VRM to be edited",
-    #     items=(
-    #         ("0", "0.x", "Edit the VRM data of version 0.x"),
-    #         ("1", "1.x", "Edit the VRM data of version 1.x"),
-    #     ),
-    #     # default="1",
-    #     options={"HIDDEN"},
-    # )
-
     vrm_mode: Literal[0, 1]
 
     bl_options = {"UNDO"}
@@ -186,6 +180,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         self,
         target_type: Literal[
             "FIRST_PERSON",
+            "BLEND_SHAPE",
+            "BLEND_SHAPE_BIND",
+            "BLEND_SHAPE_MATERIAL",
             "EXPRESSION",
             "EXPRESSION_MORPH",
             "EXPRESSION_MATERIAL",
@@ -202,6 +199,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         ----------
         target_type: Literal[
             "FIRST_PERSON",
+            "BLEND_SHAPE",
+            "BLEND_SHAPE_BIND",
+            "BLEND_SHAPE_MATERIAL",
             "EXPRESSION",
             "EXPRESSION_MORPH",
             "EXPRESSION_MATERIAL",
@@ -224,6 +224,12 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (1, "FIRST_PERSON"):
                 vrm1_add_items2annotation_ui_list()
 
+            case (0, "BLEND_SHAPE_BIND"):
+                vrm0_add_items2blend_shape_bind_ui_list()
+
+            case (0, "BLEND_SHAPE_MATERIAL"):
+                vrm0_add_items2blend_shape_material_ui_list()
+
             case (1, "EXPRESSION"):
                 add_items2expression_ui_list()
 
@@ -232,6 +238,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
             case (1, "EXPRESSION_MATERIAL"):
                 add_items2expression_material_ui_list()
+
+            case (0, "COLLIDER"):
+                add_items2collider_ui_list()
 
             case (1, "COLLIDER"):
                 add_items2collider_ui_list()
@@ -250,6 +259,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         self,
         component_type: Literal[
             "FIRST_PERSON",
+            "BLEND_SHAPE",
+            "BLEND_SHAPE_BIND",
+            "BLEND_SHAPE_MATERIAL",
             "EXPRESSION",
             "EXPRESSION_MORPH",
             "EXPRESSION_MATERIAL",
@@ -267,6 +279,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         ----------
         component_type: Literal[
             "FIRST_PERSON",
+            "BLEND_SHAPE",
+            "BLEND_SHAPE_BIND",
+            "BLEND_SHAPE_MATERIAL",
             "EXPRESSION",
             "EXPRESSION_MORPH",
             "EXPRESSION_MATERIAL",
@@ -285,13 +300,26 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
         self.update_ui_list_prop(component_type)
 
-        index_root_prop = get_vrm1_index_root_prop()
+        match self.vrm_mode:
+            case 0:
+                index_root_prop = get_vrm0_index_root_prop()
+
+            case 1:
+                index_root_prop = get_vrm1_index_root_prop()
 
         # 'component_type'の種類に応じて操作する属性名を定義する｡
         match component_type:
             case "FIRST_PERSON":
                 list_items = get_ui_vrm1_first_person_prop()
                 attr_name = "first_person"
+
+            case "BLEND_SHAPE_BIND":
+                list_items = vrm0_add_items2blend_shape_bind_ui_list()
+                attr_name = "blend_shape_bind"
+
+            case "BLEND_SHAPE_MATERIAL":
+                list_items = vrm0_add_items2blend_shape_material_ui_list()
+                attr_name = "blend_shape_material"
 
             case "EXPRESSION":
                 list_items = get_ui_vrm1_expression_prop()
@@ -386,6 +414,11 @@ class VRMHELPER_vrm0_blend_shape_base(VRMHELPER_operator_base):
 class VRMHELPER_vrm0_blend_shape_sub(VRMHELPER_operator_base):
     vrm_mode = 0
     component_type: str = "BLEND_SHAPE_SUB"
+
+    mode_dict: BlendShapeModeDict = {
+        "BIND": "BLEND_SHAPE_BIND",
+        "MATERIAL": "BLEND_SHAPE_MATERIAL",
+    }
 
 
 # ----------------------------------------------------------

@@ -455,9 +455,7 @@ class VRMHELPER_UL_base:
     UI List用基底クラス
     """
 
-    def add_blank_labels(
-        self, layout: bpy.types.UILayout, count: int, factor: float = 2.0
-    ):
+    def add_blank_labels(self, layout: bpy.types.UILayout, count: int, factor: float = 2.0):
         iteration_count = 0
         while iteration_count != count:
             layout.separator(factor=factor)
@@ -552,6 +550,16 @@ class MToon1MaterialParameters(TypedDict, total=False):
     matcap_color: list[float]
     rim_color: list[float]
     outline_color: list[float]
+
+
+"""---------------------------------------------------------
+    Blend Shape
+---------------------------------------------------------"""
+
+
+class BlendShapeModeDict(TypedDict):
+    BIND: str
+    MATERIAL: str
 
 
 """---------------------------------------------------------

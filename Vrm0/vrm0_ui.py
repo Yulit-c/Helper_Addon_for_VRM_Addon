@@ -46,7 +46,7 @@ from ..property_groups import (
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
-    VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
@@ -79,12 +79,12 @@ from .utils_vrm0_first_person import (
 
 from .utils_vrm0_blend_shape import (
     get_scene_vrm0_mtoon_prop,
-    get_source_vrm0_blend_shape_morph4ui_list,
-    get_source_vrm0_blend_shape_material4ui_list,
-    get_ui_vrm0_blend_shape_morph_prop,
+    vrm0_get_source_vrm0_blend_shape_bind4ui_list,
+    vrm0_get_source_vrm0_blend_shape_material4ui_list,
+    get_ui_vrm0_blend_shape_bind_prop,
     get_ui_vrm0_blend_shape_material_prop,
-    add_items2blend_shape_morph_ui_list,
-    add_items2blend_shape_material_ui_list,
+    vrm0_add_items2blend_shape_bind_ui_list,
+    vrm0_add_items2blend_shape_material_ui_list,
     get_active_blend_shape,
 )
 
@@ -157,9 +157,7 @@ def draw_panel_vrm0_first_person(self, context, layout: bpy.types.UILayout):
     rows = vrm0_add_items2annotation_ui_list()
 
     row = layout.row()
-    row.prop(
-        first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type"
-    )
+    row.prop(first_person_prop, "is_filtering_by_type", text="Filtering by Selected Type")
     row = layout.row()
     row.scale_y = 1.4
     row.prop(first_person_prop, "annotation_type", text=" ", expand=True)
@@ -235,12 +233,8 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
     # Property Groupの取得｡
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
-    active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = (
-        scene_vrm0_prop.active_indexes
-    )
-    blend_shape_prop: VRMHELPER_SCENE_vrm0_blend_shape_settings = (
-        scene_vrm0_prop.blend_shape_settings
-    )
+    active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
+    blend_shape_prop: VRMHELPER_SCENE_vrm0_blend_shape_settings = scene_vrm0_prop.blend_shape_settings
     blend_shape_master = get_vrm0_extension_property_blend_shape()
     blend_shapes = blend_shape_master.blend_shape_groups
     active_blend_shape = get_active_blend_shape()
@@ -264,12 +258,8 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
 
     col_list = row.column(align=True)
     # col_list.separator(factor=0.5)
-    col_list.operator(
-        VRMHELPER_OT_0_blend_shape_create_blend_shape.bl_idname, text="", icon="ADD"
-    )
-    col_list.operator(
-        VRMHELPER_OT_0_blend_shape_remove_blend_shape.bl_idname, text="", icon="REMOVE"
-    )
+    col_list.operator(VRMHELPER_OT_0_blend_shape_create_blend_shape.bl_idname, text="", icon="ADD")
+    col_list.operator(VRMHELPER_OT_0_blend_shape_remove_blend_shape.bl_idname, text="", icon="REMOVE")
     col_list.operator(
         VRMHELPER_OT_0_blend_shape_clear_blend_shape.bl_idname,
         text="",
@@ -293,44 +283,42 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
         # Binds
         ######################################
         case "BIND":
-            rows = add_items2blend_shape_morph_ui_list()
+            rows = vrm0_add_items2blend_shape_bind_ui_list()
             row = box.row(align=True)
             row.template_list(
-                "VRMHELPER_UL_blend_shape_morph_list",
+                "VRMHELPER_UL_blend_shape_bind_list",
                 "",
                 wm_vrm0_prop,
-                "blend_shape_morph_list_items4custom_filter",
+                "blend_shape_bind_list_items4custom_filter",
                 active_indexes,
-                "blend_shape_morph",
+                "blend_shape_bind",
                 rows=define_ui_list_rows(rows),
             )
 
             # アクティブアイテムのBind設定用フォーム
-            if binds := get_ui_vrm0_blend_shape_morph_prop():
-                current_index = active_indexes.blend_shape_morph
-                active_item: VRMHELPER_WM_vrm0_blend_shape_morph_list_items = binds[
-                    current_index
-                ]
-
-                if active_item.item_type[1]:
-                    active_bind = active_blend_shape.binds[active_item.bind_index]
-                    box_bind_mesh = box.box()
-                    col_box_bind_mesh = box_bind_mesh.column(align=True)
-                    col_box_bind_mesh.label(text="Active Bind's Mesh:")
-                    col_box_bind_mesh.prop_search(
-                        active_bind.mesh,
-                        "mesh_object_name",
-                        context.scene.vrm_addon_extension,
-                        "mesh_object_names",
-                        text="",
-                        icon="OUTLINER_OB_MESH",
-                    )
+            if binds := get_ui_vrm0_blend_shape_bind_prop():
+                current_index = active_indexes.blend_shape_bind
+                active_item: VRMHELPER_WM_vrm0_blend_shape_bind_list_items = binds[current_index]
+                if active_item:
+                    if active_item.item_type[1]:
+                        active_bind = active_blend_shape.binds[active_item.bind_index]
+                        box_bind_mesh = box.box()
+                        col_box_bind_mesh = box_bind_mesh.column(align=True)
+                        col_box_bind_mesh.label(text="Active Bind's Mesh:")
+                        col_box_bind_mesh.prop_search(
+                            active_bind.mesh,
+                            "mesh_object_name",
+                            context.scene.vrm_addon_extension,
+                            "mesh_object_names",
+                            text="",
+                            icon="OUTLINER_OB_MESH",
+                        )
 
         ######################################
         # Material Value
         ######################################
         case "MATERIAL":
-            rows = add_items2blend_shape_material_ui_list()
+            rows = vrm0_add_items2blend_shape_material_ui_list()
             row = box.row(align=True)
             row.template_list(
                 "VRMHELPER_UL_blend_shape_material_list",
@@ -345,44 +333,39 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
             # アクティブなMaterial ValueのTarget Material設定用フォーム
             if binds := get_ui_vrm0_blend_shape_material_prop():
                 current_index = active_indexes.blend_shape_material
-                active_item: VRMHELPER_WM_vrm0_blend_shape_material_list_items = binds[
-                    current_index
-                ]
+                active_item: VRMHELPER_WM_vrm0_blend_shape_material_list_items = binds[current_index]
 
-            # アクティブアイテムが 'Blank'以外のラベル､Material Color, UV Coordinateであるかを判定する｡
-            if active_item.bind_index > -1:
-                active_material_value = active_blend_shape.material_values[
-                    active_item.bind_index
-                ]
-            match tuple(active_item.item_type):
-                case (1, 0, 0, 0) | (
-                    1,
-                    0,
-                    0,
-                    1,
-                ) if active_item.name != "Blank":  # Label Exclude 'Blank'
-                    box_bind_material = box.box()
-                    box_bind_material.label(
-                        text=f"Binded Material : {active_item.name}"
-                    )
-                    box_bind_material.operator(
-                        VRMHELPER_OT_vrm0_blend_shape_change_bind_material.bl_idname,
-                        text="Change Bind Material",
-                        icon="MATERIAL",
-                    )
+                # アクティブアイテムが 'Blank'以外のラベル､Material Color, UV Coordinateであるかを判定する｡
+                if active_item:
+                    if active_item.bind_index > -1:
+                        active_material_value = active_blend_shape.material_values[active_item.bind_index]
+                    match tuple(active_item.item_type):
+                        case (1, 0, 0, 0) | (
+                            1,
+                            0,
+                            0,
+                            1,
+                        ) if active_item.name != "Blank":  # Label Exclude 'Blank'
+                            box_bind_material = box.box()
+                            box_bind_material.label(text=f"Binded Material : {active_item.name}")
+                            box_bind_material.operator(
+                                VRMHELPER_OT_vrm0_blend_shape_change_bind_material.bl_idname,
+                                text="Change Bind Material",
+                                icon="MATERIAL",
+                            )
 
-                case (0, 1, 0, 0) | (0, 1, 0, 0) | (0, 0, 1, 0):
-                    box_bind_material = box.box()
-                    col_box_bind_material = box_bind_material.column(align=True)
-                    col_box_bind_material.label(text="Active Bind's Material:")
-                    col_box_bind_material.prop_search(
-                        active_material_value,
-                        "material",
-                        bpy.data,
-                        "materials",
-                        text="",
-                        icon="MATERIAL",
-                    )
+                        case (0, 1, 0, 0) | (0, 1, 0, 0) | (0, 0, 1, 0):
+                            box_bind_material = box.box()
+                            col_box_bind_material = box_bind_material.column(align=True)
+                            col_box_bind_material.label(text="Active Bind's Material:")
+                            col_box_bind_material.prop_search(
+                                active_material_value,
+                                "material",
+                                bpy.data,
+                                "materials",
+                                text="",
+                                icon="MATERIAL",
+                            )
 
     # 'Blank'のラベル以外であれば追加のプロパティを描画する｡
     editing_target = blend_shape_prop.editing_target
@@ -454,7 +437,7 @@ class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
         row_preview.prop(item, "preview", text="Preview")
 
 
-class VRMHELPER_UL_blend_shape_morph_list(bpy.types.UIList):
+class VRMHELPER_UL_blend_shape_bind_list(bpy.types.UIList):
     """Morph Target Bindsを表示するUI List"""
 
     def draw_item(
@@ -462,7 +445,7 @@ class VRMHELPER_UL_blend_shape_morph_list(bpy.types.UIList):
         context,
         layout: bpy.types.UILayout,
         data,
-        item: VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+        item: VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
         icon,
         active_data,
         active_propname,
@@ -479,9 +462,7 @@ class VRMHELPER_UL_blend_shape_morph_list(bpy.types.UIList):
         blend_shape_groups = blend_shape_master.blend_shape_groups
         active_index = blend_shape_master.active_blend_shape_group_index
         active_blend_shape_binds = blend_shape_groups[active_index].binds
-        source_bind: ReferenceVrm0BlendShapeBindPropertyGroup = (
-            active_blend_shape_binds[item.bind_index]
-        )
+        source_bind: ReferenceVrm0BlendShapeBindPropertyGroup = active_blend_shape_binds[item.bind_index]
         if item.item_type[1]:
             row.separator(factor=3.0)
             sp = row.split(factor=0.65)
@@ -521,9 +502,7 @@ class VRMHELPER_UL_blend_shape_material_list(bpy.types.UIList, VRMHELPER_UL_base
         active_blend_shape = get_vrm0_extension_active_blend_shape_group()
         material_values = active_blend_shape.material_values
         self.add_blank_labels(row, 3)
-        mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values[
-            item.bind_index
-        ]
+        mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values[item.bind_index]
 
         initialize_material_value_prop()
         property_names = get_wm_vrm0_material_value_prop()
@@ -578,6 +557,6 @@ CLASSES = (
     # ----------------------------------------------------------
     VRMHELPER_UL_vrm0_first_person_list,
     VRMHELPER_UL_Blend_Shape_list,
-    VRMHELPER_UL_blend_shape_morph_list,
+    VRMHELPER_UL_blend_shape_bind_list,
     VRMHELPER_UL_blend_shape_material_list,
 )

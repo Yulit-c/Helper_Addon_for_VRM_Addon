@@ -18,7 +18,7 @@ DOCUMENTATION_URL = "https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS
 VRM0_COMPONENT_TYPES = Literal[
     "FIRST_PERSON",
     "BLEND_SHAPE",
-    "BLEND_SHAPE_MORPH",
+    "blend_shape_bind",
     "BLEND_SHAPE_MATERIAL",
     "BONE_GROUPS",
     "COLLIDER_GROUP",
@@ -174,9 +174,7 @@ EXPRESSION_OPTION_ICON = {
 }
 
 MOVE_UP_CUSTOM_EXPRESSION_OPS_NAME = "vrm.move_up_vrm1_expressions_custom_expression"
-MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME = (
-    "vrm.move_down_vrm1_expressions_custom_expression"
-)
+MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME = "vrm.move_down_vrm1_expressions_custom_expression"
 
 """---------------------------------------------------------
     Spring

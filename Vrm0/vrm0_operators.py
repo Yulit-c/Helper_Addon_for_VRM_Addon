@@ -60,6 +60,7 @@ from ..property_groups import (
     get_target_armature_data,
     get_vrm0_wm_root_prop,
     get_vrm0_scene_root_prop,
+    get_scene_vrm0_blend_shape_prop,
     # ----------------------------------------------------------
     get_ui_vrm0_first_person_prop,
     get_ui_vrm0_blend_shape_material_prop,
@@ -95,9 +96,9 @@ from .utils_vrm0_first_person import (
 
 from .utils_vrm0_blend_shape import (
     get_active_blend_shape,
-    get_ui_vrm0_blend_shape_morph_prop,
-    get_active_bind_in_ui,
-    get_active_material_value_in_ui,
+    get_ui_vrm0_blend_shape_bind_prop,
+    vrm0_get_active_bind_in_ui,
+    vrm0_get_active_material_value_in_ui,
 )
 
 from ..operators import (
@@ -130,7 +131,9 @@ logger = preparating_logger(__name__)
 class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_base):
     bl_idname = "vrm_helper.vrm0_set_mesh_annotation"
     bl_label = "Set VRM0 Mesh Annotation"
-    bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+    bl_description = (
+        "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+    )
     vrm_mode = "0"
 
     """
@@ -149,9 +152,7 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_
 
         # 選択オブジェクトの数だけMesh Annotationを追加する｡
         # 既にオブジェクトが存在する場合､Typeが異なれば値を更新､同じであれば処理をスキップする｡
-        for obj in [
-            obj for obj in context.selected_objects if filtering_mesh_type(obj)
-        ]:
+        for obj in [obj for obj in context.selected_objects if filtering_mesh_type(obj)]:
             if annotation := vrm0_search_same_name_mesh_annotation(obj.name):
                 logger.debug(annotation.mesh.mesh_object_name)
                 if annotation.first_person_flag == annotation_type:
@@ -170,14 +171,10 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(
-    VRMHELPER_vrm0_first_person_base
-):
+class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(VRMHELPER_vrm0_first_person_base):
     bl_idname = "vrm_helper.vrm0_remove_mesh_annotation_from_list"
     bl_label = "Remove Mesh Annotation from Active Item"
-    bl_description = (
-        "Remove active annotation in the list from Target Armature's VRM Extension"
-    )
+    bl_description = "Remove active annotation in the list from Target Armature's VRM Extension"
     vrm_mode = "0"
 
     """
@@ -203,9 +200,7 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(
-    VRMHELPER_vrm0_first_person_base
-):
+class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(VRMHELPER_vrm0_first_person_base):
     bl_idname = "vrm_helper.vrm0_remove_mesh_annotation"
     bl_label = "Remove  Mesh Annotation by Selected Objects"
     bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
@@ -265,9 +260,7 @@ class VRMHELPER_OT_0_blend_shape_create_blend_shape(VRMHELPER_vrm0_blend_shape_b
     def execute(self, context):
         target_armature = get_target_armature()
 
-        bpy.ops.vrm.add_vrm0_blend_shape_group(
-            armature_name=target_armature.name, name="new"
-        )
+        bpy.ops.vrm.add_vrm0_blend_shape_group(armature_name=target_armature.name, name="new")
 
         return {"FINISHED"}
 
@@ -317,9 +310,7 @@ class VRMHELPER_OT_0_blend_shape_clear_blend_shape(VRMHELPER_vrm0_blend_shape_ba
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
-    VRMHELPER_vrm0_blend_shape_base
-):
+class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_blend_shape_base):
     bl_idname = "vrm_helper.vrm0_blend_shape_assign_blend_shape_to_scene"
     bl_label = "Assign Blend Shape"
     bl_description = "Active blend_shape settings are reflected on the scene"
@@ -335,9 +326,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
         blend_shape_master = get_vrm0_extension_property_blend_shape()
         blend_shape_groups = blend_shape_master.blend_shape_groups
         target_index = blend_shape_master.active_blend_shape_group_index
-        active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = (
-            blend_shape_groups[target_index]
-        )
+        active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_groups[target_index]
 
         # ----------------------------------------------------------
         #    Morph Target Binds
@@ -354,9 +343,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
         for bind in morph_binds:
             bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
             bind_mesh = bpy.data.objects.get(bind.mesh.mesh_object_name).data
-            existing_bind_info.setdefault(bind_mesh, []).append(
-                (bind.index, bind.weight)
-            )
+            existing_bind_info.setdefault(bind_mesh, []).append((bind.index, bind.weight))
 
         # 取得したデータをシーン上に反映する｡
         for mesh, sk_info in existing_bind_info.items():
@@ -385,9 +372,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(
-    VRMHELPER_vrm0_blend_shape_sub
-):
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_create"
     bl_label = "Create  Item"
     bl_description = "Create a Bind or Material Value to the active Blend Shape"
@@ -428,14 +413,10 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(
-    VRMHELPER_vrm0_blend_shape_sub
-):
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_remove"
     bl_label = "Remove  Item"
-    bl_description = (
-        "Remove the active Bind or Material Value in the active Blend Shape"
-    )
+    bl_description = "Remove the active Bind or Material Value in the active Blend Shape"
     bl_options = {"UNDO"}
 
     mode: EnumProperty(
@@ -448,13 +429,23 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(
         default="BIND",
     )
 
+    @classmethod
+    def poll(cls, context):
+        # modeに応じたアクティブ要素が存在する｡
+        return True
+
     def execute(self, context):
+        match self.mode:
+            case "BIND":
+                self.report({"INFO"}, f"BIND")
+
+            case "MATERIAL":
+                self.report({"INFO"}, f"MATERIAL")
+
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(
-    VRMHELPER_vrm0_blend_shape_sub
-):
+class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_clear"
     bl_label = "Clear  Items"
     bl_description = "clear the all Binds or Material Values in the active Blend Shape"
@@ -470,13 +461,31 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(
         default="BIND",
     )
 
+    @classmethod
+    def poll(cls, context):
+        # modeに応じたアクティブ要素が存在する｡
+
+        mode = get_scene_vrm0_blend_shape_prop()
+        match mode.editing_target:
+            case "BIND":
+                active_item = vrm0_get_active_bind_in_ui()
+
+            case "MATERIAL":
+                active_item = vrm0_get_active_material_value_in_ui()
+        logger.debug(active_item)
+        return active_item
+
     def execute(self, context):
+        match self.mode:
+            case "BIND":
+                self.report({"INFO"}, f"BIND")
+
+            case "MATERIAL":
+                self.report({"INFO"}, f"MATERIAL")
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(
-    VRMHELPER_vrm0_blend_shape_sub
-):
+class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_change_bind_material"
     bl_label = "Change Bind Material"
     bl_description = "Change the material of the active bind"
@@ -489,8 +498,23 @@ class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(
         items=get_all_materials,
     )
 
+    @classmethod
+    def poll(cls, context):
+        # アクティブなMaterial Valueがマテリアル名のラベルである｡
+        active_value = vrm0_get_active_material_value_in_ui()
+        match tuple(active_value.item_type):
+            case (1, 0, 0, 0) | (1, 0, 0, 1):
+                return True
+
+    def invoke(self, context, event):
+        component_type = self.mode_dict["MATERIAL"]
+        self.offset_active_item_index(component_type)
+        # マテリアル選択メニューポップアップ
+        context.window_manager.invoke_search_popup(self)
+        return {"FINISHED"}
+
     def execute(self, context):
-        self.report({"INFO"}, "Change Bind Material")
+        self.report({"INFO"}, f"{self.material_name}")
         return {"FINISHED"}
 
 

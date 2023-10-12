@@ -42,7 +42,7 @@ from ..preferences import (
 )
 
 from ..property_groups import (
-    VRMHELPER_WM_vrm0_blend_shape_morph_list_items,
+    VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     # ----------------------------------------------------------
     get_target_armature,
@@ -50,7 +50,7 @@ from ..property_groups import (
     get_vrm0_active_index_prop,
     # ---------------------------------------------------------------------------------
     get_scene_vrm0_mtoon_prop,
-    get_ui_vrm0_blend_shape_morph_prop,
+    get_ui_vrm0_blend_shape_bind_prop,
     get_ui_vrm0_blend_shape_material_prop,
 )
 
@@ -98,7 +98,7 @@ def get_active_blend_shape() -> Optional[ReferenceVrm0BlendShapeGroupPropertyGro
 # ----------------------------------------------------------
 #    Binds
 # ----------------------------------------------------------
-def get_source_vrm0_blend_shape_morph4ui_list() -> (
+def vrm0_get_source_vrm0_blend_shape_bind4ui_list() -> (
     dict[str, list[tuple[ReferenceVrm0BlendShapeBindPropertyGroup, int]]]
 ):
     """
@@ -122,7 +122,7 @@ def get_source_vrm0_blend_shape_morph4ui_list() -> (
     return binds_dict
 
 
-def add_items2blend_shape_morph_ui_list() -> int:
+def vrm0_add_items2blend_shape_bind_ui_list() -> int:
     """
     Bindsの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -134,17 +134,17 @@ def add_items2blend_shape_morph_ui_list() -> int:
 
     """
 
-    items = get_ui_vrm0_blend_shape_morph_prop()
-    source_binds_dict = get_source_vrm0_blend_shape_morph4ui_list()
+    items = get_ui_vrm0_blend_shape_bind_prop()
+    source_binds_dict = vrm0_get_source_vrm0_blend_shape_bind4ui_list()
     items.clear()
 
     for obj_name, bind_info in source_binds_dict.items():
-        target_item: VRMHELPER_WM_vrm0_blend_shape_morph_list_items = items.add()
+        target_item: VRMHELPER_WM_vrm0_blend_shape_bind_list_items = items.add()
         target_item.item_type[0] = True
         target_item.name = obj_name
 
         for bind, index in bind_info:
-            target_item: VRMHELPER_WM_vrm0_blend_shape_morph_list_items = items.add()
+            target_item: VRMHELPER_WM_vrm0_blend_shape_bind_list_items = items.add()
             target_item.item_type[1] = True
             target_item.name = obj_name
             target_item.shape_key_name = bind.index
@@ -153,9 +153,9 @@ def add_items2blend_shape_morph_ui_list() -> int:
     return len(items)
 
 
-def get_active_bind_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_morph_list_items:
-    active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MORPH")
-    bind_ui_list = get_ui_vrm0_blend_shape_morph_prop()
+def vrm0_get_active_bind_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_bind_list_items:
+    active_index = get_vrm0_active_index_prop("blend_shape_bind")
+    bind_ui_list = get_ui_vrm0_blend_shape_bind_prop()
     active_bind = bind_ui_list[active_index]
 
     return active_bind
@@ -164,7 +164,7 @@ def get_active_bind_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_morph_list_items:
 # ----------------------------------------------------------
 #    Material
 # ----------------------------------------------------------
-def get_source_vrm0_blend_shape_material4ui_list() -> (
+def vrm0_get_source_vrm0_blend_shape_material4ui_list() -> (
     dict[str, list[tuple[ReferenceVrm0MaterialValueBindPropertyGroup, int]]]
 ):
     """
@@ -191,7 +191,7 @@ def get_source_vrm0_blend_shape_material4ui_list() -> (
     return material_value_dict
 
 
-def add_items2blend_shape_material_ui_list() -> int:
+def vrm0_add_items2blend_shape_material_ui_list() -> int:
     """
     Material Valueの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -204,7 +204,7 @@ def add_items2blend_shape_material_ui_list() -> int:
     """
 
     items = get_ui_vrm0_blend_shape_material_prop()
-    source_material_value_dict = get_source_vrm0_blend_shape_material4ui_list()
+    source_material_value_dict = vrm0_get_source_vrm0_blend_shape_material4ui_list()
     items.clear()
 
     # マテリアル名をラベルとして関連付けられたMaterial Valueをグルーピングする｡
@@ -214,9 +214,7 @@ def add_items2blend_shape_material_ui_list() -> int:
 
         # 先頭でない場合は空白行挿入
         if n != 0:
-            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = (
-                items.add()
-            )
+            target_label: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
             target_label.item_type[0] = True
             target_label.name = "Blank"
 
@@ -245,9 +243,7 @@ def add_items2blend_shape_material_ui_list() -> int:
             target_item.is_locked_uv_offset = True
 
             # マテリアルがMToonである場合はタグ付け
-            mat_vrm_ext = (
-                mat_value.material.vrm_addon_extension if mat_value.material else None
-            )
+            mat_vrm_ext = mat_value.material.vrm_addon_extension if mat_value.material else None
             if mat_vrm_ext != None:
                 if mat_vrm_ext.mtoon1.enabled:
                     target_item.material_type = "MTOON"
@@ -299,9 +295,7 @@ def add_items2blend_shape_material_ui_list() -> int:
     return len(items)
 
 
-def get_active_material_value_in_ui() -> (
-    VRMHELPER_WM_vrm0_blend_shape_material_list_items
-):
+def vrm0_get_active_material_value_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_material_list_items:
     active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
     material_value_ui_list = get_ui_vrm0_blend_shape_material_prop()
     active_value = material_value_ui_list[active_index]
