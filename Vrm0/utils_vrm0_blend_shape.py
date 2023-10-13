@@ -153,11 +153,21 @@ def vrm0_add_items2blend_shape_bind_ui_list() -> int:
     return len(items)
 
 
-def vrm0_get_active_bind_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_bind_list_items:
-    active_index = get_vrm0_active_index_prop("blend_shape_bind")
-    bind_ui_list = get_ui_vrm0_blend_shape_bind_prop()
-    active_bind = bind_ui_list[active_index]
+def vrm0_get_active_bind_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_shape_bind_list_items]:
+    """
+    BindsのUI List内でアクティブになっている要素を返す｡UI Listがからの場合はNoneを返す
 
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm0_blend_shape_bind_list_items]
+        UI List内のアクティブ要素､またはNone
+
+    """
+    if not (bind_ui_list := get_ui_vrm0_blend_shape_bind_prop()):
+        return
+
+    active_index = get_vrm0_active_index_prop("blend_shape_bind")
+    active_bind = bind_ui_list[active_index]
     return active_bind
 
 
@@ -295,11 +305,21 @@ def vrm0_add_items2blend_shape_material_ui_list() -> int:
     return len(items)
 
 
-def vrm0_get_active_material_value_in_ui() -> VRMHELPER_WM_vrm0_blend_shape_material_list_items:
-    active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
-    material_value_ui_list = get_ui_vrm0_blend_shape_material_prop()
-    active_value = material_value_ui_list[active_index]
+def vrm0_get_active_material_value_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_shape_material_list_items]:
+    """
+    Material ValueのUI List内でアクティブになっている要素を返す｡UI Listがからの場合はNoneを返す
 
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm0_blend_shape_material_list_items]
+        UI List内のアクティブ要素､またはNone
+    """
+
+    if not (material_value_ui_list := get_ui_vrm0_blend_shape_material_prop()):
+        return
+
+    active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
+    active_value = material_value_ui_list[active_index]
     return active_value
 
 

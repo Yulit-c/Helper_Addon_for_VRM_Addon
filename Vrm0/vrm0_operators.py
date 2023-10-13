@@ -85,6 +85,7 @@ from ..utils_vrm_base import (
     evaluation_expression_material_collection,
     get_vrm0_extension_property_first_person,
     get_vrm0_extension_property_blend_shape,
+    get_vrm0_extension_active_blend_shape_group,
     reset_shape_keys_value_in_morph_binds,
 )
 
@@ -431,16 +432,44 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend
 
     @classmethod
     def poll(cls, context):
-        # modeに応じたアクティブ要素が存在する｡
-        return True
-
-    def execute(self, context):
-        match self.mode:
+        # modeに応じたUI Listの要素が存在する｡
+        mode = get_scene_vrm0_blend_shape_prop()
+        match mode.editing_target:
             case "BIND":
-                self.report({"INFO"}, f"BIND")
+                active_item = vrm0_get_active_bind_in_ui()
 
             case "MATERIAL":
-                self.report({"INFO"}, f"MATERIAL")
+                active_item = vrm0_get_active_material_value_in_ui()
+        return active_item
+
+    def execute(self, context):
+        target_armature = get_target_armature()
+        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_index = blend_shape_master.active_blend_shape_group_index
+        active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_master.blend_shape_groups[
+            blend_shape_index
+        ]
+        # TODO : アクティブ要素がラベルであればそのラベルに属する要素を全て削除｡
+        #        BindやMaterial Valueであればその一つを削除する｡
+
+        match self.mode:
+            case "BIND":
+                bind_index = active_blend_shape.active_bind_index
+                bpy.ops.vrm.remove_vrm0_blend_shape_bind(
+                    armature_name=target_armature.name,
+                    blend_shape_group_index=blend_shape_index,
+                    bind_index=bind_index,
+                )
+
+            case "MATERIAL":
+                value_index = active_blend_shape.active_material_value_index
+                bpy.ops.vrm.remove_vrm0_material_value_bind(
+                    armature_name=target_armature.name,
+                    blend_shape_group_index=blend_shape_index,
+                    material_value_index=value_index,
+                )
+
+        self.offset_active_item_index(self.mode_dict[self.mode])
 
         return {"FINISHED"}
 
@@ -463,8 +492,7 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(VRMHELPER_vrm0_blend_
 
     @classmethod
     def poll(cls, context):
-        # modeに応じたアクティブ要素が存在する｡
-
+        # modeに応じたUI Listの要素が存在する｡
         mode = get_scene_vrm0_blend_shape_prop()
         match mode.editing_target:
             case "BIND":
@@ -472,16 +500,21 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear(VRMHELPER_vrm0_blend_
 
             case "MATERIAL":
                 active_item = vrm0_get_active_material_value_in_ui()
-        logger.debug(active_item)
         return active_item
 
     def execute(self, context):
+        active_blend_shape = get_vrm0_extension_active_blend_shape_group()
+
         match self.mode:
             case "BIND":
-                self.report({"INFO"}, f"BIND")
+                group = active_blend_shape.binds
 
             case "MATERIAL":
-                self.report({"INFO"}, f"MATERIAL")
+                group = active_blend_shape.material_values
+
+        group.clear()
+        self.offset_active_item_index(self.mode_dict[self.mode])
+
         return {"FINISHED"}
 
 
