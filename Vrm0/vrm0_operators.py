@@ -548,6 +548,23 @@ class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(VRMHELPER_vrm0_blend_sh
 
     def execute(self, context):
         self.report({"INFO"}, f"{self.material_name}")
+
+        blend_shapes = get_active_blend_shape()
+        mat_values = blend_shapes.material_values
+        active_value = vrm0_get_active_material_value_in_ui()
+        old_material = active_value.material_data
+
+        # アクティブアイテムがラベルであるかMaterial Valueであるかに応じて処理対象のグループを決定する｡
+        match tuple(active_value.item_type):
+            case (1, 0, 0, 0) | (1, 0, 0, 1):
+                target_values = {value for value in mat_values if value.material == old_material}
+
+            case _:
+                value_index = active_value.value_index
+                target_values = {mat_values[value_index]}
+
+        [logger.debug(i) for i in target_values]
+
         return {"FINISHED"}
 
 
