@@ -337,8 +337,8 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
 
                 # アクティブアイテムが 'Blank'以外のラベル､Material Color, UV Coordinateであるかを判定する｡
                 if active_item:
-                    if active_item.bind_index > -1:
-                        active_material_value = active_blend_shape.material_values[active_item.bind_index]
+                    if active_item.value_index > -1:
+                        active_material_value = active_blend_shape.material_values[active_item.value_index]
                     match tuple(active_item.item_type):
                         case (1, 0, 0, 0) | (
                             1,
@@ -354,7 +354,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
                                 icon="MATERIAL",
                             )
 
-                        case (0, 1, 0, 0) | (0, 1, 0, 0) | (0, 0, 1, 0):
+                        case (0, 1, 0, 0) | (0, 1, 0, 0) | (0, 0, 1, 0) | (0, 0, 0, 1):
                             box_bind_material = box.box()
                             col_box_bind_material = box_bind_material.column(align=True)
                             col_box_bind_material.label(text="Active Bind's Material:")
@@ -502,7 +502,7 @@ class VRMHELPER_UL_blend_shape_material_list(bpy.types.UIList, VRMHELPER_UL_base
         active_blend_shape = get_vrm0_extension_active_blend_shape_group()
         material_values = active_blend_shape.material_values
         self.add_blank_labels(row, 3)
-        mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values[item.bind_index]
+        mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values[item.value_index]
 
         initialize_material_value_prop()
         property_names = get_wm_vrm0_material_value_prop()

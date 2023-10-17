@@ -1303,7 +1303,7 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         material_values = blend_shape_groups[
             blend_shape_master.active_blend_shape_group_index
         ].material_values
-        active_material_value = material_values[self.bind_index]
+        active_material_value = material_values[self.value_index]
         target_value = active_material_value.target_value
 
         while len(target_value) < 4:
@@ -1314,8 +1314,6 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
                 target_value[n].value = value
             except:
                 pass
-                # target_value.add()
-                # target_value[n].value = value
 
     def update_uv_scale(self, context):
         """
@@ -1331,7 +1329,7 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         material_values = blend_shape_groups[
             blend_shape_master.active_blend_shape_group_index
         ].material_values
-        active_material_value = material_values[self.bind_index]
+        active_material_value = material_values[self.value_index]
         target_value = active_material_value.target_value
 
         while len(target_value) < 4:
@@ -1342,8 +1340,6 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
                 target_value[n].value = value
             except:
                 pass
-                # target_value.add()
-                # target_value[n].value = value
 
     def update_uv_offset(self, context):
         """
@@ -1359,7 +1355,7 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         material_values = blend_shape_groups[
             blend_shape_master.active_blend_shape_group_index
         ].material_values
-        active_material_value = material_values[self.bind_index]
+        active_material_value = material_values[self.value_index]
         target_value = active_material_value.target_value
 
         while len(target_value) < 4:
@@ -1370,8 +1366,6 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
                 target_value[n + 2].value = value
             except:
                 pass
-                # target_value.add()
-                # target_value[n + 2].value = value
 
     # ---------------------------------------------------------------------------------
 
@@ -1399,10 +1393,16 @@ class VRMHELPER_WM_vrm0_blend_shape_material_list_items(bpy.types.PropertyGroup)
         size=4,
     )
 
-    bind_index: IntProperty(
+    value_index: IntProperty(
         name="Item Index",
         description="Index of item in VRM extension compornent",
         default=-1,
+    )
+
+    material_name: StringProperty(
+        name="Material name",
+        description="Referenced Material Name",
+        default="",
     )
 
     material_type: EnumProperty(

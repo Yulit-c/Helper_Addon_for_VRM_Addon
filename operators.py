@@ -41,6 +41,11 @@ from .addon_classes import (
 
 from .property_groups import (
     get_vrm0_index_root_prop,
+    get_vrm0_active_index_prop,
+    get_ui_vrm0_first_person_prop,
+    get_ui_vrm0_blend_shape_bind_prop,
+    get_ui_vrm0_blend_shape_material_prop,
+    # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_constraint_prop,
@@ -178,7 +183,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
     def update_ui_list_prop(
         self,
-        target_type: Literal[
+        comopnent_type: Literal[
             "FIRST_PERSON",
             "BLEND_SHAPE",
             "BLEND_SHAPE_BIND",
@@ -193,11 +198,11 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         ],
     ):
         """
-        'target_type'に対応するUIリストのアイテムを全て消去した後に再登録する
+        'comopnent_type'に対応するUIリストのアイテムを全て消去した後に再登録する
 
         Parameters
         ----------
-        target_type: Literal[
+        comopnent_type: Literal[
             "FIRST_PERSON",
             "BLEND_SHAPE",
             "BLEND_SHAPE_BIND",
@@ -214,7 +219,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
         """
 
-        pattern = (int(self.vrm_mode), target_type)
+        pattern = (int(self.vrm_mode), comopnent_type)
         logger.debug(pattern)
 
         match pattern:
@@ -299,6 +304,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         """
 
         self.update_ui_list_prop(component_type)
+        pattern = (int(self.vrm_mode), component_type)
 
         match self.vrm_mode:
             case 0:
@@ -308,44 +314,48 @@ class VRMHELPER_operator_base(bpy.types.Operator):
                 index_root_prop = get_vrm1_index_root_prop()
 
         # 'component_type'の種類に応じて操作する属性名を定義する｡
-        match component_type:
-            case "FIRST_PERSON":
+        match pattern:
+            case (0, "FIRST_PERSON"):
+                list_items = get_ui_vrm0_first_person_prop()
+                attr_name = "first_person"
+
+            case (0, "BLEND_SHAPE_BIND"):
+                list_items = get_ui_vrm0_blend_shape_bind_prop()
+                attr_name = "blend_shape_bind"
+
+            case (0, "BLEND_SHAPE_MATERIAL"):
+                list_items = get_ui_vrm0_blend_shape_material_prop()
+                attr_name = "blend_shape_material"
+            # ---------------------------------------------------------------------------------
+            case (1, "FIRST_PERSON"):
                 list_items = get_ui_vrm1_first_person_prop()
                 attr_name = "first_person"
 
-            case "BLEND_SHAPE_BIND":
-                list_items = vrm0_add_items2blend_shape_bind_ui_list()
-                attr_name = "blend_shape_bind"
-
-            case "BLEND_SHAPE_MATERIAL":
-                list_items = vrm0_add_items2blend_shape_material_ui_list()
-                attr_name = "blend_shape_material"
-
-            case "EXPRESSION":
+            case (1, "EXPRESSION"):
                 list_items = get_ui_vrm1_expression_prop()
                 attr_name = "expression"
 
-            case "EXPRESSION_MORPH":
+            case (1, "EXPRESSION_MORPH"):
                 list_items = get_ui_vrm1_expression_morph_prop()
                 attr_name = "expression_morph"
 
-            case "EXPRESSION_MATERIAL":
+            case (1, "EXPRESSION_MATERIAL"):
                 list_items = get_ui_vrm1_expression_material_prop()
                 attr_name = "expression_material"
 
-            case "COLLIDER":
+            case (1, "COLLIDER"):
                 list_items = get_ui_vrm1_collider_prop()
                 attr_name = "collider"
 
-            case "COLLIDER_GROUP":
+            case (1, "COLLIDER_GROUP"):
                 list_items = get_ui_vrm1_collider_group_prop()
                 attr_name = "collider_group"
 
-            case "SPRING":
+            case (1, "SPRING"):
                 list_items = get_ui_vrm1_spring_prop()
                 attr_name = "spring"
 
-            case "CONSTRAINT":
+            case (1, "CONSTRAINT"):
                 list_items = get_ui_vrm1_constraint_prop()
                 attr_name = "constraint"
 
@@ -381,7 +391,11 @@ class VRMHELPER_operator_base(bpy.types.Operator):
                 break
 
             try:
-                active_index = max(get_vrm1_active_index_prop(component_type), 0)
+                match self.vrm_mode:
+                    case 0:
+                        active_index = max(get_vrm0_active_index_prop(component_type), 0)
+                    case 1:
+                        active_index = max(get_vrm1_active_index_prop(component_type), 0)
                 active_item = list_items[active_index]
                 if active_index <= 0 or active_item.name != "Blank":
                     break

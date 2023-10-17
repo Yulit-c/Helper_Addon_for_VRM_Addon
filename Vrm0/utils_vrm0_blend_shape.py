@@ -230,22 +230,26 @@ def vrm0_add_items2blend_shape_material_ui_list() -> int:
 
         # マテリアルが参照されていない場合は専用のラベル
         if isinstance(material, bpy.types.Material):
+            label_name = material.name
             material_name = material.name
             item_type = (1, 0, 0, 0)
         else:
-            material_name = "Not Selected"
+            label_name = "Not Selected"
+            material_name = ""
             item_type = (1, 0, 0, 1)
 
         # マテリアル毎のグルーピング用ラベルの登録
         target_label = items.add()
         target_label.item_type = tuple(map(bool, item_type))
-        target_label.name = material_name
+        target_label.name = label_name
+        target_label.material_name = material_name
 
         # マテリアル毎に紐付けられているMaterial Valueの登録をする｡
         for mat_value, index in value_list:
             mat_value: ReferenceVrm0MaterialValueBindPropertyGroup = mat_value
             target_item: VRMHELPER_WM_vrm0_blend_shape_material_list_items = items.add()
-            target_item.bind_index = index
+            target_item.value_index = index
+            target_item.material_name = material_name
 
             # UI List用アイテム登録の間はUpdateコールバックをロックする｡
             target_item.is_locked_color = True
