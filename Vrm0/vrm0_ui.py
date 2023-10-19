@@ -114,6 +114,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove,
     VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear,
     VRMHELPER_OT_vrm0_blend_shape_change_bind_material,
+    VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
 )
 
 """
@@ -388,6 +389,22 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
         icon="PANEL_CLOSE",
     )
     op.mode = editing_target
+
+    # オペレーターの描画
+    box.separator()
+    box_op_mtoon = box.box()
+    col = box_op_mtoon.column(align=True)
+    col.scale_y = 1.2
+    col.operator(
+        VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters.bl_idname,
+        text="Store MToon Current Values",
+        icon="IMPORT",
+    )
+    # col.operator(
+    #     VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters.bl_idname,
+    #     text="Discard stored MToon Values",
+    #     icon="EXPORT",
+    # )
 
 
 class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):

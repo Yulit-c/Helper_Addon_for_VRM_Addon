@@ -533,6 +533,16 @@ class VRMHELPER_VRM1_joint_property:
 ---------------------------------------------------------"""
 
 
+class MToon0ParameterNames(TypedDict):
+    texture_scale: str
+    texture_offset: str
+    color: str
+    shade_color: str
+    emission_color: str
+    rim_color: str
+    outline_color: str
+
+
 class MToon1ParameterNames(TypedDict):
     texture_scale: str
     texture_offset: str

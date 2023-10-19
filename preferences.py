@@ -68,9 +68,9 @@ class VRMHELPER_PREF_addon_preferences(AddonPreferences):
     addon_collection_dict: dict[str, str] = {
         "ROOT": "VRMHelper_Collection",
         "VRM0_ROOT": "VRMHelper_VRM0",
-        "VRM0_BLENDSHAPE_MORPH": "VRMHelper_VRM0_Collider",
-        "VRM0_BLENDSHAPE_MATERIAL": "VRMHelper_VRM0_BlendShape_Morph",
-        "VRM0_COLLIDER": "VRMHelper_VRM0_BlendShape_Material",
+        "VRM0_COLLIDER": "VRMHelper_VRM0_Collider",
+        "VRM0_BLENDSHAPE_MORPH": "VRMHelper_VRM0_BlendShape_Morph",
+        "VRM0_BLENDSHAPE_MATERIAL": "VRMHelper_VRM0_BlendShape_Material",
         "VRM1_ROOT": "VRMHelper_VRM1",
         "VRM1_COLLIDER": "VRMHelper_VRM1_Collider",
         "VRM1_EXPRESSION_MORPH": "VRMHelper_VRM1_Expression_Morph",

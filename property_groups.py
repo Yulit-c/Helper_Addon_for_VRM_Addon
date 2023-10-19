@@ -288,35 +288,41 @@ class VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters(bpy.types.PropertyGroup):
     shade_color: FloatVectorProperty(
         name="Shade Color",
         description="MToon0 Shade Color",
-        default=(1.0, 1.0, 1.0, 1.0),
-        size=4,
+        default=(1.0, 1.0, 1.0),
+        size=3,
     )
 
     rim_color: FloatVectorProperty(
         name="RIm Color",
         description="MToon0 Rim Color",
-        default=(0.0, 0.0, 0.0, 0.0),
-        size=4,
+        default=(0.0, 0.0, 0.0),
+        size=3,
     )
     emission_color: FloatVectorProperty(
         name="Emission Color",
         description="MToon0 Emission Color",
-        default=(0.0, 0.0, 0.0, 0.0),
-        size=4,
+        default=(0.0, 0.0, 0.0),
+        size=3,
     )
     outline_color: FloatVectorProperty(
         name="Outline Color",
         description="MToon0 Outline Color",
-        default=(0.0, 0.0, 0.0, 0.0),
-        size=4,
+        default=(0.0, 0.0, 0.0),
+        size=3,
     )
 
-    uv_coordinate: FloatVectorProperty(
-        name="UV Coordinate",
-        description="MToon0 UV Coordinate",
-        default=(1.0, 1.0, 0.0, 0.0),
-        size=4,
-        # [0],[1] : Scale, [2],[3] : Offset
+    texture_scale: FloatVectorProperty(
+        name="Texture Scale",
+        description="MToon0 Texture Scale",
+        default=(1.0, 1.0),
+        size=2,
+    )
+
+    texture_offset: FloatVectorProperty(
+        name="Texture Offset",
+        description="MToon0 Texture Offset",
+        default=(0.0, 0.0),
+        size=2,
     )
 
 
@@ -540,7 +546,7 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
     )
 
     mtoon0_stored_parameters: CollectionProperty(
-        name="MToon1 Stored Parameters",
+        name="MToon0 Stored Parameters",
         description="Allows  MToon0 parameters of the target material to be saved and restored as default values",
         type=VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
     )

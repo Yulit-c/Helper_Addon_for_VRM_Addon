@@ -100,7 +100,7 @@ from ..utils_vrm_base import (
     is_existing_target_armature_and_mode,
     get_bones_for_each_branch_by_type,
     reset_shape_keys_value_in_morph_binds,
-    store_mtoon1_current_values,
+    store_mtoon_current_values,
     set_mtoon1_default_values,
     re_link_all_collider_object2collection,
 )
@@ -186,7 +186,9 @@ logger = preparating_logger(__name__)
 class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_vrm1_first_person_base):
     bl_idname = "vrm_helper.set_mesh_annotation_1"
     bl_label = "Set VRM1 Mesh Annotation"
-    bl_description = "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+    bl_description = (
+        "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
+    )
 
     """
     選択されたオブジェクトをTarget ArmatureのVRM First Person Mesh Annotationに設定する｡
@@ -204,9 +206,7 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_vrm1_first_person_
 
         # 選択オブジェクトの数だけMesh Annotationを追加する｡
         # 既にオブジェクトが存在する場合､Typeが異なれば値を更新､同じであれば処理をスキップする｡
-        for obj in [
-            obj for obj in context.selected_objects if filtering_mesh_type(obj)
-        ]:
+        for obj in [obj for obj in context.selected_objects if filtering_mesh_type(obj)]:
             if annotation := vrm1_search_same_name_mesh_annotation(obj.name):
                 logger.debug(annotation.node.mesh_object_name)
                 if annotation.type == annotation_type:
@@ -225,14 +225,10 @@ class VRMHELPER_OT_vrm1_first_person_set_annotation(VRMHELPER_vrm1_first_person_
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
-    VRMHELPER_vrm1_first_person_base
-):
+class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(VRMHELPER_vrm1_first_person_base):
     bl_idname = "vrm_helper.vrm1_remove_mesh_annotation_from_list"
     bl_label = "Remove Mesh Annotation from Active Item"
-    bl_description = (
-        "Remove active annotation in the list from Target Armature's VRM Extension"
-    )
+    bl_description = "Remove active annotation in the list from Target Armature's VRM Extension"
 
     """
     Target ArmatureのVRM Extensionから､リスト内で選択されているMesh Annotationを削除する｡
@@ -257,9 +253,7 @@ class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_list(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(
-    VRMHELPER_vrm1_first_person_base
-):
+class VRMHELPER_OT_vrm1_first_person_remove_annotation_from_select_objects(VRMHELPER_vrm1_first_person_base):
     bl_idname = "vrm_helper.vrm1_remove_mesh_annotation"
     bl_label = "Remove  Mesh Annotation by Selected Objects"
     bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
@@ -316,9 +310,7 @@ class VRMHELPER_OT_vrm1_first_person_clear_annotation(VRMHELPER_vrm1_first_perso
 # ----------------------------------------------------------
 #    Expressions
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_expression_create_custom_expression(
-    VRMHELPER_vrm1_expression_base
-):
+class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_vrm1_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_create_custom_expression"
     bl_label = "Create Custom Expression"
     bl_description = "Create a new custom expression to the target armature"
@@ -336,9 +328,7 @@ class VRMHELPER_OT_vrm1_expression_create_custom_expression(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_remove_custom_expression(
-    VRMHELPER_vrm1_expression_base
-):
+class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_vrm1_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_remove_custom_expression"
     bl_label = "Remove Custom Expression"
     bl_description = "Remove the active custom expression from the target armature"
@@ -347,9 +337,9 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがカスタムエクスプレッションである
-        return (
-            active_item := get_active_list_item_in_expression()
-        ) and not active_item.expression_index[1] < 0
+        return (active_item := get_active_list_item_in_expression()) and not active_item.expression_index[
+            1
+        ] < 0
 
     def execute(self, context):
         vrm1_expresions = get_vrm1_extension_property_expression()
@@ -365,9 +355,7 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_clear_custom_expression(
-    VRMHELPER_vrm1_expression_base
-):
+class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_vrm1_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_clear_custom_expression"
     bl_label = "Clear Custom Expression"
     bl_description = "Clear all custom expressions from the target armature"
@@ -393,9 +381,7 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_move_custom_expression(
-    VRMHELPER_vrm1_expression_base
-):
+class VRMHELPER_OT_vrm1_expression_move_custom_expression(VRMHELPER_vrm1_expression_base):
     bl_idname = "vrm_helper.vrm1_expression_move_custom_expression"
     bl_label = "Move Custom Expression"
     bl_description = "Reorder active custom expression"
@@ -414,9 +400,9 @@ class VRMHELPER_OT_vrm1_expression_move_custom_expression(
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがカスタムエクスプレッションである
-        return (
-            active_item := get_active_list_item_in_expression()
-        ) and not active_item.expression_index[1] < 0
+        return (active_item := get_active_list_item_in_expression()) and not active_item.expression_index[
+            1
+        ] < 0
 
     def execute(self, context):
         active_expression = get_active_expression()
@@ -451,9 +437,7 @@ class VRMHELPER_OT_vrm1_expression_move_custom_expression(
 # ----------------------------------------------------------
 #    Morph Target
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_expression_morph_create_morph(
-    VRMHELPER_vrm1_expression_sub_morph
-):
+class VRMHELPER_OT_vrm1_expression_morph_create_morph(VRMHELPER_vrm1_expression_sub_morph):
     bl_idname = "vrm_helper.vrm1_expression_morph_create_morph"
     bl_label = "Create Morph Target Bind"
     bl_description = "Create a new morph target bind to the active expression"
@@ -506,9 +490,7 @@ class VRMHELPER_OT_vrm1_expression_morph_create_morph(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_morph_remove_morph(
-    VRMHELPER_vrm1_expression_sub_morph
-):
+class VRMHELPER_OT_vrm1_expression_morph_remove_morph(VRMHELPER_vrm1_expression_sub_morph):
     bl_idname = "vrm_helper.vrm1_expression_morph_remove_morph"
     bl_label = "Remove Morph Target Bind"
     bl_description = "Remove the active morph target bind from the active expression"
@@ -532,9 +514,7 @@ class VRMHELPER_OT_vrm1_expression_morph_remove_morph(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(
-    VRMHELPER_vrm1_expression_sub_morph
-):
+class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(VRMHELPER_vrm1_expression_sub_morph):
     bl_idname = "vrm_helper.vrm1_expression_morph_clear_morphs"
     bl_label = "Clear Morph Target Binds"
     bl_description = "Clear all morph target binds from the active expression"
@@ -552,39 +532,29 @@ class VRMHELPER_OT_vrm1_expression_morph_clear_morphs(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(
-    VRMHELPER_vrm1_expression_sub_morph
-):
+class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(VRMHELPER_vrm1_expression_sub_morph):
     bl_idname = "vrm_helper.vrm1_expression_set_morph_from_scene"
     bl_label = "Set Morph Target from Scene"
-    bl_description = (
-        "Set Morph Target Bind from the shape keys of the target objects on the scene"
-    )
+    bl_description = "Set Morph Target Bind from the shape keys of the target objects on the scene"
     bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Morph'のコレクションが存在する｡
         return (
-            c := bpy.data.collections.get(
-                get_addon_collection_name("VRM1_EXPRESSION_MORPH")
-            )
+            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MORPH"))
         ) and c.all_objects
 
     def execute(self, context):
         morph_target_binds = get_active_expression().morph_target_binds
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM1_EXPRESSION_MORPH")
-        )
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MORPH"))
 
         for obj in source_collection.all_objects:
             # オブジェクトのメッシュデータに2つ以上のキーブロックを持ったシェイプキーが存在する｡
             if not (sk := obj.data.shape_keys) and len(sk.key_blocks) <= 1:
                 continue
 
-            logger.debug(
-                f"###\n{'':#>100}\nCurrent Processed Object : {obj.name}\n{'':#>100}"
-            )
+            logger.debug(f"###\n{'':#>100}\nCurrent Processed Object : {obj.name}\n{'':#>100}")
             for shape_key in (k for k in sk.key_blocks if k != sk.reference_key):
                 # objとシェイプキーのペアがMorph Target Bindに登録済みであればシェイプキーの現在の値に更新する｡
                 # 値が0だった場合はBindを削除する｡
@@ -598,9 +568,7 @@ class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(
                 if not is_existing_bind:
                     if shape_key.value == 0:
                         continue
-                    logger.debug(
-                        f"Registered New Bind -- {obj.name} : {shape_key.name}"
-                    )
+                    logger.debug(f"Registered New Bind -- {obj.name} : {shape_key.name}")
                     new_morph_bind = morph_target_binds.add()
                     new_morph_bind.node.mesh_object_name = obj.name
                     new_morph_bind.index = shape_key.name
@@ -616,9 +584,7 @@ class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(
 # ----------------------------------------------------------
 
 
-class VRMHELPER_OT_vrm1_expression_change_bind_material(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_change_bind_material(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_change_bind_material"
     bl_label = "Change Bind Material"
     bl_description = "Change the material of the active bind"
@@ -654,14 +620,10 @@ class VRMHELPER_OT_vrm1_expression_change_bind_material(
 
         # Material Labelの場合
         target_material_color_binds = {
-            bind
-            for bind in active_expression.material_color_binds
-            if bind.material == old_bind_material
+            bind for bind in active_expression.material_color_binds if bind.material == old_bind_material
         }
         target_transform_bind_binds = {
-            bind
-            for bind in active_expression.texture_transform_binds
-            if bind.material == old_bind_material
+            bind for bind in active_expression.texture_transform_binds if bind.material == old_bind_material
         }
         match active_item.name:
             case "Material Color":
@@ -680,9 +642,7 @@ class VRMHELPER_OT_vrm1_expression_change_bind_material(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_create_color(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_create_color(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_create_color"
     bl_label = "Create Material Color Bind"
     bl_description = "Create a new material color bind to the active expression"
@@ -707,9 +667,7 @@ class VRMHELPER_OT_vrm1_expression_material_create_color(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_remove_color(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_remove_color(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_remove_color"
     bl_label = "Remove Material Color Bind"
     bl_description = "Remove the active material color bind from the active expression"
@@ -719,9 +677,7 @@ class VRMHELPER_OT_vrm1_expression_material_remove_color(
     def poll(cls, context):
         # アクティブアイテムがMaterial Colorである
         if materials := get_ui_vrm1_expression_material_prop():
-            return materials[
-                get_vrm1_active_index_prop("EXPRESSION_MATERIAL")
-            ].item_type[1]
+            return materials[get_vrm1_active_index_prop("EXPRESSION_MATERIAL")].item_type[1]
 
     def execute(self, context):
         materials = get_ui_vrm1_expression_material_prop()
@@ -735,9 +691,7 @@ class VRMHELPER_OT_vrm1_expression_material_remove_color(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_clear_colors(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_clear_colors(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_clear_colors"
     bl_label = "Clear Morph Target Binds"
     bl_description = "Clear all morph target binds from the active expression"
@@ -756,9 +710,7 @@ class VRMHELPER_OT_vrm1_expression_material_clear_colors(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_create_transform(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_create_transform(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_create_transform"
     bl_label = "Create Material Color Bind"
     bl_description = "Create a new texture transform bind to the active expression"
@@ -783,23 +735,17 @@ class VRMHELPER_OT_vrm1_expression_material_create_transform(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_remove_transform(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_remove_transform(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_remove_transform"
     bl_label = "Remove Material Color Bind"
-    bl_description = (
-        "Remove the active texture transform bind from the active expression"
-    )
+    bl_description = "Remove the active texture transform bind from the active expression"
     bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
         # アクティブアイテムがMaterial Colorである
         if materials := get_ui_vrm1_expression_material_prop():
-            return materials[
-                get_vrm1_active_index_prop("EXPRESSION_MATERIAL")
-            ].item_type[2]
+            return materials[get_vrm1_active_index_prop("EXPRESSION_MATERIAL")].item_type[2]
 
     def execute(self, context):
         materials = get_ui_vrm1_expression_material_prop()
@@ -813,9 +759,7 @@ class VRMHELPER_OT_vrm1_expression_material_remove_transform(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_material_clear_transforms(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_material_clear_transforms(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_material_clear_transforms"
     bl_label = "Clear Morph Target Binds"
     bl_description = "Clear all texture transform binds from the active expression"
@@ -834,23 +778,17 @@ class VRMHELPER_OT_vrm1_expression_material_clear_transforms(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_set_material_bind_from_scene"
     bl_label = "Set Material Bind from Scene"
-    bl_description = (
-        "Set Material Bind from the material of the target objects on the scene"
-    )
+    bl_description = "Set Material Bind from the material of the target objects on the scene"
     bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Material'のコレクションが存在する｡
         return (
-            c := bpy.data.collections.get(
-                get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-            )
+            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
         ) and c.all_objects
 
     def execute(self, context):
@@ -859,9 +797,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
         active_expression = get_active_expression()
         material_color_binds = active_expression.material_color_binds
         texture_transform_binds = active_expression.texture_transform_binds
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-        )
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
 
         # ソースとなるマテリアルを取得する｡
         source_materials = {
@@ -884,10 +820,8 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
             # ソースマテリアルに設定されたMToonパラメーターに応じてMaterial Color Bindを登録する｡
             # 既に登録済みのマテリアル､パラメーターの組み合わせだった場合は値を更新する｡初期値に設定される場合はバインドを削除する｡
             print(f"\n{'':#>50}\nMaterial Color Bind Process\n{'':#>50}")
-            mtoon_color_parameters_dict = (
-                search_existing_material_color_bind_and_update(
-                    source_material, material_color_binds
-                )
+            mtoon_color_parameters_dict = search_existing_material_color_bind_and_update(
+                source_material, material_color_binds
             )
 
             # 未登録であった場合は新規登録する｡
@@ -907,10 +841,8 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
             # ソースマテリアルに設定されたMToonパラメーターに応じてTexture Transform Bindを登録する｡
             # 既に登録済みのマテリアル､パラメーターの組み合わせだった場合は値を更新する｡初期値に設定される場合はバインドを削除する｡
             print(f"\n{'':#>50}\nTexture Transform Bind Process\n{'':#>50}")
-            mtoon_transform_parameters_dict = (
-                search_existing_texture_transform_bind_and_update(
-                    source_material, texture_transform_binds
-                )
+            mtoon_transform_parameters_dict = search_existing_texture_transform_bind_and_update(
+                source_material, texture_transform_binds
             )
 
             # 未登録であった場合は新規登録する｡
@@ -925,12 +857,8 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
             new_transform_bind = texture_transform_binds.add()
             for parameter, value in mtoon_transform_parameters_dict.items():
                 if value:
-                    converted_parameter_name = convert_str2transform_bind_type(
-                        parameter
-                    )
-                    logger.debug(
-                        f"Set Parameter : {converted_parameter_name} -- {value}"
-                    )
+                    converted_parameter_name = convert_str2transform_bind_type(parameter)
+                    logger.debug(f"Set Parameter : {converted_parameter_name} -- {value}")
                     new_transform_bind.material = source_material
                     setattr(new_transform_bind, converted_parameter_name, value)
         # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
@@ -941,9 +869,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_store_mtoon1_parameters"
     bl_label = "Store MToon1 Parameters"
     bl_description = "Obtains and stores the current parameters of Mtoon1"
@@ -953,16 +879,12 @@ class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM1 Expression'のコレクションが存在する｡
         return (
-            c := bpy.data.collections.get(
-                get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-            )
+            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
         ) and c.all_objects
 
     def execute(self, context):
         os.system("cls")
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-        )
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
         mtoon1_stored_parameters = get_scene_vrm1_mtoon_stored_prop()
         mtoon1_stored_parameters.clear()
 
@@ -970,14 +892,12 @@ class VRMHELPER_OT_vrm1_expression_store_mtoon1_parameters(
             logger.debug(f"Stored MToon1 Parameters : {mat.name}")
             new_item = mtoon1_stored_parameters.add()
             new_item.name = mat.name
-            store_mtoon1_current_values(new_item, mat)
+            store_mtoon_current_values(new_item, mat)
 
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_discard_stored_mtoon1_parameters"
     bl_label = "Discard Stored MToon1 Parameters"
     bl_description = "Discard stored parameters of Mtoon1"
@@ -992,9 +912,7 @@ class VRMHELPER_OT_vrm1_expression_discard_stored_mtoon1_parameters(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_restore_mtoon1_parameters"
     bl_label = "Restore MToon1 Parameters"
     bl_description = "Restore stored parameters of Mtoon1"
@@ -1003,15 +921,11 @@ class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(
     @classmethod
     def poll(cls, context):
         return (
-            c := bpy.data.collections.get(
-                get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-            )
+            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
         ) and c.all_objects
 
     def execute(self, context):
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
-        )
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
 
         for mat in get_all_materials_from_source_collection_objects(source_collection):
             set_mtoon1_default_values(mat)
@@ -1024,9 +938,7 @@ class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(
 # ----------------------------------------------------------
 #    Morph & Material Binds
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_set_both_binds_from_scene"
     bl_label = "Set Both Binds from Scene"
     bl_description = "Set Morph/Material Binds from the scene"
@@ -1045,18 +957,14 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
         #    Morph Target Bind
         # ----------------------------------------------------------
         morph_target_binds = get_active_expression().morph_target_binds
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM1_EXPRESSION_MORPH")
-        )
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MORPH"))
 
         for obj in source_collection.all_objects:
             # オブジェクトのメッシュデータに2つ以上のキーブロックを持ったシェイプキーが存在する｡
             if not (sk := obj.data.shape_keys) and len(sk.key_blocks) <= 1:
                 continue
 
-            logger.debug(
-                f"###\n{'':#>100}\nCurrent Processed Object : {obj.name}\n{'':#>100}"
-            )
+            logger.debug(f"###\n{'':#>100}\nCurrent Processed Object : {obj.name}\n{'':#>100}")
             for shape_key in (k for k in sk.key_blocks if k != sk.reference_key):
                 # objとシェイプキーのペアがMorph Target Bindに登録済みであればシェイプキーの現在の値に更新する｡
                 # 値が0だった場合はBindを削除する｡
@@ -1070,9 +978,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
                 if not is_existing_bind:
                     if shape_key.value == 0:
                         continue
-                    logger.debug(
-                        f"Registered New Bind -- {obj.name} : {shape_key.name}"
-                    )
+                    logger.debug(f"Registered New Bind -- {obj.name} : {shape_key.name}")
                     new_morph_bind = morph_target_binds.add()
                     new_morph_bind.node.mesh_object_name = obj.name
                     new_morph_bind.index = shape_key.name
@@ -1111,10 +1017,8 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
             # ソースマテリアルに設定されたMToonパラメーターに応じてMaterial Color Bindを登録する｡
             # 既に登録済みのマテリアル､パラメーターの組み合わせだった場合は値を更新する｡初期値に設定される場合はバインドを削除する｡
             print(f"\n{'':#>50}\nMaterial Color Bind Process\n{'':#>50}")
-            mtoon_color_parameters_dict = (
-                search_existing_material_color_bind_and_update(
-                    source_material, material_color_binds
-                )
+            mtoon_color_parameters_dict = search_existing_material_color_bind_and_update(
+                source_material, material_color_binds
             )
 
             # 未登録であった場合は新規登録する｡
@@ -1134,10 +1038,8 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
             # ソースマテリアルに設定されたMToonパラメーターに応じてTexture Transform Bindを登録する｡
             # 既に登録済みのマテリアル､パラメーターの組み合わせだった場合は値を更新する｡初期値に設定される場合はバインドを削除する｡
             print(f"\n{'':#>50}\nTexture Transform Bind Process\n{'':#>50}")
-            mtoon_transform_parameters_dict = (
-                search_existing_texture_transform_bind_and_update(
-                    source_material, texture_transform_binds
-                )
+            mtoon_transform_parameters_dict = search_existing_texture_transform_bind_and_update(
+                source_material, texture_transform_binds
             )
 
             # 未登録であった場合は新規登録する｡
@@ -1152,12 +1054,8 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
             new_transform_bind = texture_transform_binds.add()
             for parameter, value in mtoon_transform_parameters_dict.items():
                 if value:
-                    converted_parameter_name = convert_str2transform_bind_type(
-                        parameter
-                    )
-                    logger.debug(
-                        f"Set Parameter : {converted_parameter_name} -- {value}"
-                    )
+                    converted_parameter_name = convert_str2transform_bind_type(parameter)
+                    logger.debug(f"Set Parameter : {converted_parameter_name} -- {value}")
 
                     new_transform_bind.material = source_material
                     setattr(new_transform_bind, converted_parameter_name, value)
@@ -1169,9 +1067,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_restore_initial_values"
     bl_label = "Restore Initial State"
     bl_description = "Restore Mesh and Material to their initial state"
@@ -1190,9 +1086,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
         if source_collection_morph := bpy.data.collections.get(
             get_addon_collection_name("VRM1_EXPRESSION_MORPH")
         ):
-            for obj in {
-                obj for obj in source_collection_morph.all_objects if obj.type == "MESH"
-            }:
+            for obj in {obj for obj in source_collection_morph.all_objects if obj.type == "MESH"}:
                 reset_shape_keys_value(obj.data)
 
         # ----------------------------------------------------------
@@ -1202,9 +1096,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
             get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
         ):
             # 対象コレクション内のすべてのオブジェクトが持つマテリアルにパラメーターの復元処理を行う｡
-            for mat in get_all_materials_from_source_collection_objects(
-                source_collection_mat
-            ):
+            for mat in get_all_materials_from_source_collection_objects(source_collection_mat):
                 set_mtoon1_default_values(mat)
 
             # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
@@ -1212,9 +1104,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
-    VRMHELPER_vrm1_expression_sub_material
-):
+class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_expression_sub_material):
     bl_idname = "vrm_helper.vrm1_expression_assign_expression_to_scene"
     bl_label = "Assign Expression"
     bl_description = "Active expression settings are reflected on the scene"
@@ -1244,9 +1134,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
         existing_bind_info = {}
         for bind in morph_target_binds:
             bind_mesh = bpy.data.objects.get(bind.node.mesh_object_name).data
-            existing_bind_info.setdefault(bind_mesh, []).append(
-                (bind.index, bind.weight)
-            )
+            existing_bind_info.setdefault(bind_mesh, []).append((bind.index, bind.weight))
 
         for mesh, sk_info in existing_bind_info.items():
             for sk_name, sk_value in sk_info:
@@ -1254,9 +1142,9 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(
                 sk.value = sk_value
 
         # Color/Transform Bindで指定されている全てのマテリアルの特定パラメーターは一度すべて初期値にセットする｡
-        if existing_bind_material := {
-            bind.material for bind in material_color_binds
-        } | {bind.material for bind in texture_transform_binds}:
+        if existing_bind_material := {bind.material for bind in material_color_binds} | {
+            bind.material for bind in texture_transform_binds
+        }:
             for mat in existing_bind_material:
                 if not mat:
                     continue
@@ -1363,9 +1251,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
                 collider_tail = new_item.bpy_object.children[0]
                 collider_head.matrix_world = generate_head_collider_position(bone.head)
                 collider_head.rotation_euler = Vector((0, 0, 0))
-                collider_tail.matrix_basis = generate_tail_collider_position(
-                    bone, bone.tail
-                )
+                collider_tail.matrix_basis = generate_tail_collider_position(bone, bone.tail)
 
                 # コライダーオブジェクトを対象コレクションにリンクする｡
                 re_link_all_collider_object2collection()
@@ -1426,9 +1312,7 @@ class VRMHELPER_OT_collider_group_add_group(VRMHELPER_vrm1_collider_group_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_remove_active_group(
-    VRMHELPER_vrm1_collider_group_base
-):
+class VRMHELPER_OT_collider_group_remove_active_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_active_group"
     bl_label = "Remove Collider Group"
     bl_description = "Deletes the collider group that is active in the list."
@@ -1448,9 +1332,7 @@ class VRMHELPER_OT_collider_group_remove_active_group(
         collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
 
         # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを
-        remove_vrm1_spring_collider_group_when_removed_collider_group(
-            collider_groups[active_indexes[0]].name
-        )
+        remove_vrm1_spring_collider_group_when_removed_collider_group(collider_groups[active_indexes[0]].name)
         collider_groups.remove(active_indexes[0])
         self.offset_active_item_index(self.component_type)
 
@@ -1470,12 +1352,8 @@ class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_vrm1_collider_group_base
     def execute(self, context):
         os.system("cls")
 
-        for collider_group in (
-            collider_groups := get_vrm_extension_property("COLLIDER_GROUP")
-        ):
-            remove_vrm1_spring_collider_group_when_removed_collider_group(
-                collider_group.name
-            )
+        for collider_group in (collider_groups := get_vrm_extension_property("COLLIDER_GROUP")):
+            remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group.name)
 
         collider_groups.clear()
         get_vrm1_index_root_prop().collider_group = 0
@@ -1519,9 +1397,7 @@ class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_vrm1_collider_group_
 
     def execute(self, context):
         active_indexes = get_active_list_item_in_collider_group().item_indexes
-        get_vrm_extension_property("COLLIDER_GROUP")[
-            active_indexes[0]
-        ].colliders.remove(active_indexes[1])
+        get_vrm_extension_property("COLLIDER_GROUP")[active_indexes[0]].colliders.remove(active_indexes[1])
 
         get_vrm1_index_root_prop().collider_group -= 1
 
@@ -1539,17 +1415,13 @@ class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_vrm1_collider_group_b
         return (
             (active_item := get_active_list_item_in_collider_group())
             and not (active_item.item_type[0])
-            and get_vrm_extension_property("COLLIDER_GROUP")[
-                active_item.item_indexes[0]
-            ].colliders
+            and get_vrm_extension_property("COLLIDER_GROUP")[active_item.item_indexes[0]].colliders
         )
 
     def execute(self, context):
         os.system("cls")
         active_indexes = get_active_list_item_in_collider_group().item_indexes
-        get_vrm_extension_property("COLLIDER_GROUP")[
-            active_indexes[0]
-        ].colliders.clear()
+        get_vrm_extension_property("COLLIDER_GROUP")[active_indexes[0]].colliders.clear()
 
         self.offset_active_item_index(self.component_type)
 
@@ -1655,9 +1527,7 @@ class VRMHELPER_OT_spring_clear_spring(VRMHELPER_vrm1_spring_base):
 # -----------------------------------------------------
 
 
-class VRMHELPER_OT_spring_add_joint(
-    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
-):
+class VRMHELPER_OT_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
     bl_idname = "vrmhelper.vrm1_spring_add_joint"
     bl_label = "Add Joint"
     bl_description = "Add a new joint to the active spring"
@@ -1690,9 +1560,7 @@ class VRMHELPER_OT_spring_add_joint(
         # 可能であれば2個前のジョイントの情報を取得し､新しく作成したジョイントの値を自動で設定する｡
         try:
             two_previous_joint = joints[-3]
-            two_previous_bone = target_armature.bones.get(
-                two_previous_joint.node.bone_name
-            )
+            two_previous_bone = target_armature.bones.get(two_previous_joint.node.bone_name)
             previous_joint = joints[-2]
             previous_bone = target_armature.bones.get(previous_joint.node.bone_name)
             if previous_bone.parent == two_previous_bone:
@@ -1729,15 +1597,11 @@ class VRMHELPER_OT_spring_remove_joint(VRMHELPER_vrm1_spring_base):
     @classmethod
     def poll(self, context):
         # アクティブアイテムがジョイントである
-        return (
-            active_item := get_active_list_item_in_spring()
-        ) and active_item.item_type[2]
+        return (active_item := get_active_list_item_in_spring()) and active_item.item_type[2]
 
     def execute(self, context):
         active_indexes = get_active_list_item_in_spring().item_indexes
-        get_vrm_extension_property("SPRING")[active_indexes[0]].joints.remove(
-            active_indexes[1]
-        )
+        get_vrm_extension_property("SPRING")[active_indexes[0]].joints.remove(active_indexes[1])
         get_vrm1_index_root_prop().spring -= 1
 
         return {"FINISHED"}
@@ -1766,9 +1630,7 @@ class VRMHELPER_OT_spring_clear_joint(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_add_joint_from_source(
-    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
-):
+class VRMHELPER_OT_spring_add_joint_from_source(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
     bl_idname = "vrmhelper.vrm1_spring_create_joint_from_selected"
     bl_label = "Create Joint"
     bl_description = "Create spring joints from selected bones"
@@ -1825,17 +1687,11 @@ class VRMHELPER_OT_spring_add_joint_from_source(
         os.system("cls")
 
         # # 処理対象となるボーンを､枝毎にグルーピングされた状態で取得する｡
-        if not (
-            target_bones := get_bones_for_each_branch_by_type(
-                self.source_type, get_target_armature()
-            )
-        ):
+        if not (target_bones := get_bones_for_each_branch_by_type(self.source_type, get_target_armature())):
             return {"CANCELLED"}
 
         springs = get_vrm_extension_property("SPRING")
-        spring_and_joint_dicts = [
-            {spring: [joint for joint in spring.joints]} for spring in springs
-        ]
+        spring_and_joint_dicts = [{spring: [joint for joint in spring.joints]} for spring in springs]
 
         # 取得したボーンのリストから枝毎にスプリングを作成し､そのスプリングに対してジョイントを登録する｡
         for branch in target_bones:
@@ -1885,9 +1741,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(
             ]
             target_collider_groups = spring.collider_groups
             for group in source_collider_groups:
-                if group.name in [
-                    i.collider_group_name for i in target_collider_groups
-                ]:
+                if group.name in [i.collider_group_name for i in target_collider_groups]:
                     logger.debug(f"Already Registered : {group.vrm_name}")
                     continue
                 target_group = target_collider_groups.add()
@@ -1984,9 +1838,7 @@ class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
 
     def execute(self, context):
         active_indexes = get_active_list_item_in_spring().item_indexes
-        collider_groups = get_vrm_extension_property("SPRING")[
-            active_indexes[0]
-        ].collider_groups
+        collider_groups = get_vrm_extension_property("SPRING")[active_indexes[0]].collider_groups
         collider_groups.add()
 
         return {"FINISHED"}
@@ -2000,15 +1852,11 @@ class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_vrm1_spring_base):
     @classmethod
     def poll(self, context):
         # アクティブアイテムがコライダーグループである｡
-        return (
-            active_item := get_active_list_item_in_spring()
-        ) and active_item.item_type[3]
+        return (active_item := get_active_list_item_in_spring()) and active_item.item_type[3]
 
     def execute(self, context):
         active_indexes = get_active_list_item_in_spring().item_indexes
-        get_vrm_extension_property("SPRING")[active_indexes[0]].collider_groups.remove(
-            active_indexes[2]
-        )
+        get_vrm_extension_property("SPRING")[active_indexes[0]].collider_groups.remove(active_indexes[2])
         get_vrm1_index_root_prop().spring -= 1
 
         return {"FINISHED"}
@@ -2078,9 +1926,7 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base)
             self.report({"ERROR"}, "Inappropriate active or target object")
             return {"FINISHED"}
 
-        logger.debug(
-            f"\n{'':#>100}\n{type(constrainted_element)} & {type(target_element)}"
-        )
+        logger.debug(f"\n{'':#>100}\n{type(constrainted_element)} & {type(target_element)}")
         logger.debug(f"Constrainted : {constrainted_element.name}")
         logger.debug(f"Traget : {target_element.name}\n{'':#>100}\n")
 
@@ -2092,9 +1938,7 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base)
         # 既にVRMコンストレイントが存在する場合は削除する｡
         remove_existing_vrm_constraint(constraints)
 
-        new_constraint: CopyRotationConstraint | DampedTrackConstraint = (
-            constraints.new(constraint_type)
-        )
+        new_constraint: CopyRotationConstraint | DampedTrackConstraint = constraints.new(constraint_type)
         # Target Object, Subtargetを設定する｡
         match target_element:
             case PoseBone():

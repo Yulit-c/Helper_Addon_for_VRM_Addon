@@ -88,6 +88,7 @@ from ..utils_vrm_base import (
     get_vrm0_extension_property_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
     reset_shape_keys_value_in_morph_binds,
+    store_mtoon_current_values,
 )
 
 from .utils_vrm0_first_person import (
@@ -564,32 +565,30 @@ class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(VRMHELPER_vrm0_blend_sh
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters(
-    VRMHELPER_vrm0_blend_shape_sub
-):
+class VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_store_mtoon0_parameters"
     bl_label = "Store MToon0 Parameters"
     bl_description = "Obtains and stores the current parameters of Mtoon0"
     bl_options = {"UNDO"}
 
-
     @classmethod
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM0 'のコレクションが存在する｡
         return (
-            c := bpy.data.collections.get(
-                get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
-            )
+            c := bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
         ) and c.all_objects
 
     def execute(self, context):
         os.system("cls")
-        source_collection = bpy.data.collections.get(
-            get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
-        )
-        mtoon1_stored_parameters = get_scene_vrm0_mtoon_stored_prop()
-        mtoon1_stored_parameters.clear()
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
+        mtoon0_stored_parameters = get_scene_vrm0_mtoon_stored_prop()
+        mtoon0_stored_parameters.clear()
 
+        for mat in get_all_materials_from_source_collection_objects(source_collection):
+            logger.debug(f"Stored MToon0 Parameters : {mat.name}")
+            new_item = mtoon0_stored_parameters.add()
+            new_item.name = mat.name
+            store_mtoon_current_values(new_item, mat)
 
         return {"FINISHED"}
 
@@ -621,4 +620,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove,
     VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear,
     VRMHELPER_OT_vrm0_blend_shape_change_bind_material,
+    VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
 )

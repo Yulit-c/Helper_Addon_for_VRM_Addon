@@ -1,6 +1,7 @@
 from typing import Literal
 
 from .addon_classes import (
+    MToon0ParameterNames,
     MToon1ParameterNames,
     MToon1MaterialParameters,
 )
@@ -191,6 +192,16 @@ JOINT_PROP_NAMES = (
 """---------------------------------------------------------
     MToon
 ---------------------------------------------------------"""
+MTOON0_ATTRIBUTE_NAMES: MToon0ParameterNames = {
+    "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
+    "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
+    "color": "pbr_metallic_roughness.base_color_factor",
+    "shade_color": "extensions.vrmc_materials_mtoon.shade_color_factor",
+    "emission_color": "emissive_factor",
+    "rim_color": "extensions.vrmc_materials_mtoon.parametric_rim_color_factor",
+    "outline_color": "extensions.vrmc_materials_mtoon.outline_color_factor",
+}
+
 MTOON1_ATTRIBUTE_NAMES: MToon1ParameterNames = {
     "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
     "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
