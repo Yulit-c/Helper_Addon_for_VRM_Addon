@@ -49,7 +49,7 @@ from ..property_groups import (
     get_target_armature_data,
     get_vrm0_active_index_prop,
     # ---------------------------------------------------------------------------------
-    get_scene_vrm0_mtoon_prop,
+    get_scene_vrm0_mtoon_stored_prop,
     get_ui_vrm0_blend_shape_bind_prop,
     get_ui_vrm0_blend_shape_material_prop,
 )

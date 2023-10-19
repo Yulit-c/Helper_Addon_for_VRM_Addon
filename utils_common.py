@@ -103,9 +103,7 @@ def set_attr_from_strings(object: object, attrs: str, value: Any):
             setattr(object, attr, value)
 
 
-def get_properties_to_dict(
-    source: object, property_names: Iterator[str]
-) -> dict[str, Any]:
+def get_properties_to_dict(source: object, property_names: Iterator[str]) -> dict[str, Any]:
     """
     'property_names'で指定した属性を'source'から取得し､それらの値を辞書に格納して帰す｡
 
@@ -279,9 +277,7 @@ def get_bones_for_each_branch_from_source_bones(
     """
 
     # 処理対象となるボーンを､枝毎にグルーピングされた状態で取得する｡
-    branch_root_bones = list(
-        {y for x in source_bones if (y := get_branch_root_bone(x))}
-    )
+    branch_root_bones = list({y for x in source_bones if (y := get_branch_root_bone(x))})
     sort_order = [i.name for i in target_armature.data.bones if i in branch_root_bones]
     branch_root_bones.sort(key=lambda x: sort_order.index(x.name))
 
@@ -296,9 +292,7 @@ def get_bones_for_each_branch_from_source_bones(
 ---------------------------------------------------------"""
 
 
-def link_object2collection(
-    target_object: bpy.types.Object, dest_collection: bpy.types.Collection
-):
+def link_object2collection(target_object: bpy.types.Object, dest_collection: bpy.types.Collection):
     """
     'Target_object'のオブジェクトを'dest_collection'のコレクションにリンクさせる｡
 
@@ -415,6 +409,9 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
 
     root = get_addon_collection_name("ROOT")
     vrm0_root = get_addon_collection_name("VRM0_ROOT")
+    vrm0_collider = get_addon_collection_name("VRM0_COLLIDER")
+    vrm0_blend_shape_morph = get_addon_collection_name("VRM0_BLENDSHAPE_MORPH")
+    vrm0_blend_shape_material = get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
     vrm1_root = get_addon_collection_name("VRM1_ROOT")
     vrm1_collider = get_addon_collection_name("VRM1_COLLIDER")
     vrm1_expression_morph = get_addon_collection_name("VRM1_EXPRESSION_MORPH")
@@ -436,6 +433,18 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
     vrm0_root_collection = create_or_get_collection_and_link_to_dest(
         vrm0_root,
         addon_root_collection.name,
+    )
+
+    vrm0_collider_collection = create_or_get_collection_and_link_to_dest(
+        vrm0_collider, addon_root_collection.name
+    )
+
+    vrm0_blend_shape_morph_collection = create_or_get_collection_and_link_to_dest(
+        vrm0_blend_shape_morph, addon_root_collection.name
+    )
+
+    vrm0_blend_shape_material_collection = create_or_get_collection_and_link_to_dest(
+        vrm0_blend_shape_material, addon_root_collection.name
     )
 
     # ----------------------------------------------------------
@@ -464,6 +473,9 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
     vrm_helper_collection_dict: VRMHelper_Addon_Collection_Dict = {
         "ROOT": addon_root_collection,
         "VRM0_Root": vrm0_root_collection,
+        "VRM0_COLLIDER": vrm0_collider_collection,
+        "VRM0_BLEND_SHAPE_MORPH": vrm0_blend_shape_morph_collection,
+        "VRM0_BLEND_SHAPE_MATERIAL": vrm0_blend_shape_material_collection,
         "VRM1_Root": vrm1_root_collection,
         "VRM1_COLLIDER": vrm1_collider_collection,
         "VRM1_EXPRESSION_MORPH": vrm1_expression_morph_collection,
@@ -495,11 +507,7 @@ def get_all_materials_from_source_collection_objects(
         取得されたマテリアルを格納した集合｡
 
     """
-    all_materials = {
-        slot.material
-        for obj in source_collection.all_objects
-        for slot in obj.material_slots
-    }
+    all_materials = {slot.material for obj in source_collection.all_objects for slot in obj.material_slots}
 
     return all_materials
 

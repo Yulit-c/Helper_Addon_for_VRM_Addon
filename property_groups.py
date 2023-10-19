@@ -2229,7 +2229,7 @@ def get_scene_vrm0_blend_shape_prop() -> VRMHELPER_SCENE_vrm0_blend_shape_settin
     return blend_shape_prop
 
 
-def get_scene_vrm0_mtoon_prop() -> VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters:
+def get_scene_vrm0_mtoon_stored_prop() -> VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters:
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     mtoon_prop = scene_vrm0_prop.mtoon0_stored_parameters
     return mtoon_prop

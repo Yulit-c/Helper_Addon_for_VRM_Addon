@@ -439,6 +439,9 @@ class ReferenceVrmAddonArmatureExtensionPropertyGroup:
 class VRMHelper_Addon_Collection_Dict(TypedDict):
     ROOT: bpy.types.Collection
     VRM0_Root: bpy.types.Collection
+    VRM0_COLLIDER: bpy.types.Collection
+    VRM0_BLEND_SHAPE_MORPH: bpy.types.Collection
+    VRM0_BLEND_SHAPE_MATERIAL: bpy.types.Collection
     VRM1_Root: bpy.types.Collection
     VRM1_COLLIDER: bpy.types.Collection
     VRM1_EXPRESSION_MORPH: bpy.types.Collection

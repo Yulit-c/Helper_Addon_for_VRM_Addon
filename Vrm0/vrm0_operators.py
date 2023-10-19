@@ -61,6 +61,7 @@ from ..property_groups import (
     get_vrm0_wm_root_prop,
     get_vrm0_scene_root_prop,
     get_scene_vrm0_blend_shape_prop,
+    get_scene_vrm0_mtoon_stored_prop,
     # ----------------------------------------------------------
     get_ui_vrm0_first_person_prop,
     get_ui_vrm0_blend_shape_material_prop,
@@ -547,18 +548,48 @@ class VRMHELPER_OT_vrm0_blend_shape_change_bind_material(VRMHELPER_vrm0_blend_sh
         return {"FINISHED"}
 
     def execute(self, context):
-        self.report({"INFO"}, f"{self.material_name}")
-
         blend_shapes = get_active_blend_shape()
         mat_values = blend_shapes.material_values
         active_value = vrm0_get_active_material_value_in_ui()
         old_material_name = active_value.material_name
         old_material = bpy.data.materials.get(old_material_name)
 
-        # アクティブアイテムがラベルであるかMaterial Valueであるかに応じて処理対象のグループを決定する｡
+        # ラベル名に対応するマテリアルを参照している全てのMaterial ValueのMaterialを変更する｡
         target_values = {value for value in mat_values if value.material == old_material}
 
-        [logger.debug(i.material) for i in target_values]
+        new_material = bpy.data.materials.get(self.material_name)
+        for value in target_values:
+            value.material = new_material
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters(
+    VRMHELPER_vrm0_blend_shape_sub
+):
+    bl_idname = "vrm_helper.vrm0_blend_shape_store_mtoon0_parameters"
+    bl_label = "Store MToon0 Parameters"
+    bl_description = "Obtains and stores the current parameters of Mtoon0"
+    bl_options = {"UNDO"}
+
+
+    @classmethod
+    def poll(cls, context):
+        # 1つ以上のオブジェクトがリンクされた'VRM0 'のコレクションが存在する｡
+        return (
+            c := bpy.data.collections.get(
+                get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
+            )
+        ) and c.all_objects
+
+    def execute(self, context):
+        os.system("cls")
+        source_collection = bpy.data.collections.get(
+            get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
+        )
+        mtoon1_stored_parameters = get_scene_vrm0_mtoon_stored_prop()
+        mtoon1_stored_parameters.clear()
+
 
         return {"FINISHED"}
 

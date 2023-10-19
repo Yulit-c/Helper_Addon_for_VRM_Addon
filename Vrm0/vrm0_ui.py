@@ -78,7 +78,7 @@ from .utils_vrm0_first_person import (
 )
 
 from .utils_vrm0_blend_shape import (
-    get_scene_vrm0_mtoon_prop,
+    get_scene_vrm0_mtoon_stored_prop,
     vrm0_get_source_vrm0_blend_shape_bind4ui_list,
     vrm0_get_source_vrm0_blend_shape_material4ui_list,
     get_ui_vrm0_blend_shape_bind_prop,
