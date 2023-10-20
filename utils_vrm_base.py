@@ -108,7 +108,7 @@ logger = preparating_logger(__name__)
 
 def evaluation_expression_morph_collection() -> bool:
     """
-    # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Morph'のコレクションが
+    # 1つ以上のオブジェクトがリンクされた'VRM0 BlendShape ','VRM1 Expression Morph'のコレクションが
     # 存在するか否かを判定する｡
 
     Returns
@@ -858,8 +858,29 @@ def serach_vrm_shader_node(
 def check_vrm_material_mode(
     material: bpy.types.Material,
 ) -> Literal["GLTF", "MTOON", "NONE"]:
+    """
+    引数"material"がVRM Extensionにおいてどのタイプのマテリアルとして扱われるかをチェックする｡
+
+
+    Parameters
+    ----------
+    material: bpy.types.Material
+        処理対象のマテリアル｡
+
+    Returns
+    -------
+    Literal["GLTF", "MTOON", "NONE"]
+        マテリアルの設定に応じたタイプを文字列として返す｡
+
+    """
+
     if not material:
         return "NONE"
+
+    mat_vrm_ext = material.vrm_addon_extension
+    if mat_vrm_ext != None:
+        if mat_vrm_ext.mtoon1.enabled:
+            return "MTOON"
 
     if vrm_node := serach_vrm_shader_node(material):
         if vrm_node.node_tree["SHADER"] == "MToon_unversioned":

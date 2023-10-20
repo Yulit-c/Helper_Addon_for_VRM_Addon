@@ -103,6 +103,7 @@ from .utils_vrm0_blend_shape import (
     get_ui_vrm0_blend_shape_bind_prop,
     vrm0_get_active_bind_in_ui,
     vrm0_get_active_material_value_in_ui,
+    search_existing_bind_and_update,
 )
 
 from ..operators import (
@@ -414,6 +415,9 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(VRMHELPER_vrm0_blend
                     blend_shape_group_index=active_index,
                 )
 
+        type = self.mode_dict[self.mode]
+        self.offset_active_item_index(type)
+
         return {"FINISHED"}
 
 
@@ -640,12 +644,52 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
 
     @classmethod
     def poll(cls, context):
-        morph_condition = evaluation_blend_shape_morph_collection()
-        mat_condition = evaluation_blend_shape_morph_collection()
+        morph_condition = evaluation_expression_morph_collection()
+        mat_condition = evaluation_expression_morph_collection()
         return morph_condition and mat_condition
 
     def execute(self, context):
         os.system("cls")
+        active_blend_shape = get_active_blend_shape()
+        # ----------------------------------------------------------
+        #    Binds
+        # ----------------------------------------------------------
+        binds = active_blend_shape.binds
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MORPH"))
+
+        for obj in source_collection.all_objects:
+            # オブジェクトのメッシュデータに2つ以上のキーブロックを持ったシェイプキーが存在する｡
+            if not (sk := obj.data.shape_keys) and len(sk.key_blocks) <= 1:
+                continue
+
+            logger.debug(f"###\n{'':#>100}\nCurrent Processed Object : {obj.name}\n{'':#>100}")
+            for shape_key in (k for k in sk.key_blocks if k != sk.reference_key):
+                # objとシェイプキーのペアがMorph Target Bindに登録済みであればシェイプキーの現在の値に更新する｡
+                # 値が0だった場合はBindを削除する｡
+                is_existing_bind = search_existing_bind_and_update(
+                    obj,
+                    shape_key,
+                    binds,
+                )
+
+                # objとシェイプキーのペアがBindに未登録かつシェイプキーの値が0超過であった場合は新規登録する｡
+                if not is_existing_bind:
+                    if shape_key.value == 0:
+                        continue
+                    logger.debug(f"Registered New Bind -- {obj.name} : {shape_key.name}")
+                    new_bind: ReferenceVrm0BlendShapeBindPropertyGroup = binds.add()
+                    new_bind.mesh.mesh_object_name = obj.name
+                    new_bind.index = shape_key.name
+                    new_bind.weight = shape_key.value
+
+        self.offset_active_item_index(self.mode_dict["BIND"])
+
+        # ----------------------------------------------------------
+        #    Material Values
+        # ----------------------------------------------------------
+        aaaaaa
+
+        return {"FINISHED"}
 
 
 """---------------------------------------------------------
@@ -678,4 +722,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
+    VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
 )

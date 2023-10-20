@@ -436,15 +436,15 @@ def setting_vrm_helper_collection() -> VRMHelper_Addon_Collection_Dict:
     )
 
     vrm0_collider_collection = create_or_get_collection_and_link_to_dest(
-        vrm0_collider, addon_root_collection.name
+        vrm0_collider, vrm0_root_collection.name
     )
 
     vrm0_blend_shape_morph_collection = create_or_get_collection_and_link_to_dest(
-        vrm0_blend_shape_morph, addon_root_collection.name
+        vrm0_blend_shape_morph, vrm0_root_collection.name
     )
 
     vrm0_blend_shape_material_collection = create_or_get_collection_and_link_to_dest(
-        vrm0_blend_shape_material, addon_root_collection.name
+        vrm0_blend_shape_material, vrm0_root_collection.name
     )
 
     # ----------------------------------------------------------

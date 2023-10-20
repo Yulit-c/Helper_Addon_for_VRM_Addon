@@ -956,7 +956,7 @@ class VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene(VRMHELPER_vrm1_expr
         # ----------------------------------------------------------
         #    Morph Target Bind
         # ----------------------------------------------------------
-        morph_target_binds = get_active_expression().morph_target_binds
+        morph_target_binds = active_expression.morph_target_binds
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MORPH"))
 
         for obj in source_collection.all_objects:

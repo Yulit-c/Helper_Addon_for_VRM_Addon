@@ -257,11 +257,6 @@ def vrm0_add_items2blend_shape_material_ui_list() -> int:
             target_item.is_locked_uv_offset = True
 
             # マテリアルがMToonである場合はタグ付け
-            mat_vrm_ext = mat_value.material.vrm_addon_extension if mat_value.material else None
-            if mat_vrm_ext != None:
-                if mat_vrm_ext.mtoon1.enabled:
-                    target_item.material_type = "MTOON"
-
             target_item.material_type = check_vrm_material_mode(mat_value.material)
 
             # マテリアルが参照されていない場合のタグ付け
@@ -309,6 +304,87 @@ def vrm0_add_items2blend_shape_material_ui_list() -> int:
     return len(items)
 
 
+# ----------------------------------------------------------
+#    Bind
+# ----------------------------------------------------------
+def get_same_value_existing_bind(
+    obj_name: str, shape_key_name: str
+) -> Optional[ReferenceVrm0BlendShapeBindPropertyGroup]:
+    """
+    アクティブエクスプレションのMorph Target Bindの中から
+    2つの引数と同じ値が設定されたものを走査して取得する｡
+
+    Parameters
+    ----------
+    obj_name : str
+        検索対象のオブジェクト名
+    shape_key_name : str
+        検索対象のシェイプキー名
+
+    Returns
+    -------
+    Optional[ReferenceVrm1MorphTargetBindPropertyGroup]
+        'mesh_object_name'と'indes'の値が引数と同じMorpht Target Bind｡
+        該当データがなければNone｡
+    """
+
+    active_blend_shape = get_active_blend_shape()
+    for bind in active_blend_shape.binds:
+        bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
+        if bind.mesh.mesh_object_name == obj_name and bind.index == shape_key_name:
+            return bind
+    return None
+
+
+def search_existing_bind_and_update(
+    source_object: bpy.types.Object,
+    source_shape_key: bpy.types.ShapeKey,
+    binds: bpy.types.bpy_prop_collection,
+) -> bool:
+    """
+    'binds'内に'source_object'と'source_shape_key'のペアが登録されたBindが
+    存在するか否かを走査し､存在する場合値の更新する｡値が0の場合はBindの削除を行なう｡
+    また､存在したか否かの判定を返す｡
+
+    Parameters
+    ----------
+    source_object : Object
+        検索対象のオブジェクト
+    source_shape_key : ShapeKey
+        検索対象のシェイプキー
+    binds : bpy_prop_collection
+        処理対象となるBinds
+
+    Returns
+    -------
+    bool
+        該当するMorph Bindが存在した場合はTrue,存在しなかった場合はFalse｡
+    """
+
+    if morph_bind := get_same_value_existing_bind(source_object.name, source_shape_key.name):
+        if source_shape_key.value == 0:
+            logger.debug(f"Remove 0 Value morph_Bind : {morph_bind.index}")
+            binds.remove(list(binds).index(morph_bind))
+
+        else:
+            if morph_bind.weight == source_shape_key.value:
+                logger.debug(f"Same Value : {morph_bind.index} : {morph_bind.weight}")
+            else:
+                logger.debug(
+                    f"Updated : {morph_bind.index} : {morph_bind.weight} -->> {source_shape_key.value}"
+                )
+                morph_bind.weight = source_shape_key.value
+
+        return True
+
+    return False
+
+
+# ----------------------------------------------------------
+#    Material
+# ----------------------------------------------------------
+
+
 def vrm0_get_active_material_value_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_shape_material_list_items]:
     """
     Material ValueのUI List内でアクティブになっている要素を返す｡UI Listがからの場合はNoneを返す
@@ -325,10 +401,3 @@ def vrm0_get_active_material_value_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_s
     active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
     active_value = material_value_ui_list[active_index]
     return active_value
-
-
-# ----------------------------------------------------------
-#    MToon
-# ----------------------------------------------------------
-def set_mtoon_default_values():
-    pass

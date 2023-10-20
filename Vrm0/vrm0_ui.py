@@ -117,6 +117,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
+    VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
 )
 
 """
@@ -416,8 +417,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
     col = box_op_bottom.column(align=True)
     col.scale_y = 1.2
     col.operator(
-        # VRMHELPER_OT_vrm1_expression_set_both_binds_from_scene.bl_idname,
-        VRMHELPER_OT_empty_operator.bl_idname,
+        VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene.bl_idname,
         text="Set Binds from Scene",
     )
 
