@@ -554,9 +554,10 @@ class MToon1ParameterNames(TypedDict):
     outline_color: str
 
 
-class MToon1MaterialParameters(TypedDict, total=False):
+class MToonMaterialParameters(TypedDict, total=False):
     texture_scale: list[float]
     texture_offset: list[float]
+    color: list[float]
     lit_color: list[float]
     shade_color: list[float]
     emission_color: list[float]

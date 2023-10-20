@@ -330,5 +330,5 @@ def vrm0_get_active_material_value_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_s
 # ----------------------------------------------------------
 #    MToon
 # ----------------------------------------------------------
-def set_mtoon0_default_values():
+def set_mtoon_default_values():
     pass

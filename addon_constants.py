@@ -3,7 +3,7 @@ from typing import Literal
 from .addon_classes import (
     MToon0ParameterNames,
     MToon1ParameterNames,
-    MToon1MaterialParameters,
+    MToonMaterialParameters,
 )
 
 
@@ -213,7 +213,18 @@ MTOON1_ATTRIBUTE_NAMES: MToon1ParameterNames = {
     "outline_color": "extensions.vrmc_materials_mtoon.outline_color_factor",
 }
 
-MTOON1_DEFAULT_VALUES: MToon1MaterialParameters = {
+MTOON0_DEFAULT_VALUES: MToonMaterialParameters = {
+    "texture_scale": [1.0, 1.0],
+    "texture_offset": [0.0, 0.0],
+    "color": [1.0, 1.0, 1.0, 1.0],
+    "shade_color": [1.0, 1.0, 1.0],
+    "emission_color": [0.0, 0.0, 0.0],
+    "rim_color": [0.0, 0.0, 0.0],
+    "outline_color": [0.0, 0.0, 0.0],
+}
+
+
+MTOON1_DEFAULT_VALUES: MToonMaterialParameters = {
     "texture_scale": [1.0, 1.0],
     "texture_offset": [0.0, 0.0],
     "lit_color": [1.0, 1.0, 1.0, 1.0],

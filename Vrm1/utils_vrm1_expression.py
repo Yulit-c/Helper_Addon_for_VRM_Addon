@@ -74,7 +74,7 @@ from ..utils_common import (
 )
 
 from ..utils_vrm_base import (
-    MToon1MaterialParameters,
+    MToonMaterialParameters,
     MTOON1_ATTRIBUTE_NAMES,
     get_vrm1_extension_property_expression,
     get_mtoon_attr_name_from_bind_type,
@@ -104,9 +104,7 @@ logger = preparating_logger(__name__)
 # ----------------------------------------------------------
 #    Expressions
 # ----------------------------------------------------------
-def get_active_list_item_in_expression() -> (
-    Optional[VRMHELPER_WM_vrm1_expression_list_items]
-):
+def get_active_list_item_in_expression() -> Optional[VRMHELPER_WM_vrm1_expression_list_items]:
     """
     UIリスト内のアクティブアイテムを取得する｡カスタムエクスプレッションの判別に利用する｡
 
@@ -146,18 +144,13 @@ def get_source_vrm1_expression4ui_list() -> (
     # UI Listに表示する対象オブジェクトをリストに格納する｡
     # プリセットエクスプレッションのプロパティグループのフィールドから対応するエクスプレッションを取得する｡
     for name in preset_expressions.__annotations__.keys():
-        preset_expression: ReferenceVrm1ExpressionPropertyGroup = getattr(
-            preset_expressions, name
-        )
+        preset_expression: ReferenceVrm1ExpressionPropertyGroup = getattr(preset_expressions, name)
 
         # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
         has_any_morph_bind = True if preset_expression.morph_target_binds else False
         has_any_material_bind = (
             True
-            if (
-                preset_expression.material_color_binds
-                or preset_expression.texture_transform_binds
-            )
+            if (preset_expression.material_color_binds or preset_expression.texture_transform_binds)
             else False
         )
 
@@ -179,9 +172,7 @@ def get_source_vrm1_expression4ui_list() -> (
         # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
         has_any_morph_bind = True if custom_exp.morph_target_binds else False
         has_any_material_bind = (
-            True
-            if (custom_exp.material_color_binds or custom_exp.texture_transform_binds)
-            else False
+            True if (custom_exp.material_color_binds or custom_exp.texture_transform_binds) else False
         )
 
         # 取得した情報を格納した辞書を作成し､Custom Expressionのリストに加える｡
@@ -253,10 +244,7 @@ def add_items2expression_ui_list() -> int:
 
 
 def get_active_expression() -> (
-    Optional[
-        ReferenceVrm1ExpressionPropertyGroup
-        | ReferenceVrm1CustomExpressionPropertyGroup
-    ]
+    Optional[ReferenceVrm1ExpressionPropertyGroup | ReferenceVrm1CustomExpressionPropertyGroup]
 ):
     """
     エクスプレッションリストでアクティブになっているエクスプレッションを取得する｡
@@ -296,9 +284,7 @@ def get_source_vrm1_expression_morph4ui_list() -> (
     active_item = get_active_expression()
     morph_target_binds_dict = {}
     for n, morph_bind in enumerate(active_item.morph_target_binds):
-        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append(
-            (morph_bind, n)
-        )
+        morph_target_binds_dict.setdefault(morph_bind.node.mesh_object_name, []).append((morph_bind, n))
 
     return morph_target_binds_dict
 
@@ -356,10 +342,7 @@ def get_same_value_existing_morph_bind(
     """
 
     for morph_bind in get_active_expression().morph_target_binds:
-        if (
-            morph_bind.node.mesh_object_name == obj_name
-            and morph_bind.index == shape_key_name
-        ):
+        if morph_bind.node.mesh_object_name == obj_name and morph_bind.index == shape_key_name:
             return morph_bind
     return None
 
@@ -389,9 +372,7 @@ def search_existing_morph_bind_and_update(
         該当するMorph Bindが存在した場合はTrue,存在しなかった場合はFalse｡
     """
 
-    if morph_bind := get_same_value_existing_morph_bind(
-        source_object.name, source_shape_key.name
-    ):
+    if morph_bind := get_same_value_existing_morph_bind(source_object.name, source_shape_key.name):
         if source_shape_key.value == 0:
             logger.debug(f"Remove 0 Value morph_Bind : {morph_bind.index}")
             morph_target_binds.remove(list(morph_target_binds).index(morph_bind))
@@ -553,7 +534,7 @@ def get_same_type_material_color_bind(
 def search_existing_material_color_bind_and_update(
     source_material: Material,
     material_color_binds: bpy_prop_collection,
-) -> MToon1MaterialParameters:
+) -> MToonMaterialParameters:
     """
     'material_color_binds'内に'source_material'と関連付けられたColor Bindが
     存在するか否かを走査し､存在する場合値の更新する｡値が初期値の場合はColor Bindの削除を行なう｡
@@ -569,7 +550,7 @@ def search_existing_material_color_bind_and_update(
 
     Returns
     -------
-    MToon1MaterialParameters
+    MToonMaterialParameters
         'source_material'に設定されたMToonパラメーターの値を格納した辞書｡
         MToonパラメーターが初期値の場合は値がNoneになる｡
 
@@ -580,11 +561,7 @@ def search_existing_material_color_bind_and_update(
     # 既に登録されているMaterial Color Bindがある場合は値の更新/削除を行なう｡
     for bind_type in mtoon_parameters_dict.keys():
         converted_bind_type = convert_str2color_bind_type(bind_type)
-        if not (
-            same_type_bind := get_same_type_material_color_bind(
-                source_material, converted_bind_type
-            )
-        ):
+        if not (same_type_bind := get_same_type_material_color_bind(source_material, converted_bind_type)):
             continue
 
         # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
@@ -607,9 +584,7 @@ def search_existing_material_color_bind_and_update(
             if list(target_value) == current_value:
                 logger.debug(f"Same Value : {same_type_bind}")
             else:
-                logger.debug(
-                    f"Updated : {source_material} : {list(target_value)} -->> {current_value}"
-                )
+                logger.debug(f"Updated : {source_material} : {list(target_value)} -->> {current_value}")
                 setattr(same_type_bind, attr_name, current_value)
             mtoon_parameters_dict[bind_type] = None
 
@@ -673,7 +648,7 @@ def get_same_material_texture_transform_bind(
 def search_existing_texture_transform_bind_and_update(
     source_material: Material,
     texture_transform_binds: bpy_prop_collection,
-) -> MToon1MaterialParameters | None:
+) -> MToonMaterialParameters | None:
     """
     'texture_transform_binds'内に'source_material'と関連付けられたColor Bindが
     存在するか否かを走査し､存在する場合値の更新する｡値が初期値の場合はColor Bindの削除を行なう｡
@@ -689,7 +664,7 @@ def search_existing_texture_transform_bind_and_update(
 
     Returns
     -------
-    MToon1MaterialParameters
+    MToonMaterialParameters
         'source_material'に設定されたMToonパラメーターと値を格納した辞書｡
         MToonパラメーターが初期値の場合はNoneを返す｡
     """
@@ -698,16 +673,11 @@ def search_existing_texture_transform_bind_and_update(
     logger.debug(mtoon_parameters_dict)
 
     # 既に登録されているTexture Transform Bindがある場合は値の更新/削除を行なう｡
-    if not (
-        same_material_bind := get_same_material_texture_transform_bind(source_material)
-    ):
+    if not (same_material_bind := get_same_material_texture_transform_bind(source_material)):
         return mtoon_parameters_dict
 
     # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
-    if not (
-        mtoon_parameters_dict["texture_scale"]
-        or mtoon_parameters_dict["texture_offset"]
-    ):
+    if not (mtoon_parameters_dict["texture_scale"] or mtoon_parameters_dict["texture_offset"]):
         logger.debug(f"Remove Texture Transform Bind : {source_material.name}")
         remove_target_index = list(texture_transform_binds).index(same_material_bind)
         texture_transform_binds.remove(remove_target_index)
@@ -726,9 +696,7 @@ def search_existing_texture_transform_bind_and_update(
                 continue
 
             converted_parameter_name = convert_str2transform_bind_type(parameter)
-            logger.debug(
-                f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}"
-            )
+            logger.debug(f"Updated : {converted_parameter_name} : {old_value[parameter]} -->> {new_value}")
             setattr(same_material_bind, converted_parameter_name, new_value)
 
         mtoon_parameters_dict = None
@@ -783,9 +751,5 @@ def set_mtoon1_texture_transform_from_bind(
     # offset_value = [i * -1 for i in transform_bind.offset]
     offset_value = transform_bind.offset
 
-    set_attr_from_strings(
-        mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale
-    )
-    set_attr_from_strings(
-        mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"], offset_value
-    )
+    set_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale)
+    set_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"], offset_value)

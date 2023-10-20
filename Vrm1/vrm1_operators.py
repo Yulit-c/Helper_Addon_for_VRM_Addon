@@ -101,7 +101,7 @@ from ..utils_vrm_base import (
     get_bones_for_each_branch_by_type,
     reset_shape_keys_value_in_morph_binds,
     store_mtoon_current_values,
-    set_mtoon1_default_values,
+    set_mtoon_default_values,
     re_link_all_collider_object2collection,
 )
 
@@ -928,7 +928,7 @@ class VRMHELPER_OT_vrm1_expression_restore_mtoon1_parameters(VRMHELPER_vrm1_expr
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
 
         for mat in get_all_materials_from_source_collection_objects(source_collection):
-            set_mtoon1_default_values(mat)
+            set_mtoon_default_values(mat)
 
         # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
@@ -1097,7 +1097,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(VRMHELPER_vrm1_exp
         ):
             # 対象コレクション内のすべてのオブジェクトが持つマテリアルにパラメーターの復元処理を行う｡
             for mat in get_all_materials_from_source_collection_objects(source_collection_mat):
-                set_mtoon1_default_values(mat)
+                set_mtoon_default_values(mat)
 
             # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
@@ -1149,7 +1149,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
                 if not mat:
                     continue
                 logger.debug(f"Reset Values : {mat.name}")
-                set_mtoon1_default_values(mat)
+                set_mtoon_default_values(mat)
 
         bpy.ops.vrm_helper.vrm1_expression_restore_mtoon1_parameters()
         # ----------------------------------------------------------

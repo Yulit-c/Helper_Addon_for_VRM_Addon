@@ -89,6 +89,7 @@ from ..utils_vrm_base import (
     get_vrm0_extension_active_blend_shape_group,
     reset_shape_keys_value_in_morph_binds,
     store_mtoon_current_values,
+    set_mtoon_default_values,
 )
 
 from .utils_vrm0_first_person import (
@@ -370,7 +371,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
                 continue
             logger.debug(f"Reset Values : {mat.name}")
             # TODO : Material Valueの設定
-            # set_mtoon0_default_values(mat)
+            # set_mtoon_default_values(mat)
 
         return {"FINISHED"}
 
@@ -593,6 +594,60 @@ class VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters(VRMHELPER_vrm0_blend
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_discard_stored_mtoon0_parameters"
+    bl_label = "Discard Stored MToon1 Parameters"
+    bl_description = "Discard stored parameters of Mtoon0"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return get_scene_vrm0_mtoon_stored_prop()
+
+    def execute(self, context):
+        get_scene_vrm0_mtoon_stored_prop().clear()
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_restore_mtoon0_parameters"
+    bl_label = "Restore MToon1 Parameters"
+    bl_description = "Restore stored parameters of Mtoon1"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            c := bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
+        ) and c.all_objects
+
+    def execute(self, context):
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
+
+        for mat in get_all_materials_from_source_collection_objects(source_collection):
+            set_mtoon_default_values(mat)
+
+        # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_set_both_binds_from_scene"
+    bl_label = "Set Both Binds from Scene"
+    bl_description = "Set Morph/Material Binds from the scene"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        morph_condition = evaluation_blend_shape_morph_collection()
+        mat_condition = evaluation_blend_shape_morph_collection()
+        return morph_condition and mat_condition
+
+    def execute(self, context):
+        os.system("cls")
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -621,4 +676,6 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_bind_or_material_clear,
     VRMHELPER_OT_vrm0_blend_shape_change_bind_material,
     VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
+    VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
+    VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
 )

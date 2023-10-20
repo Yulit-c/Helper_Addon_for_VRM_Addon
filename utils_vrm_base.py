@@ -42,7 +42,7 @@ from .addon_classes import (
     ReferenceVrm0BlendShapeMasterPropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     # ----------------------------------------------------------
-    MToon1MaterialParameters,
+    MToonMaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
@@ -60,6 +60,7 @@ from .addon_classes import (
 from .addon_constants import (
     MTOON0_ATTRIBUTE_NAMES,
     MTOON1_ATTRIBUTE_NAMES,
+    MTOON0_DEFAULT_VALUES,
     MTOON1_DEFAULT_VALUES,
 )
 
@@ -71,6 +72,7 @@ from .property_groups import (
     get_target_armature,
     get_target_armature_data,
     get_ui_vrm1_operator_bone_group_prop,
+    get_scene_vrm0_mtoon_stored_prop,
     get_scene_vrm1_mtoon_stored_prop,
 )
 
@@ -592,7 +594,7 @@ def store_mtoon_current_values(
 
 def get_mtoon1_default_values(
     source_material: Material,
-) -> MToon1MaterialParameters:
+) -> MToonMaterialParameters:
     """
     'source_material'の保存済みデフォルト値を取得する｡保存データが存在しない場合は
     MToonマテリアルが定義したデフォルト値を取得して辞書として返す｡
@@ -604,7 +606,7 @@ def get_mtoon1_default_values(
 
     Returns
     -------
-    MToon1MaterialParameters
+    MToonMaterialParameters
         取得したパラメーターとパラメーター名のペアを格納した辞書｡
 
     """
@@ -637,7 +639,7 @@ def get_mtoon1_default_values(
         default_rim_factor = MTOON1_DEFAULT_VALUES["rim_color"]
         default_outline_factor = MTOON1_DEFAULT_VALUES["outline_color"]
 
-    obtained_default_parameters: MToon1MaterialParameters = {
+    obtained_default_parameters: MToonMaterialParameters = {
         "texture_scale": list(default_texture_scale),
         "texture_offset": list(default_texture_offset),
         "lit_color": list(default_lit_factor),
@@ -653,7 +655,7 @@ def get_mtoon1_default_values(
 
 def get_mtoon_color_current_parameters(
     source_material: Material,
-) -> MToon1MaterialParameters:
+) -> MToonMaterialParameters:
     """
     'source_material'の現在のMToonパラメーターからMaterial Colorの値を取得して辞書として返す｡
     保存済みのパラメーターと比較して変化がない場合は保存済みのパラメーターを返す｡
@@ -665,7 +667,7 @@ def get_mtoon_color_current_parameters(
 
     Returns
     -------
-    MToon1MaterialParameters
+    MToonMaterialParameters
         取得したパラメーターとパラメーター名のペアを格納した辞書｡
 
     """
@@ -705,7 +707,7 @@ def get_mtoon_color_current_parameters(
     )
     #####################################################################################################
 
-    obtained_mtoon1_color_parameters: MToon1MaterialParameters = {
+    obtained_mtoon1_color_parameters: MToonMaterialParameters = {
         "lit_color": color_factor,
         "shade_color": shade_color_factor,
         "emission_color": emissive_color_factor,
@@ -719,7 +721,7 @@ def get_mtoon_color_current_parameters(
 
 def get_mtoon_transform_current_parameters(
     source_material: Material,
-) -> MToon1MaterialParameters:
+) -> MToonMaterialParameters:
     """
     'source_material'の現在のMToonパラメーターからTexture Transformの値を取得して辞書として返す｡
     保存済みのパラメーターと比較して変化がない場合は保存済みのパラメーターを返す｡
@@ -731,7 +733,7 @@ def get_mtoon_transform_current_parameters(
 
     Returns
     -------
-    MToon1MaterialParameters
+    MToonMaterialParameters
         取得したパラメーターとパラメーター名のペアを格納した辞書｡
 
     """
@@ -763,7 +765,7 @@ def get_mtoon_transform_current_parameters(
     )
     #####################################################################################################
 
-    obtained_mtoon1_transform_parameters: MToon1MaterialParameters = {
+    obtained_mtoon1_transform_parameters: MToonMaterialParameters = {
         "texture_scale": texture_scale,
         "texture_offset": texture_offset,
     }
@@ -771,20 +773,28 @@ def get_mtoon_transform_current_parameters(
     return obtained_mtoon1_transform_parameters
 
 
-def return_default_values_of_mtoon1_properties(target_material: Material):
+def return_default_values_of_mtoon_properties(target_material: Material):
     mtoon1 = target_material.vrm_addon_extension.mtoon1
+    addon_mode = check_addon_mode()
+    match addon_mode:
+        case "0":
+            attr_dict = MTOON0_ATTRIBUTE_NAMES
+            value_dict = MTOON0_DEFAULT_VALUES
+        case "1":
+            attr_dict = MTOON1_ATTRIBUTE_NAMES
+            value_dict = MTOON1_DEFAULT_VALUES
 
     for (
         parameter_name,
         attr_name,
-    ) in MTOON1_ATTRIBUTE_NAMES.items():
-        default_value = MTOON1_DEFAULT_VALUES.get(parameter_name)
+    ) in attr_dict.items():
+        default_value = value_dict.get(parameter_name)
         set_attr_from_strings(mtoon1, attr_name, default_value)
 
 
-def set_mtoon1_default_values(target_material: Material):
+def set_mtoon_default_values(target_material: Material):
     """
-    コレクションプロパティに保存された値を用いて､"targett_material"のMToon1パラメーターを復元する｡
+    コレクションプロパティに保存された値を用いて､"targett_material"のMToonパラメーターを復元する｡
     保存された値がない場合は規定のデフォルト値を復元する｡
 
     Parameters
@@ -796,18 +806,27 @@ def set_mtoon1_default_values(target_material: Material):
     if not target_material:
         return
 
-    stored_material_dict = {i.material: i for i in get_scene_vrm1_mtoon_stored_prop()}
+    addon_mode = check_addon_mode()
+    match addon_mode:
+        case "0":
+            attr_dict = MTOON0_ATTRIBUTE_NAMES
+            stored_prop = get_scene_vrm0_mtoon_stored_prop()
+        case "1":
+            attr_dict = MTOON1_ATTRIBUTE_NAMES
+            stored_prop = get_scene_vrm1_mtoon_stored_prop()
+
+    stored_material_dict = {i.material: i for i in stored_prop}
     source_patameters = stored_material_dict.get(target_material)
 
-    mtoon1 = target_material.vrm_addon_extension.mtoon1
-    for stored_parameter_name, mtoon1_attr_name in MTOON1_ATTRIBUTE_NAMES.items():
+    mtoon_ext = target_material.vrm_addon_extension.mtoon1
+    for stored_parameter_name, mtoon_attr_name in attr_dict.items():
         if source_patameters:
             value = source_patameters.get(stored_parameter_name)
             logger.debug(f"Restore Stored Values : {target_material.name}")
-            set_attr_from_strings(mtoon1, mtoon1_attr_name, value)
+            set_attr_from_strings(mtoon_ext, mtoon_attr_name, value)
         else:
             logger.debug(f"Return to Default Values : {target_material.name}")
-            return_default_values_of_mtoon1_properties(target_material)
+            return_default_values_of_mtoon_properties(target_material)
 
 
 # https://github.com/saturday06/VRM-Addon-for-Blender
