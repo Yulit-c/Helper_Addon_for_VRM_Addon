@@ -541,9 +541,7 @@ class VRMHELPER_OT_vrm1_expression_set_morph_from_scene(VRMHELPER_vrm1_expressio
     @classmethod
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Morph'のコレクションが存在する｡
-        return (
-            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MORPH"))
-        ) and c.all_objects
+        return evaluation_expression_morph_collection()
 
     def execute(self, context):
         morph_target_binds = get_active_expression().morph_target_binds
@@ -787,9 +785,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(VRMHELPER_vrm1_e
     @classmethod
     def poll(cls, context):
         # 1つ以上のオブジェクトがリンクされた'VRM1 Expression Material'のコレクションが存在する｡
-        return (
-            c := bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
-        ) and c.all_objects
+        return evaluation_expression_material_collection()
 
     def execute(self, context):
         os.system("cls")
@@ -799,7 +795,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(VRMHELPER_vrm1_e
         texture_transform_binds = active_expression.texture_transform_binds
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM1_EXPRESSION_MATERIAL"))
 
-        # ソースとなるマテリアルを取得する｡
+        # ソースとなるマテリアルを取得する(MToon指定されているもののみ)｡
         source_materials = {
             slot.material
             for obj in source_collection.all_objects
@@ -811,6 +807,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(VRMHELPER_vrm1_e
             return list(bpy.data.materials).index(element)
 
         source_materials = sorted(list(source_materials), key=get_index)
+
         for source_material in source_materials:
             logger.debug("\n\n")
             logger.debug(source_material.name)
@@ -1076,7 +1073,7 @@ class VRMHELPER_OT_vrm1_expression_restore_initial_parameters(VRMHELPER_vrm1_exp
     @classmethod
     def poll(cls, context):
         morph_condition = evaluation_expression_morph_collection()
-        mat_condition = evaluation_expression_morph_collection()
+        mat_condition = evaluation_expression_material_collection()
         return morph_condition or mat_condition
 
     def execute(self, context):

@@ -377,6 +377,9 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
         return {"FINISHED"}
 
 
+# ----------------------------------------------------------
+#   Bind or Material Values
+# ----------------------------------------------------------
 class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_bind_or_mat_create"
     bl_label = "Create  Item"
@@ -451,17 +454,20 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend
 
     def execute(self, context):
         target_armature = get_target_armature()
+        active_bind_item = vrm0_get_active_bind_in_ui()
+        active_mat_value_item = vrm0_get_active_material_value_in_ui()
         blend_shape_master = get_vrm0_extension_property_blend_shape()
         blend_shape_index = blend_shape_master.active_blend_shape_group_index
-        active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_master.blend_shape_groups[
-            blend_shape_index
-        ]
+        # active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_master.blend_shape_groups[
+        #     blend_shape_index
+        # ]
+
         # TODO : アクティブ要素がラベルであればそのラベルに属する要素を全て削除｡
         #        BindやMaterial Valueであればその一つを削除する｡
 
         match self.mode:
             case "BIND":
-                bind_index = active_blend_shape.active_bind_index
+                bind_index = active_bind_item.bind_index
                 bpy.ops.vrm.remove_vrm0_blend_shape_bind(
                     armature_name=target_armature.name,
                     blend_shape_group_index=blend_shape_index,
@@ -469,7 +475,7 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend
                 )
 
             case "MATERIAL":
-                value_index = active_blend_shape.active_material_value_index
+                value_index = active_mat_value_item.value_index
                 bpy.ops.vrm.remove_vrm0_material_value_bind(
                     armature_name=target_armature.name,
                     blend_shape_group_index=blend_shape_index,
@@ -636,24 +642,18 @@ class VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters(VRMHELPER_vrm0_ble
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_blend_shape_sub):
-    bl_idname = "vrm_helper.vrm0_blend_shape_set_both_binds_from_scene"
-    bl_label = "Set Both Binds from Scene"
-    bl_description = "Set Morph/Material Binds from the scene"
+class VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_set_bind_from_scene"
+    bl_label = "Set bind from Scene"
+    bl_description = "Set Bind Bind from the shape keys of the target objects on the scene"
     bl_options = {"UNDO"}
 
     @classmethod
     def poll(cls, context):
-        morph_condition = evaluation_expression_morph_collection()
-        mat_condition = evaluation_expression_morph_collection()
-        return morph_condition and mat_condition
+        return evaluation_expression_material_collection()
 
     def execute(self, context):
-        os.system("cls")
         active_blend_shape = get_active_blend_shape()
-        # ----------------------------------------------------------
-        #    Binds
-        # ----------------------------------------------------------
         binds = active_blend_shape.binds
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MORPH"))
 
@@ -684,10 +684,31 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
 
         self.offset_active_item_index(self.mode_dict["BIND"])
 
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_set_both_binds_from_scene"
+    bl_label = "Set Both Binds and Material Values from Scene"
+    bl_description = "Set Binds and Material Values from the scene"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        morph_condition = evaluation_expression_morph_collection()
+        mat_condition = evaluation_expression_material_collection()
+        return morph_condition and mat_condition
+
+    def execute(self, context):
+        os.system("cls")
+        # ----------------------------------------------------------
+        #    Binds
+        # ----------------------------------------------------------
+        bpy.ops.vrm_helper.vrm0_blend_shape_set_bind_from_scene()
+
         # ----------------------------------------------------------
         #    Material Values
         # ----------------------------------------------------------
-        aaaaaa
 
         return {"FINISHED"}
 
@@ -722,5 +743,6 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_store_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
+    VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
 )
