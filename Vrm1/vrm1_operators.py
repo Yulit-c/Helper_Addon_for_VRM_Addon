@@ -52,6 +52,7 @@ from mathutils import (
 )
 
 from ..addon_classes import (
+    ReferenceVrm1TextureTransformBindPropertyGroup,
     VRMHELPER_VRM1_joint_property,
 )
 
@@ -851,7 +852,7 @@ class VRMHELPER_OT_vrm1_expression_set_material_bind_from_scene(VRMHELPER_vrm1_e
                 logger.debug("condition 2")
                 continue
 
-            new_transform_bind = texture_transform_binds.add()
+            new_transform_bind: ReferenceVrm1TextureTransformBindPropertyGroup = texture_transform_binds.add()
             for parameter, value in mtoon_transform_parameters_dict.items():
                 if value:
                     converted_parameter_name = convert_str2transform_bind_type(parameter)

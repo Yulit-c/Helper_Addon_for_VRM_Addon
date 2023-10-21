@@ -592,11 +592,69 @@ def store_mtoon_current_values(
         setattr(target_item, name, value)
 
 
+def get_mtoon0_default_values(
+    source_material: Material,
+) -> MToonMaterialParameters:
+    """
+    'source_material'の保存済みMToon0デフォルト値を取得する｡保存データが存在しない場合は
+    MToonマテリアルが定義したデフォルト値を取得して辞書として返す｡
+
+    Parameters
+    ----------
+    source_material : Material
+        処理対象のマテリアル
+
+    Returns
+    -------
+    MToonMaterialParameters
+        取得したパラメーターとパラメーター名のペアを格納した辞書｡
+
+    """
+
+    stored_mtoon_parameters = None
+    if stored_mtoon1_parameters_list := [
+        i for i in get_scene_vrm0_mtoon_stored_prop() if i.material == source_material
+    ]:
+        stored_mtoon_parameters: VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters = (
+            stored_mtoon1_parameters_list[0]
+        )
+
+    if stored_mtoon_parameters:
+        default_texture_scale = stored_mtoon_parameters.texture_scale
+        default_texture_offset = stored_mtoon_parameters.texture_offset
+        default_color_factor = stored_mtoon_parameters.color
+        default_shade_factor = stored_mtoon_parameters.shade_color
+        default_emissive_factor = stored_mtoon_parameters.emission_color
+        default_rim_factor = stored_mtoon_parameters.rim_color
+        default_outline_factor = stored_mtoon_parameters.outline_color
+
+    else:
+        default_texture_scale = MTOON0_DEFAULT_VALUES["texture_scale"]
+        default_texture_offset = MTOON0_DEFAULT_VALUES["texture_offset"]
+        default_color_factor = MTOON0_DEFAULT_VALUES["color"]
+        default_shade_factor = MTOON0_DEFAULT_VALUES["shade_color"]
+        default_emissive_factor = MTOON0_DEFAULT_VALUES["emission_color"]
+        default_rim_factor = MTOON0_DEFAULT_VALUES["rim_color"]
+        default_outline_factor = MTOON0_DEFAULT_VALUES["outline_color"]
+
+    obtained_default_parameters: MToonMaterialParameters = {
+        "texture_scale": list(default_texture_scale),
+        "texture_offset": list(default_texture_offset),
+        "color": list(default_color_factor),
+        "shade_color": list(default_shade_factor),
+        "emission_color": list(default_emissive_factor),
+        "rim_color": list(default_rim_factor),
+        "outline_color": list(default_outline_factor),
+    }
+
+    return obtained_default_parameters
+
+
 def get_mtoon1_default_values(
     source_material: Material,
 ) -> MToonMaterialParameters:
     """
-    'source_material'の保存済みデフォルト値を取得する｡保存データが存在しない場合は
+    'source_material'の保存済みMToon1デフォルト値を取得する｡保存データが存在しない場合は
     MToonマテリアルが定義したデフォルト値を取得して辞書として返す｡
 
     Parameters
@@ -673,53 +731,137 @@ def get_mtoon_color_current_parameters(
     """
 
     mtoon1 = source_material.vrm_addon_extension.mtoon1
+    match check_addon_mode():
+        case "0":
+            # 保存済みのMToo1パラメーターが存在すれば取得する｡
+            mtoon0_default_value_dict = get_mtoon0_default_values(source_material)
 
-    # 保存済みのMToo1パラメーターが存在すれば取得する｡
-    default_value_dict = get_mtoon1_default_values(source_material)
+            # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
+            mtoon0_current_color_factor = list(get_attr_from_strings(mtoon1, MTOON0_ATTRIBUTE_NAMES["color"]))
+            mtoon0_current_shade_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"])
+            )
+            mtoon0_current_emissive_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"])
+            )
+            mtoon0_current_rim_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"])
+            )
+            mtoon0_current_outline_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"])
+            )
 
-    # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
-    current_lit_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["lit_color"]))
-    current_shade_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"]))
-    current_emissive_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"]))
-    current_matcap_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["matcap_color"]))
-    current_rim_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"]))
-    current_outline_factor = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"]))
-    #####################################################################################################
+            # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+            mtoon0_color_factor = (
+                mtoon0_current_color_factor
+                if mtoon0_current_color_factor != mtoon0_default_value_dict["color"]
+                else None
+            )
+            mtoon0_shade_color_factor = (
+                mtoon0_current_shade_factor
+                if mtoon0_current_shade_factor != mtoon0_default_value_dict["shade_color"]
+                else None
+            )
+            mtoon0_emissive_color_factor = (
+                mtoon0_current_emissive_factor
+                if mtoon0_current_emissive_factor != mtoon0_default_value_dict["emission_color"]
+                else None
+            )
+            mtoon0_rim_color_factor = (
+                mtoon0_current_rim_factor
+                if mtoon0_current_rim_factor != mtoon0_default_value_dict["rim_color"]
+                else None
+            )
+            mtoon0_outline_color_factor = (
+                mtoon0_current_outline_factor
+                if mtoon0_current_outline_factor != mtoon0_default_value_dict["outline_color"]
+                else None
+            )
 
-    # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
-    color_factor = current_lit_factor if current_lit_factor != default_value_dict["lit_color"] else None
+            # 取得した各パラメーターを格納した辞書を作成する｡
+            obtained_mtoon0_color_parameters: MToonMaterialParameters = {
+                "color": mtoon0_color_factor,
+                "shade_color": mtoon0_shade_color_factor,
+                "emission_color": mtoon0_emissive_color_factor,
+                "rim_color": mtoon0_rim_color_factor,
+                "outline_color": mtoon0_outline_color_factor,
+            }
+            return obtained_mtoon0_color_parameters
 
-    shade_color_factor = (
-        current_shade_factor if current_shade_factor != default_value_dict["shade_color"] else None
-    )
+        case "1":
+            # 保存済みのMToo1パラメーターが存在すれば取得する｡
+            mtoon1_default_value_dict = get_mtoon1_default_values(source_material)
 
-    emissive_color_factor = (
-        current_emissive_factor if current_emissive_factor != default_value_dict["emission_color"] else None
-    )
-    matcap_color_factor = (
-        current_matcap_factor if current_matcap_factor != default_value_dict["matcap_color"] else None
-    )
+            # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
+            mtoon1_current_lit_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["lit_color"])
+            )
+            mtoon1_current_shade_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["shade_color"])
+            )
+            mtoon1_current_emissive_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["emission_color"])
+            )
+            mtoon1_current_matcap_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["matcap_color"])
+            )
+            mtoon1_current_rim_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["rim_color"])
+            )
+            mtoon1_current_outline_factor = list(
+                get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["outline_color"])
+            )
 
-    rim_color_factor = current_rim_factor if current_rim_factor != default_value_dict["rim_color"] else None
+            # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+            mtoon1_lit_color_factor = (
+                mtoon1_current_lit_factor
+                if mtoon1_current_lit_factor != mtoon1_default_value_dict["lit_color"]
+                else None
+            )
 
-    outline_color_factor = (
-        current_outline_factor if current_outline_factor != default_value_dict["outline_color"] else None
-    )
-    #####################################################################################################
+            mtoon1_shade_color_factor = (
+                mtoon1_current_shade_factor
+                if mtoon1_current_shade_factor != mtoon1_default_value_dict["shade_color"]
+                else None
+            )
 
-    obtained_mtoon1_color_parameters: MToonMaterialParameters = {
-        "lit_color": color_factor,
-        "shade_color": shade_color_factor,
-        "emission_color": emissive_color_factor,
-        "matcap_color": matcap_color_factor,
-        "rim_color": rim_color_factor,
-        "outline_color": outline_color_factor,
-    }
+            mtoon1_emissive_color_factor = (
+                mtoon1_current_emissive_factor
+                if mtoon1_current_emissive_factor != mtoon1_default_value_dict["emission_color"]
+                else None
+            )
+            mtoon1_matcap_color_factor = (
+                mtoon1_current_matcap_factor
+                if mtoon1_current_matcap_factor != mtoon1_default_value_dict["matcap_color"]
+                else None
+            )
 
-    return obtained_mtoon1_color_parameters
+            mtoon1_rim_color_factor = (
+                mtoon1_current_rim_factor
+                if mtoon1_current_rim_factor != mtoon1_default_value_dict["rim_color"]
+                else None
+            )
+
+            mtoon1_outline_color_factor = (
+                mtoon1_current_outline_factor
+                if mtoon1_current_outline_factor != mtoon1_default_value_dict["outline_color"]
+                else None
+            )
+
+            # 取得した各パラメーターを格納した辞書を作成する｡
+            obtained_mtoon1_color_parameters: MToonMaterialParameters = {
+                "lit_color": mtoon1_lit_color_factor,
+                "shade_color": mtoon1_shade_color_factor,
+                "emission_color": mtoon1_emissive_color_factor,
+                "matcap_color": mtoon1_matcap_color_factor,
+                "rim_color": mtoon1_rim_color_factor,
+                "outline_color": mtoon1_outline_color_factor,
+            }
+
+            return obtained_mtoon1_color_parameters
 
 
-def get_mtoon_transform_current_parameters(
+def get_mtoon_uv_transform_current_parameters(
     source_material: Material,
 ) -> MToonMaterialParameters:
     """
@@ -738,39 +880,72 @@ def get_mtoon_transform_current_parameters(
 
     """
 
-    mtoon1 = source_material.vrm_addon_extension.mtoon1
+    mtoon_ext = source_material.vrm_addon_extension.mtoon1
 
-    # 保存済みのMToo1パラメーターが存在すれば取得する｡
-    default_value_dict = get_mtoon1_default_values(source_material)
+    match check_addon_mode():
+        case "0":
+            # 保存済みのMToo1パラメーターが存在すれば取得する｡
+            mtoon0_default_offset_dict = get_mtoon0_default_values(source_material)
 
-    # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
-    current_texture_offset = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"]))
-    # current_texture_offset = [abs(i) for i in current_texture_offset]
-    current_texture_scale = list(get_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"]))
-    #####################################################################################################
-    # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
-    default_offset = default_value_dict["texture_offset"]
-    texture_offset = (
-        current_texture_offset
-        if current_texture_offset != default_offset
-        # else default_offset
-        else None
-    )
-    default_scale = default_value_dict["texture_scale"]
-    texture_scale = (
-        current_texture_scale
-        if current_texture_scale != default_scale
-        # else default_scale
-        else None
-    )
-    #####################################################################################################
+            # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
+            mtoon0_current_texture_scale = list(
+                get_attr_from_strings(mtoon_ext, MTOON0_ATTRIBUTE_NAMES["texture_scale"])
+            )
+            mtoon0_current_texture_offset = list(
+                get_attr_from_strings(mtoon_ext, MTOON0_ATTRIBUTE_NAMES["texture_offset"])
+            )
+            #####################################################################################################
+            # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+            mtoon0_default_scale = mtoon0_default_offset_dict["texture_scale"]
+            mtoon0_texture_scale = (
+                mtoon0_current_texture_scale if mtoon0_current_texture_scale != mtoon0_default_scale else None
+            )
+            mtoon0_default_offset = mtoon0_default_offset_dict["texture_offset"]
+            mtoon0_texture_offset = (
+                mtoon0_current_texture_offset
+                if mtoon0_current_texture_offset != mtoon0_default_offset
+                else None
+            )
+            #####################################################################################################
 
-    obtained_mtoon1_transform_parameters: MToonMaterialParameters = {
-        "texture_scale": texture_scale,
-        "texture_offset": texture_offset,
-    }
+            obtained_mtoon0_transform_parameters: MToonMaterialParameters = {
+                "texture_scale": mtoon0_texture_scale,
+                "texture_offset": mtoon0_texture_offset,
+            }
 
-    return obtained_mtoon1_transform_parameters
+            return obtained_mtoon0_transform_parameters
+
+        case "1":
+            # 保存済みのMToo1パラメーターが存在すれば取得する｡
+            mtoon1_default_offset_dict = get_mtoon1_default_values(source_material)
+
+            # 各パラメーターの現在の値(FloatVector)をリストとして取得する｡
+            mtoon1_current_texture_scale = list(
+                get_attr_from_strings(mtoon_ext, MTOON1_ATTRIBUTE_NAMES["texture_scale"])
+            )
+            mtoon1_current_texture_offset = list(
+                get_attr_from_strings(mtoon_ext, MTOON1_ATTRIBUTE_NAMES["texture_offset"])
+            )
+            #####################################################################################################
+            # デフォルト値と現在の値を比較して変化している場合はその値を取得する｡
+            mtoon1_default_scale = mtoon1_default_offset_dict["texture_scale"]
+            mtoon1_texture_scale = (
+                mtoon1_current_texture_scale if mtoon1_current_texture_scale != mtoon1_default_scale else None
+            )
+            mtoon1_default_offset = mtoon1_default_offset_dict["texture_offset"]
+            mtoon1_texture_offset = (
+                mtoon1_current_texture_offset
+                if mtoon1_current_texture_offset != mtoon1_default_offset
+                else None
+            )
+            #####################################################################################################
+
+            obtained_mtoon1_transform_parameters: MToonMaterialParameters = {
+                "texture_scale": mtoon1_texture_scale,
+                "texture_offset": mtoon1_texture_offset,
+            }
+
+            return obtained_mtoon1_transform_parameters
 
 
 def return_default_values_of_mtoon_properties(target_material: Material):

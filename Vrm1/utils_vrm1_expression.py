@@ -79,7 +79,7 @@ from ..utils_vrm_base import (
     get_vrm1_extension_property_expression,
     get_mtoon_attr_name_from_bind_type,
     get_mtoon_color_current_parameters,
-    get_mtoon_transform_current_parameters,
+    get_mtoon_uv_transform_current_parameters,
 )
 
 
@@ -501,9 +501,9 @@ def convert_str2color_bind_type(source_name: str) -> str:
 
 
 def get_same_type_material_color_bind(
-    source_material: Material,
+    source_material: bpy.types.Material,
     source_type: str,
-) -> PropertyGroup | None:
+) -> Optional[ReferenceVrm1MaterialColorBindPropertyGroup]:
     """
     アクティブエクスプレションのMaterial Color Bindsの中に
     'source_material'を参照しているかつ'source_type'を指定しているものがあればそれを取得する｡
@@ -518,14 +518,13 @@ def get_same_type_material_color_bind(
 
     Returns
     -------
-    VrmAddon.Vrm1ExpressionPropertyGroup | None:
+    Optional[ReferenceVrm1MaterialColorBindPropertyGroup]:
         'souce_material','source_type'と同じ値が設定されているMaterial Color Bind｡
-        外胴データがなければNone｡
 
     """
-
+    converted_bind_type = convert_str2color_bind_type(source_type)
     for color_bind in get_active_expression().material_color_binds:
-        if color_bind.material == source_material and color_bind.type == source_type:
+        if color_bind.material == source_material and color_bind.type == converted_bind_type:
             return color_bind
 
     return None
@@ -560,8 +559,7 @@ def search_existing_material_color_bind_and_update(
 
     # 既に登録されているMaterial Color Bindがある場合は値の更新/削除を行なう｡
     for bind_type in mtoon_parameters_dict.keys():
-        converted_bind_type = convert_str2color_bind_type(bind_type)
-        if not (same_type_bind := get_same_type_material_color_bind(source_material, converted_bind_type)):
+        if not (same_type_bind := get_same_type_material_color_bind(source_material, bind_type)):
             continue
 
         # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
@@ -619,7 +617,7 @@ def convert_str2transform_bind_type(source_name: str) -> str:
 
 def get_same_material_texture_transform_bind(
     source_material: Material,
-) -> PropertyGroup | None:
+) -> Optional[ReferenceVrm1TextureTransformBindPropertyGroup]:
     """
     アクティブエクスプレションのTexture Transform Bindsの中に
     'source_material'を参照しているものがあればそれを取得する｡
@@ -629,12 +627,10 @@ def get_same_material_texture_transform_bind(
     source_material : Material
         検索対象のマテリアル
 
-
     Returns
     -------
-    VrmAddon.Vrm1TextureTransformBindPropertyGroup | None:
+    Optional[ReferenceVrm1TextureTransformBindPropertyGroup]
         参照マテリアルが'souce_material'であるTexture Transform Bind｡
-        該当データがなければNone｡
 
     """
 
@@ -648,7 +644,7 @@ def get_same_material_texture_transform_bind(
 def search_existing_texture_transform_bind_and_update(
     source_material: Material,
     texture_transform_binds: bpy_prop_collection,
-) -> MToonMaterialParameters | None:
+) -> Optional[MToonMaterialParameters]:
     """
     'texture_transform_binds'内に'source_material'と関連付けられたColor Bindが
     存在するか否かを走査し､存在する場合値の更新する｡値が初期値の場合はColor Bindの削除を行なう｡
@@ -664,12 +660,12 @@ def search_existing_texture_transform_bind_and_update(
 
     Returns
     -------
-    MToonMaterialParameters
+    Optional[MToonMaterialParameters]
         'source_material'に設定されたMToonパラメーターと値を格納した辞書｡
         MToonパラメーターが初期値の場合はNoneを返す｡
     """
 
-    mtoon_parameters_dict = get_mtoon_transform_current_parameters(source_material)
+    mtoon_parameters_dict = get_mtoon_uv_transform_current_parameters(source_material)
     logger.debug(mtoon_parameters_dict)
 
     # 既に登録されているTexture Transform Bindがある場合は値の更新/削除を行なう｡

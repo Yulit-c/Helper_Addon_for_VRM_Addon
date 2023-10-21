@@ -34,6 +34,8 @@ from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
+    # ---------------------------------------------------------------------------------
+    MToonMaterialParameters,
 )
 
 
@@ -64,6 +66,8 @@ from ..utils_vrm_base import (
     get_vrm0_extension_property_blend_shape,
     serach_vrm_shader_node,
     check_vrm_material_mode,
+    get_mtoon_color_current_parameters,
+    get_mtoon_uv_transform_current_parameters,
 )
 
 
@@ -401,3 +405,202 @@ def vrm0_get_active_material_value_in_ui() -> Optional[VRMHELPER_WM_vrm0_blend_s
     active_index = get_vrm0_active_index_prop("BLEND_SHAPE_MATERIAL")
     active_value = material_value_ui_list[active_index]
     return active_value
+
+
+def convert_str2color_property_type(source_name: str) -> str:
+    match source_name:
+        case "color":
+            return "_Color"
+
+        case "shade_color":
+            return "_ShadeColor"
+
+        case "emission_color":
+            return "_EmissionColor"
+
+        case "rim_color":
+            return "_RimColor"
+
+        case "outline_color":
+            return "_OutlineColor"
+
+
+def get_same_type_material_value(
+    source_material: bpy.types.Material,
+    source_type: str,
+) -> Optional[ReferenceVrm0MaterialValueBindPropertyGroup]:
+    """
+    アクティブエクスプレションのMaterial Color Bindsの中に
+    'source_material'を参照しているかつ'source_type'を指定しているものがあればそれを取得する｡
+
+    Parameters
+    ----------
+    source_material: bpy.types.Material
+        検索対象のマテリアル
+
+    source_type: str
+        検索対象のMaterial Color Bindタイプ
+
+    Returns
+    -------
+    ) -> Optional[ReferenceVrm0MaterialValueBindPropertyGroup]:
+        'souce_material','source_type'と同じ値が設定されているMaterial Value｡
+
+    """
+
+    converted_property_type = convert_str2color_property_type(source_type)
+    for value in get_active_blend_shape().material_values:
+        value: ReferenceVrm0MaterialValueBindPropertyGroup = value
+        if value.material == source_material and value.property_name == converted_property_type:
+            return value
+
+    return None
+
+
+def search_existing_material_color_and_update(
+    source_material: bpy.types.Material,
+    material_values: bpy.types.bpy_prop_collection,
+) -> MToonMaterialParameters:
+    """
+    'material_values'内に'source_material'と関連付けられたMaterial Valueが
+    存在するか否かを走査し､存在する場合値の更新する｡値が初期値の場合はMaterial Valueの削除を行なう｡
+    また､Material Valueの新規作成判定に用いるための辞書を返す｡
+
+    Parameters
+    ----------
+    source_material: bpy.types.Material
+        検索対象のマテリアル
+
+    material_value: bpy.types.bpy_prop_collection,
+        処理対象となるMaterial Value
+
+    Returns
+    -------
+    MToonMaterialParameters
+        'source_material'に設定されたMToonパラメーターの値を格納した辞書｡
+        MToonパラメーターが初期値の場合は値がNoneになる｡
+
+    """
+
+    mtoon_parameters_dict = get_mtoon_color_current_parameters(source_material)
+
+    # 既に登録されているMaterial Color Bindがある場合は値の更新/削除を行なう｡
+    for property_type in mtoon_parameters_dict.keys():
+        if not (same_type_value := get_same_type_material_value(source_material, property_type)):
+            continue
+
+        # MToonのパラメーターがデフォルト値である場合はColor Bindを削除する｡
+        logger.debug(f"{same_type_value.name} , {property_type}")
+        if not (current_values := mtoon_parameters_dict[property_type]):
+            logger.debug(f"Removed Material Value -- {same_type_value.name} : {property_type}")
+            remove_target_index = list(material_values).index(same_type_value)
+            material_values.remove(remove_target_index)
+
+        # Material Valueの値を現在の値に更新する｡
+        else:
+            attr_name = "target_value"
+            target_value = getattr(same_type_value, attr_name)
+            if list(target_value) == current_values:
+                logger.debug(f"Same Value : {same_type_value}")
+            else:
+                logger.debug(f"Updated : {source_material} : {list(target_value)} -->> {current_values}")
+                # target_valueのプロパティ数が4未満の場合はプロパティを追加する｡
+                while len(same_type_value.target_value) < 4:
+                    same_type_value.target_value.add()
+
+                for n in range(len(same_type_value.target_value)):
+                    same_type_value.target_value[n].value = current_values[n]
+
+    return mtoon_parameters_dict
+
+
+def get_same_material_uv_offset_value(
+    source_material: bpy.types.Material, source_prop_type: str
+) -> Optional[ReferenceVrm0MaterialValueBindPropertyGroup]:
+    """
+    アクティブブレンドシェイプのMaterial Valueの中に
+    'source_material'を参照しているかつ'source_prop_type'を指定しているものがあればそれを取得する｡
+
+    Parameters
+    ----------
+    source_material: bpy.types.Material
+        検索対象のマテリアル
+
+    prop_type: str
+        検索対象のProperty Name
+
+    Returns
+    -------
+    Optional[ReferenceVrm0MaterialValueBindPropertyGroup]
+        参照マテリアルが'souce_material'であるMaterial Value｡
+
+    """
+
+    for material_value in get_active_blend_shape().material_values:
+        material_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_value
+        if material_value.material == source_material and material_value.property_name == source_prop_type:
+            return material_value
+
+    return None
+
+
+def search_existing_material_uv_and_update(
+    source_material: bpy.types.Material,
+    material_values: bpy.types.bpy_prop_collection,
+) -> Optional[MToonMaterialParameters]:
+    """
+    'material_values'内に'source_material'と関連付けられたMaterial Valueが
+    存在するか否かを走査し､存在する場合値の更新する｡値が初期値の場合はMaterial Valueの削除を行なう｡
+    また､Material Valueの新規作成判定に用いるための辞書を返す｡
+
+    Parameters
+    ----------
+    source_material: bpy.types.Material
+        検索対象のマテリアル
+
+    material_values: bpy.types.bpy_prop_collection
+        処理対象となるMaterial Values
+
+    Returns
+    -------
+    Optional[MToonMaterialParameters]
+        'source_material'に設定されたMToonパラメーターと値を格納した辞書｡
+        MToonパラメーターが初期値の場合はNoneを返す｡
+    """
+
+    mtoon_parameters_dict = get_mtoon_uv_transform_current_parameters(source_material)
+
+    # 既に登録されているMaterial Valueがある場合は値の更新/削除を行なう｡
+    if not (same_material_value := get_same_material_uv_offset_value(source_material, "_MainTex_ST")):
+        return mtoon_parameters_dict
+
+    # MToonのパラメーターがデフォルト値である場合はMaterial Valueを削除する｡
+    if not (mtoon_parameters_dict["texture_scale"] or mtoon_parameters_dict["texture_offset"]):
+        logger.debug(f"Removed Material Value : {source_material.name}")
+        remove_target_index = list(material_values).index(same_material_value)
+        material_values.remove(remove_target_index)
+
+    # Material Valueの値を現在の値に更新する｡
+    else:
+        old_values = list(same_material_value.target_value)
+        scale_value = mtoon_parameters_dict["texture_scale"]
+        offset_value = mtoon_parameters_dict["texture_offset"]
+        new_scale = scale_value if scale_value else [1.0, 1.0]
+        new_offset = offset_value if offset_value else [0.0, 0.0]
+        new_values = new_scale + new_offset
+
+        if new_values == old_values or new_values == None:
+            logger.debug(f"Same Value : {new_values}")
+
+        else:
+            logger.debug(f"Updated : UV Coordinate : {old_values} -->> {new_values}")
+            # target_valueのプロパティ数が4未満の場合はプロパティを追加する｡
+            while len(same_material_value.target_value) < 4:
+                same_material_value.target_value.add()
+
+            for n in range(len(same_material_value.target_value)):
+                same_material_value.target_value[n].value = new_values[n]
+
+        mtoon_parameters_dict = None
+
+    return mtoon_parameters_dict

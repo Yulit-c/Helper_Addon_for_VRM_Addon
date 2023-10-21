@@ -104,6 +104,9 @@ from .utils_vrm0_blend_shape import (
     vrm0_get_active_bind_in_ui,
     vrm0_get_active_material_value_in_ui,
     search_existing_bind_and_update,
+    convert_str2color_property_type,
+    search_existing_material_color_and_update,
+    search_existing_material_uv_and_update,
 )
 
 from ..operators import (
@@ -458,9 +461,6 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend
         active_mat_value_item = vrm0_get_active_material_value_in_ui()
         blend_shape_master = get_vrm0_extension_property_blend_shape()
         blend_shape_index = blend_shape_master.active_blend_shape_group_index
-        # active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_master.blend_shape_groups[
-        #     blend_shape_index
-        # ]
 
         # TODO : アクティブ要素がラベルであればそのラベルに属する要素を全て削除｡
         #        BindやMaterial Valueであればその一つを削除する｡
@@ -650,6 +650,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene(VRMHELPER_vrm0_blend_sha
 
     @classmethod
     def poll(cls, context):
+        # 1つ以上のオブジェクトがリンクされた'VRM0_BlendShape_Morph'のコレクションが存在する｡
         return evaluation_expression_material_collection()
 
     def execute(self, context):
@@ -687,6 +688,104 @@ class VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene(VRMHELPER_vrm0_blend_sha
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_set_material_value_from_scene"
+    bl_label = "Set Material Bind from Scene"
+    bl_description = "Set Material Value from the material of the target objects on the scene"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        # 1つ以上のオブジェクトがリンクされた'VRM0_BlendShape_Material'のコレクションが存在する｡
+        return evaluation_expression_material_collection()
+
+    def execute(self, context):
+        active_blend_shape = get_active_blend_shape()
+        material_values = active_blend_shape.material_values
+        source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
+
+        # ソースとなるマテリアルを取得する(MToon指定されているもののみ)｡
+        source_materials = {
+            slot.material
+            for obj in source_collection.all_objects
+            for slot in obj.material_slots
+            if slot.material and slot.material.vrm_addon_extension.mtoon1.enabled
+        }
+
+        def get_index(element):
+            return list(bpy.data.materials).index(element)
+
+        source_materials = sorted(list(source_materials), key=get_index)
+
+        for source_material in source_materials:
+            logger.debug("\n\n")
+            logger.debug(source_material.name)
+            # ----------------------------------------------------------
+            #    Material Color
+            # ----------------------------------------------------------
+            # ソースマテリアルに設定されたMToonパラメーターに応じてMaterial Valueを登録する｡
+            # 既に登録済みのマテリアル､パラメーターの組み合わせだった場合は値を更新する｡初期値に設定される場合はValueを削除する｡
+            print(f"\n{'':#>50}\nRegistering Material Value(Color)\n{'':#>50}")
+            mtoon_color_parameters_dict = search_existing_material_color_and_update(
+                source_material, material_values
+            )
+
+            # 未登録であった場合は新規登録する｡
+            for prop, values in mtoon_color_parameters_dict.items():
+                if values:
+                    logger.debug(f"Set Type : {prop}")
+                    if len(values) < 4:
+                        values.append(1.0)
+                    # 新規にmaterial_valueを作成し､valueを4つ作成する｡
+                    new_color_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values.add()
+                    while len(new_color_value.target_value) < 4:
+                        new_color_value.target_value.add()
+
+                    # MaterialとProperty Nameの値をセットする｡
+                    new_color_value.material = source_material
+                    new_color_value.property_name = convert_str2color_property_type(prop)
+                    # # target_valueの値をセットする｡
+                    for n in range(len(new_color_value.target_value)):
+                        new_color_value.target_value[n].value = values[n]
+            # ----------------------------------------------------------
+            #    UV Coordinate
+            # ----------------------------------------------------------
+            print(f"\n{'':#>50}\nRegistering Material Value(UV)\n{'':#>50}")
+            mtoon_uv_parameters_dict = search_existing_material_uv_and_update(
+                source_material, material_values
+            )
+
+            # 未登録であった場合は新規登録する｡
+            if not mtoon_uv_parameters_dict:
+                logger.debug("condition 1")
+                continue
+
+            if not any(mtoon_uv_parameters_dict.values()):
+                logger.debug("condition 2")
+                continue
+
+            # 新規にmaterial_valueを作成し､valueを4つ作成する｡
+            new_uv_value: ReferenceVrm0MaterialValueBindPropertyGroup = material_values.add()
+            while len(new_uv_value.target_value) < 4:
+                new_uv_value.target_value.add()
+            prop_name = "_MainTex_ST"
+            # MaterialとProperty Nameの値をセットする｡
+            new_uv_value.material = source_material
+            new_uv_value.property_name = prop_name
+            # target_valueの値をセットする｡
+            value_set = mtoon_uv_parameters_dict["texture_scale"] + mtoon_uv_parameters_dict["texture_offset"]
+            target_value = new_uv_value.target_value
+            for n in range(len(target_value)):
+                target_value[n].value = value_set[n]
+
+        # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
+
+        # ---------------------------------------------------------------------------------
+        self.offset_active_item_index(self.mode_dict["MATERIAL"])
+
+        return {"FINISHED"}
+
+
 class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_blend_shape_sub):
     bl_idname = "vrm_helper.vrm0_blend_shape_set_both_binds_from_scene"
     bl_label = "Set Both Binds and Material Values from Scene"
@@ -709,6 +808,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
         # ----------------------------------------------------------
         #    Material Values
         # ----------------------------------------------------------
+        bpy.ops.vrm_helper.vrm0_blend_shape_set_material_value_from_scene()
 
         return {"FINISHED"}
 
@@ -744,5 +844,6 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene,
+    VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
 )
