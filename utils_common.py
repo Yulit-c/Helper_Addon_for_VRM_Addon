@@ -90,7 +90,7 @@ def set_attr_from_strings(object: object, attrs: str, value: Any):
     if not (splitted_attrs := attrs.split(".")):
         return
 
-    logger.debug(splitted_attrs)
+    # logger.debug(splitted_attrs)
     for n, attr in enumerate(splitted_attrs):
         if not object:
             return

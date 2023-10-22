@@ -107,6 +107,7 @@ from .utils_vrm0_blend_shape import (
     convert_str2color_property_type,
     search_existing_material_color_and_update,
     search_existing_material_uv_and_update,
+    set_mtoon0_parameters_from_material_value,
 )
 
 from ..operators import (
@@ -259,6 +260,11 @@ class VRMHELPER_OT_vrm0_first_person_clear_annotation(VRMHELPER_vrm0_first_perso
         return {"FINISHED"}
 
 
+"""---------------------------------------------------------
+    Blend Shape
+---------------------------------------------------------"""
+
+
 class VRMHELPER_OT_0_blend_shape_create_blend_shape(VRMHELPER_vrm0_blend_shape_base):
     bl_idname = "vrm_helper.vrm0_blend_shape_create_blend_shape"
     bl_label = "Create Blend Shape"
@@ -268,7 +274,7 @@ class VRMHELPER_OT_0_blend_shape_create_blend_shape(VRMHELPER_vrm0_blend_shape_b
     def execute(self, context):
         target_armature = get_target_armature()
 
-        bpy.ops.vrm.add_vrm0_blend_shape_group(armature_name=target_armature.name, name="new")
+        bpy.ops.vrm.add_vrm0_blend_shape_group(armature_name=target_armature.name, name="Blend Shape")
 
         return {"FINISHED"}
 
@@ -331,26 +337,30 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
         return blend_shapes
 
     def execute(self, context):
+        os.system("cls")
         blend_shape_master = get_vrm0_extension_property_blend_shape()
         blend_shape_groups = blend_shape_master.blend_shape_groups
         target_index = blend_shape_master.active_blend_shape_group_index
         active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_groups[target_index]
 
         # ----------------------------------------------------------
-        #    Morph Target Binds
+        #    Binds
         # ----------------------------------------------------------
-        # アクティブエクスプレッションのMorpth Target Bindsの全てのBindの
+        # アクティブエクスプレッションのBindsの全てのBindの
         # メッシュ/シェイプキーに対してウェイトを反映する｡
         # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
-        morph_binds = active_blend_shape.binds
-        reset_shape_keys_value_in_morph_binds(morph_binds)
+        binds = active_blend_shape.binds
+        reset_shape_keys_value_in_morph_binds(binds)
 
-        # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
+        # Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}
         # Bindsに登録されている全メッシュとそれに関連付けられたシェイプキー､ウェイトを取得する｡
-        for bind in morph_binds:
+        for bind in binds:
             bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
-            bind_mesh = bpy.data.objects.get(bind.mesh.mesh_object_name).data
+            if not (mesh_object := bpy.data.objects.get(bind.mesh.mesh_object_name)):
+                continue
+
+            bind_mesh = mesh_object.data
             existing_bind_info.setdefault(bind_mesh, []).append((bind.index, bind.weight))
 
         # 取得したデータをシーン上に反映する｡
@@ -374,8 +384,10 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
             if not mat:
                 continue
             logger.debug(f"Reset Values : {mat.name}")
-            # TODO : Material Valueの設定
             # set_mtoon_default_values(mat)
+
+        for mat_value in material_values:
+            set_mtoon0_parameters_from_material_value(mat_value)
 
         return {"FINISHED"}
 
@@ -813,6 +825,43 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters(VRMHELPER_vrm0_blend_shape_sub):
+    bl_idname = "vrm_helper.vrm0_blend_shape_restore_initial_values"
+    bl_label = "Restore Initial State"
+    bl_description = "Restore Mesh and Material to their initial state"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        morph_condition = evaluation_expression_morph_collection()
+        mat_condition = evaluation_expression_material_collection()
+        return morph_condition or mat_condition
+
+    def execute(self, context):
+        # ----------------------------------------------------------
+        #    Bind
+        # ----------------------------------------------------------
+        if source_collection_morph := bpy.data.collections.get(
+            get_addon_collection_name("VRM0_BLENDSHAPE_MORPH")
+        ):
+            for obj in {obj for obj in source_collection_morph.all_objects if obj.type == "MESH"}:
+                reset_shape_keys_value(obj.data)
+
+        # ----------------------------------------------------------
+        #    Material Value
+        # ----------------------------------------------------------
+        if source_collection_mat := bpy.data.collections.get(
+            get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")
+        ):
+            # 対象コレクション内のすべてのオブジェクトが持つマテリアルにパラメーターの復元処理を行う｡
+            for mat in get_all_materials_from_source_collection_objects(source_collection_mat):
+                set_mtoon_default_values(mat)
+
+            # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -846,4 +895,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_set_bind_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
+    VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters,
 )

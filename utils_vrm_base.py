@@ -499,8 +499,13 @@ def reset_shape_keys_value_in_morph_binds(source_morph_binds: Any):
             reset_shape_keys_value(target_object.data)
 
 
-def get_mtoon_attr_name_from_bind_type(
-    color_bind_type: Literal[
+def get_mtoon_attr_name_from_property_type(
+    property_type: Literal[
+        "_Color",
+        "_ShadeColor",
+        "_RimColor",
+        "_EmissionColor",
+        "_OutlineColor",
         "color",
         "shadeColor",
         "emissionColor",
@@ -508,13 +513,18 @@ def get_mtoon_attr_name_from_bind_type(
         "rimColor",
         "outlineColor",
     ],
-) -> str | None:
+) -> Optional[str]:
     """
-    引数'color_bind_type'に対応したMToo1属性名を返す｡
+    引数'property_type'に対応したMToo1属性名を返す｡
 
     Parameters
     ----------
-    color_bind_type: Literal[
+    property_type: Literal[
+        "_Color",
+        "_ShadeColor",
+        "_RimColor",
+        "_EmissionColor",
+        "_OutlineColor",
         "color",
         "shadeColor",
         "emissionColor",
@@ -526,32 +536,43 @@ def get_mtoon_attr_name_from_bind_type(
 
     Returns
     -------
-    str|None
+    Optional[str]:
         取得された属性名｡
 
     """
 
-    mtoon1_attr_name = None
-    match color_bind_type:
+    mtoon_attr_name = None
+    match property_type:
+        case "_Color":
+            mtoon_attr_name = MTOON0_ATTRIBUTE_NAMES["color"]
+        case "_ShadeColor":
+            mtoon_attr_name = MTOON0_ATTRIBUTE_NAMES["shade_color"]
+        case "_RimColor":
+            mtoon_attr_name = MTOON0_ATTRIBUTE_NAMES["rim_color"]
+        case "_EmissionColor":
+            mtoon_attr_name = MTOON0_ATTRIBUTE_NAMES["emission_color"]
+        case "_OutlineColor":
+            mtoon_attr_name = MTOON0_ATTRIBUTE_NAMES["outline_color"]
+        # ---------------------------------------------------------------------------------
         case "color" | "lit_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["lit_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["lit_color"]
 
         case "shadeColor" | "shade_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["shade_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["shade_color"]
 
         case "emissionColor" | "emission_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["emission_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["emission_color"]
 
         case "matcapColor" | "matcap_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["matcap_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["matcap_color"]
 
         case "rimColor" | "rim_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["rim_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["rim_color"]
 
         case "outlineColor" | "outline_color":
-            mtoon1_attr_name = MTOON1_ATTRIBUTE_NAMES["outline_color"]
+            mtoon_attr_name = MTOON1_ATTRIBUTE_NAMES["outline_color"]
 
-    return mtoon1_attr_name
+    return mtoon_attr_name
 
 
 def store_mtoon_current_values(

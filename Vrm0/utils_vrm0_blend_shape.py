@@ -38,6 +38,10 @@ from ..addon_classes import (
     MToonMaterialParameters,
 )
 
+from ..addon_constants import (
+    MTOON0_ATTRIBUTE_NAMES,
+)
+
 
 from ..preferences import (
     get_addon_collection_name,
@@ -68,6 +72,7 @@ from ..utils_vrm_base import (
     check_vrm_material_mode,
     get_mtoon_color_current_parameters,
     get_mtoon_uv_transform_current_parameters,
+    get_mtoon_attr_name_from_property_type,
 )
 
 
@@ -582,7 +587,7 @@ def search_existing_material_uv_and_update(
 
     # Material Valueの値を現在の値に更新する｡
     else:
-        old_values = list(same_material_value.target_value)
+        old_values = [i.value in i in same_material_value.target_value]
         scale_value = mtoon_parameters_dict["texture_scale"]
         offset_value = mtoon_parameters_dict["texture_offset"]
         new_scale = scale_value if scale_value else [1.0, 1.0]
@@ -604,3 +609,44 @@ def search_existing_material_uv_and_update(
         mtoon_parameters_dict = None
 
     return mtoon_parameters_dict
+
+
+def set_mtoon0_parameters_from_material_value(material_value: ReferenceVrm0MaterialValueBindPropertyGroup):
+    """
+    引数'material_value'で参照されているマテリアルのMToon0パラメーターにそのMateri alValueの値をセットする
+
+    Parameters
+    ----------
+    material_value:ReferenceVrm0MaterialValueBindPropertyGroup
+        処理対象のマテリアルのパラメーター変化を定義しているMaterial Value
+    """
+
+    if not (target_material := material_value.material):
+        return
+
+    logger.debug(material_value.property_name)
+
+    mtoon_ext = target_material.vrm_addon_extension.mtoon1
+    color_prop_set = {
+        "_Color",
+        "_ShadeColor",
+        "_RimColor",
+        "_EmissionColor",
+        "_OutlineColor",
+    }
+    value_list = [i.value for i in material_value.target_value]
+
+    # Color系統のパラメーターの場合
+    if material_value.property_name in color_prop_set:
+        mtoon_attr_name = get_mtoon_attr_name_from_property_type(material_value.property_name)
+        set_attr_from_strings(mtoon_ext, mtoon_attr_name, value_list)
+
+    # UV Coordinateの場合
+    if "_MainTex_ST" in material_value.property_name:
+        uv_scale = (value_list[0], value_list[1])
+        scale_attr = MTOON0_ATTRIBUTE_NAMES["texture_scale"]
+        uv_offset = (value_list[2], value_list[3])
+        offset_attr = MTOON0_ATTRIBUTE_NAMES["texture_offset"]
+
+        set_attr_from_strings(mtoon_ext, scale_attr, uv_scale)
+        set_attr_from_strings(mtoon_ext, offset_attr, uv_offset)

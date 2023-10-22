@@ -219,6 +219,7 @@ class ReferenceVrm1MaterialColorBindPropertyGroup:
         "outlineColor",
     ]
     target_value: list[bpy.types.FloatProperty]
+    target_value_as_rgb: list[bpy.types.FloatProperty]
 
 
 class ReferenceVrm1TextureTransformBindPropertyGroup:

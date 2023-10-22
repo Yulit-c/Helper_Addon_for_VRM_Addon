@@ -77,7 +77,7 @@ from ..utils_vrm_base import (
     MToonMaterialParameters,
     MTOON1_ATTRIBUTE_NAMES,
     get_vrm1_extension_property_expression,
-    get_mtoon_attr_name_from_bind_type,
+    get_mtoon_attr_name_from_property_type,
     get_mtoon_color_current_parameters,
     get_mtoon_uv_transform_current_parameters,
 )
@@ -715,8 +715,8 @@ def set_mtoon1_colors_from_bind(
 
     if not (target_material := color_bind.material):
         return
-    mtoon1 = target_material.vrm_addon_extension.mtoon1
-    mtoon1_attr_name = get_mtoon_attr_name_from_bind_type(color_bind.type)
+    mtoon_ext = target_material.vrm_addon_extension.mtoon1
+    mtoon1_attr_name = get_mtoon_attr_name_from_property_type(color_bind.type)
 
     # Lit Colorの場合とそれ以外の場合で参照する値を変更する｡
     match color_bind.type:
@@ -725,7 +725,7 @@ def set_mtoon1_colors_from_bind(
         case _:
             set_value = color_bind.target_value_as_rgb
 
-    set_attr_from_strings(mtoon1, mtoon1_attr_name, set_value)
+    set_attr_from_strings(mtoon_ext, mtoon1_attr_name, set_value)
 
 
 def set_mtoon1_texture_transform_from_bind(
@@ -737,10 +737,9 @@ def set_mtoon1_texture_transform_from_bind(
     Parameters
     ----------
     transform_bind : ReferenceVrm1TextureTransformBindPropertyGroup
-        処理対象のマテリアルを定義しているTexture Transform Bind
-
-
+        処理対象のマテリアルのパラメーター変化を定義しているTexture Transform Bind
     """
+
     if not (target_material := transform_bind.material):
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1

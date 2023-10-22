@@ -118,6 +118,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_blend_shape_discard_stored_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
+    VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters,
 )
 
 """
@@ -434,8 +435,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
         icon="NODE_MATERIAL",
     )
     col.operator(
-        # VRMHELPER_OT_vrm1_expression_restore_initial_parameters.bl_idname,
-        VRMHELPER_OT_empty_operator.bl_idname,
+        VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters.bl_idname,
         text="Reset Bind's All Values",
         icon="RECOVER_LAST",
     )
