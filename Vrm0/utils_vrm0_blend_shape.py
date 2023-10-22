@@ -587,15 +587,15 @@ def search_existing_material_uv_and_update(
 
     # Material Valueの値を現在の値に更新する｡
     else:
-        old_values = [i.value in i in same_material_value.target_value]
+        old_values = [i.value for i in same_material_value.target_value]
         scale_value = mtoon_parameters_dict["texture_scale"]
         offset_value = mtoon_parameters_dict["texture_offset"]
-        new_scale = scale_value if scale_value else [1.0, 1.0]
-        new_offset = offset_value if offset_value else [0.0, 0.0]
+        new_scale = scale_value if scale_value else [None, None]
+        new_offset = offset_value if offset_value else [None, None]
         new_values = new_scale + new_offset
 
-        if new_values == old_values or new_values == None:
-            logger.debug(f"Same Value : {new_values}")
+        if new_values == old_values or not (any(new_values)):
+            logger.debug(f"Same Value : {old_values}")
 
         else:
             logger.debug(f"Updated : UV Coordinate : {old_values} -->> {new_values}")
@@ -604,7 +604,11 @@ def search_existing_material_uv_and_update(
                 same_material_value.target_value.add()
 
             for n in range(len(same_material_value.target_value)):
-                same_material_value.target_value[n].value = new_values[n]
+                try:
+                    same_material_value.target_value[n].value = new_values[n]
+
+                except:
+                    same_material_value.target_value[n].value = old_values[n]
 
         mtoon_parameters_dict = None
 

@@ -785,10 +785,20 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
             new_uv_value.material = source_material
             new_uv_value.property_name = prop_name
             # target_valueの値をセットする｡
-            value_set = mtoon_uv_parameters_dict["texture_scale"] + mtoon_uv_parameters_dict["texture_offset"]
+            uv_scale = []
+            if mtoon_uv_parameters_dict["texture_scale"]:
+                uv_scale = mtoon_uv_parameters_dict["texture_scale"]
+            uv_offset = []
+            if mtoon_uv_parameters_dict["texture_offset"]:
+                uv_offset = mtoon_uv_parameters_dict["texture_offset"]
+            # value_set = mtoon_uv_parameters_dict["texture_scale"] + mtoon_uv_parameters_dict["texture_offset"]
             target_value = new_uv_value.target_value
-            for n in range(len(target_value)):
-                target_value[n].value = value_set[n]
+            for n, scale_value in enumerate(uv_scale):
+                target_value[n].value = scale_value
+
+            logger.debug(uv_offset)
+            for n, offset_value in enumerate(uv_offset):
+                target_value[n + 2].value = offset_value
 
         # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
