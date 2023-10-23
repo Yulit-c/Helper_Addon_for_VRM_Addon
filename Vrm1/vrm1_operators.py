@@ -1823,12 +1823,13 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()
+        springs_filter_list = []
         if filter_strings := spring_settings.filter_of_adjusting_target_filter:
             springs_filter_list = [i.name for i in springs_collection if filter_strings in i.name]
 
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
         for spring, filter in zip(springs, springs_collection):
-            if not spring.vrm_name in springs_filter_list:
+            if springs_filter_list and not spring.vrm_name in springs_filter_list:
                 logger.debug(f"Skip 0 : {spring.vrm_name}")
                 continue
 
