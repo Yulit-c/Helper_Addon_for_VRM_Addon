@@ -1783,8 +1783,8 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
         add_list_item2joint_list4operator()
         if self.source_type == "MULTIPLE":
             spring_collection = get_ui_vrm1_operator_spring_prop()
-            spring_settings = get_scene_vrm1_spring_prop()
             # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+            spring_settings = get_scene_vrm1_spring_prop()
             if filter_strings := spring_settings.filter_of_adjusting_target_filter:
                 spring_collection = [i for i in spring_collection if filter_strings in i.name]
             width_popup = math.ceil(len(spring_collection) / self.rows_property) * 240
@@ -1800,8 +1800,8 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 
     def draw(self, context):
         spring_collection = get_ui_vrm1_operator_spring_prop()
-        spring_settings = get_scene_vrm1_spring_prop()
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+        spring_settings = get_scene_vrm1_spring_prop()
         if filter_strings := spring_settings.filter_of_adjusting_target_filter:
             spring_collection = [i for i in spring_collection if filter_strings in i.name]
         # UIの描画
@@ -1819,12 +1819,21 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 
     def execute(self, context):
         springs = get_vrm_extension_property("SPRING")
-        springs_filter_list = get_ui_vrm1_operator_spring_prop()
+        springs_collection = get_ui_vrm1_operator_spring_prop()
+
+        # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+        spring_settings = get_scene_vrm1_spring_prop()
+        if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+            springs_filter_list = [i.name for i in springs_collection if filter_strings in i.name]
 
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
-        for spring, filter in zip(springs, springs_filter_list):
+        for spring, filter in zip(springs, springs_collection):
+            if not spring.vrm_name in springs_filter_list:
+                logger.debug(f"Skip 0 : {spring.vrm_name}")
+                continue
+
             if not filter.is_target:
-                logger.debug(f"Skip : {spring.vrm_name}")
+                logger.debug(f"Skip 1 : {spring.vrm_name}")
                 continue
 
             damping = 1.0
