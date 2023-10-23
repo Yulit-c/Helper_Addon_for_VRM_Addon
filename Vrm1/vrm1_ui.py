@@ -1133,7 +1133,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             box_sub.prop(spring_settings, "damping_ratio", slider=True)
 
         # ジョイント作成オペレーターの描画
-        col = box.column(align=True)
+        col = box.column()
         col.scale_y = 1.2
         op = col.operator(
             VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
@@ -1160,7 +1160,13 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         op.source_type = "SINGLE"
         set_properties_to_from_dict(op, joint_properties)
 
-        op = col.operator(
+        box = col.box()
+        box.prop(
+            spring_settings,
+            "filter_of_adjusting_target_filter",
+            text="Filtering Strings",
+        )
+        op = box.operator(
             VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
             text="Adjust Joints from Selected Spring",
         )

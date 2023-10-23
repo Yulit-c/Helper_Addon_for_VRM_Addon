@@ -27,8 +27,7 @@ else:
     from . import vrm1_operators
 
 
-import os, time, uuid
-from pprint import pprint
+import os, math, time, uuid
 from typing import (
     Literal,
 )
@@ -42,6 +41,7 @@ from bpy.types import (
 )
 from bpy.props import (
     BoolProperty,
+    IntProperty,
     FloatProperty,
     FloatVectorProperty,
     EnumProperty,
@@ -78,6 +78,7 @@ from ..property_groups import (
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
     get_scene_vrm1_first_person_prop,
+    get_scene_vrm1_spring_prop,
     get_scene_vrm1_constraint_prop,
     get_scene_vrm1_mtoon_stored_prop,
 )
@@ -1767,6 +1768,13 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
         ),
         default="SINGLE",
     )
+
+    rows_property: IntProperty(
+        name="Rows Property",
+        description="Number of properties displayed per column",
+        default=12,
+    )
+
     # -----------------------------------------------------
 
     def invoke(self, context, event):
@@ -1774,7 +1782,13 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 
         add_list_item2joint_list4operator()
         if self.source_type == "MULTIPLE":
-            return context.window_manager.invoke_props_dialog(self)
+            spring_collection = get_ui_vrm1_operator_spring_prop()
+            spring_settings = get_scene_vrm1_spring_prop()
+            # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+            if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+                spring_collection = [i for i in spring_collection if filter_strings in i.name]
+            width_popup = math.ceil(len(spring_collection) / self.rows_property) * 240
+            return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
         # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
         active_indexes = get_active_list_item_in_spring().item_indexes
@@ -1786,12 +1800,21 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 
     def draw(self, context):
         spring_collection = get_ui_vrm1_operator_spring_prop()
+        spring_settings = get_scene_vrm1_spring_prop()
+        # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+        if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+            spring_collection = [i for i in spring_collection if filter_strings in i.name]
+        # UIの描画
         layout = self.layout
         box = layout.box()
         box.label(text="Target Spring")
         box.separator(factor=0.1)
-        for spring in spring_collection:
-            row = box.row(align=True)
+        row = box.row()
+        row_root = box.row()
+        for n, spring in enumerate(spring_collection):
+            if n % self.rows_property == 0:
+                col = row_root.column()
+            row = col.row(align=True)
             row.prop(spring, "is_target", text=spring.name)
 
     def execute(self, context):

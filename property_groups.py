@@ -851,6 +851,12 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         default=True,
     )
 
+    filter_of_adjusting_target_filter: StringProperty(
+        name="Filter of Adjusting Target",
+        description="Filter springs adjusting parameters",
+        default="",
+    )
+
 
 # ----------------------------------------------------------
 #    Constraint
