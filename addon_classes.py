@@ -143,8 +143,44 @@ class ReferenceVrm0MaterialValueBindPropertyGroup:
 # ----------------------------------------------------------
 #    Secondary Animation
 # ----------------------------------------------------------
+class ReferenceVrm0SecondaryAnimationGroupPropertyGroup:
+    comment: bpy.types.StringProperty
+    stiffiness: bpy.types.FloatProperty
+    gravity_power: bpy.types.FloatProperty
+    gravity_dir: list[bpy.types.FloatProperty]
+    drag_force: bpy.types.FloatProperty
+    center: ReferenceBonePropertyGroup
+    hit_radius: bpy.types.FloatProperty
+    bones: bpy.types.CollectionProperty  # BonePropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # StringPropertyGroup
+
+    # for UI
+    show_expanded: bpy.types.BoolProperty
+    show_expanded_bones: bpy.types.BoolProperty
+    show_expanded_collider_groups: bpy.types.BoolProperty
+
+
+class ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup:
+    node: ReferenceBonePropertyGroup
+
+    # offsetとradiusはコライダー自身のデータを用いる
+    colliders: bpy.types.CollectionProperty  # Vrm0SecondaryAnimationColliderPropertyGroup
+
+    # for UI
+    show_expanded: bpy.types.BoolProperty
+
+    # for reference from Vrm0SecondaryAnimationGroupPropertyGroup
+    name: bpy.types.StringProperty
+    uuid: bpy.types.StringProperty
+
+
 class ReferenceVrm0SecondaryAnimationPropertyGroup:
-    pass
+    bone_groups: bpy.types.CollectionProperty  # Vrm0SecondaryAnimationGroupPropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # Vrm0SecondaryAnimationColliderGroupPropertyGroup
+
+    # for UI
+    active_bone_group_index: bpy.types.IntProperty
+    active_collider_group_index: bpy.types.IntProperty
 
 
 # ----------------------------------------------------------

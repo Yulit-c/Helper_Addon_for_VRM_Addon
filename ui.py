@@ -268,9 +268,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                 def get_index(element):
                     return basic_prop.vrm0_sort_order_component_type.index(element)
 
-                component_types = sorted(
-                    list(basic_prop.vrm0_component_type), key=get_index
-                )
+                component_types = sorted(list(basic_prop.vrm0_component_type), key=get_index)
 
                 box_spring = None
                 for type in component_types:
@@ -288,22 +286,18 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                             draw_panel_vrm0_blend_shape(self, context, box_sub)
 
                         case "COLLIDER_GROUP":
-                            box_spring = draw_spring_setting_box(
-                                box_spring, layout, basic_prop
-                            )
+                            box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Collider Group Tools", icon="OVERLAY")
                             box_sub = box.box()
-                            # draw_panel_vrm1_collider_group(self, context, box_sub)
+                            draw_panel_vrm0_collider_group(self, context, box_sub)
 
                         case "SPRING":
-                            box_spring = draw_spring_setting_box(
-                                box_spring, layout, basic_prop
-                            )
+                            box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Spring Bone Tools", icon="BONE_DATA")
                             box_sub = box.box()
-                            # draw_panel_vrm1_spring(self, context, box_sub)
+                            # draw_panel_vrm0_spring(self, context, box_sub)
 
                     if len(basic_prop.vrm1_component_type) > 1:
                         layout.separator(factor=0.25)
@@ -321,9 +315,7 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                 def get_index(element):
                     return basic_prop.vrm1_sort_order_component_type.index(element)
 
-                component_types = sorted(
-                    list(basic_prop.vrm1_component_type), key=get_index
-                )
+                component_types = sorted(list(basic_prop.vrm1_component_type), key=get_index)
 
                 box_spring = None
                 for type in component_types:
@@ -341,27 +333,21 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                             draw_panel_vrm1_expression(self, context, box_sub)
 
                         case "COLLIDER":
-                            box_spring = draw_spring_setting_box(
-                                box_spring, layout, basic_prop
-                            )
+                            box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Collider Tools", icon="MESH_UVSPHERE")
                             box_sub = box.box()
                             draw_panel_vrm1_collider(self, context, box_sub)
 
                         case "COLLIDER_GROUP":
-                            box_spring = draw_spring_setting_box(
-                                box_spring, layout, basic_prop
-                            )
+                            box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Collider Group Tools", icon="OVERLAY")
                             box_sub = box.box()
                             draw_panel_vrm1_collider_group(self, context, box_sub)
 
                         case "SPRING":
-                            box_spring = draw_spring_setting_box(
-                                box_spring, layout, basic_prop
-                            )
+                            box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Joint Tools", icon="BONE_DATA")
                             box_sub = box.box()

@@ -48,6 +48,8 @@ from ..property_groups import (
     VRMHELPER_WM_vrm0_first_person_list_items,
     VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    VRMHELPER_WM_vrm0_collider_group_list_items,
+    VRMHELPER_WM_vrm0_spring_bone_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
@@ -236,7 +238,7 @@ class VRMHELPER_UL_vrm0_first_person_list(bpy.types.UIList):
 
 def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
     """
-    VRM1のExpressionに関する設定/オペレーターを描画する
+    VRM0のBlend Shapeに関する設定/オペレーターを描画する
     """
 
     # Property Groupの取得｡
@@ -442,6 +444,44 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
 
 
 """---------------------------------------------------------
+    Secondary Animation
+---------------------------------------------------------"""
+
+
+def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
+    """
+    VRM0のCollider Groupsに関する設定/オペレーターを描画する
+    """
+
+    # Property Groupの取得｡
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
+    cjollider_group_prop: VRMHELPER_SCENE_vrm0_blend_shape_settings = scene_vrm0_prop.collider_group_settings
+
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = 5
+
+    # ----------------------------------------------------------
+    #    登録されているBlend Shapeのリスト描画
+    # ----------------------------------------------------------
+    row = layout.row()
+    row.template_list(
+        "VRMHELPER_UL_Blend_Shape_list",
+        "",
+        blend_shape_master,
+        "blend_shape_groups",
+        blend_shape_master,
+        "active_blend_shape_group_index",
+        rows=define_ui_list_rows(rows),
+    )
+
+    col_list = row.column(align=True)
+    # col_list.separator(factor=0.5)
+    col_list.operator(VRMHELPER_OT_0_blend_shape_create_blend_shape.bl_idname, text="", icon="ADD")
+
+
+"""---------------------------------------------------------
 ------------------------------------------------------------
     Ui List
 ------------------------------------------------------------
@@ -449,7 +489,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
 
 
 class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
-    """Expressionを表示するUI List"""
+    """Blend Shapeを表示するUI List"""
 
     def draw_item(
         self,
@@ -496,7 +536,7 @@ class VRMHELPER_UL_Blend_Shape_list(bpy.types.UIList):
 
 
 class VRMHELPER_UL_blend_shape_bind_list(bpy.types.UIList):
-    """Morph Target Bindsを表示するUI List"""
+    """Bindsを表示するUI List"""
 
     def draw_item(
         self,
@@ -541,7 +581,7 @@ class VRMHELPER_UL_blend_shape_bind_list(bpy.types.UIList):
 
 
 class VRMHELPER_UL_blend_shape_material_list(bpy.types.UIList, VRMHELPER_UL_base):
-    """Material Color/TextureTransform Bindsを表示するUI List"""
+    """Material Valueを表示するUI List"""
 
     def draw_item(
         self,
@@ -602,6 +642,84 @@ class VRMHELPER_UL_blend_shape_material_list(bpy.types.UIList, VRMHELPER_UL_base
             case (0, 0, 1, 0):
                 row_prop.prop(item, "uv_scale", text="")
                 row_prop.prop(item, "uv_offset", text="")
+
+
+class VRMHELPER_UL_collider_group_list(bpy.types.UIList, VRMHELPER_UL_base):
+    """Vrm0のSpring Bone Collider Groupを表示するUI List"""
+
+    def draw_item(
+        self,
+        context,
+        layout,
+        data,
+        item: VRMHELPER_WM_vrm0_collider_group_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        row = layout.row(align=True)
+
+        # ラベルの描画｡
+        if item.item_type[0]:
+            row.label(text="")
+            return
+
+        spring1 = get_vrm_extension_root_property("SPRING1")
+        # Collider Groupの描画｡
+        if item.item_type[1]:
+            row.prop(
+                spring1.collider_groups[item.item_indexes[0]],
+                "vrm_name",
+                text="",
+                icon="OVERLAY",
+                emboss=False,
+            )
+            return
+
+        # Colliderの描画｡
+        if item.item_type[2]:
+            self.add_blank_labels(row, 2)
+            row.prop_search(
+                spring1.collider_groups[item.item_indexes[0]].colliders[item.item_indexes[1]],
+                "collider_name",
+                spring1,
+                "colliders",
+                text="",
+                icon="MESH_UVSPHERE",
+            )
+
+
+class VRMHELPER_UL_vrm0_spring_list(bpy.types.UIList, VRMHELPER_UL_base):
+    """
+    Vrm0のSpring Bone Groupを表示するUI List
+    """
+
+    def draw_item(
+        self,
+        context,
+        layout,
+        data,
+        item: VRMHELPER_WM_vrm0_spring_bone_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        row = layout.row(align=True)
+
+        # ラベルの描画
+        if item.item_type[0]:
+            if not item.name:
+                row.label(text="")
+                return
+
+            label_icon = "OVERLAY"
+            if item.name == "Joint":
+                label_icon = "BONE_DATA"
+            row.separator(factor=2.0)
+            row.label(text=item.name, icon=label_icon)
+            return
 
 
 """---------------------------------------------------------

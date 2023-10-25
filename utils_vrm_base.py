@@ -41,6 +41,7 @@ from .addon_classes import (
     ReferenceVrm0FirstPersonPropertyGroup,
     ReferenceVrm0BlendShapeMasterPropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
+    ReferenceVrm0SecondaryAnimationPropertyGroup,
     # ----------------------------------------------------------
     MToonMaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
@@ -282,24 +283,24 @@ def get_vrm_extension_all_root_property() -> Optional[ReferenceVrmAddonArmatureE
 
 
 def get_vrm_extension_root_property(
-    target: Literal["VRM", "SPRING1", "CONSTRAINT"],
+    target: Literal["VRM", "SECONDARY", "SPRING1", "CONSTRAINT"],
 ) -> (
     ReferenceVrm0PropertyGroup
     | ReferenceVrm1PropertyGroup
+    | ReferenceVrm0SecondaryAnimationPropertyGroup
     | ReferenceSpringBone1SpringBonePropertyGroup
-    | ReferenceNodeConstraint1NodeConstraintPropertyGroup
 ):
     """
     選択されているUI Modeに対応したバージョンのVRM Extensionのルートプロパティを取得する｡
 
     Parameters
     ----------
-    target: Literal["VRM", "SPRING1","CONSTRAINT"]
+    target: Literal["VRM", "SECONDARY", "SPRING1", "CONSTRAINT"]
         取得したいプロパティグループの種類を指定する｡
 
     Returns
     -------
-    PropertyGroup
+    bpy.types.bpy_prop_collection
         選択されているUI Modeに応じてVRM ExtensionのProperty Groupのルートを取得する｡
 
     """
@@ -314,6 +315,9 @@ def get_vrm_extension_root_property(
 
                 case "1":
                     vrm_property = vrm_extension.vrm1
+
+        case "SECONDARY":
+            vrm_property = vrm_extension.vrm0.secondary_animation
 
         case "SPRING1":
             vrm_property = vrm_extension.spring_bone1
@@ -411,43 +415,41 @@ def get_vrm_extension_property(
 
     """
 
-    # Spring Bone関連のプロパティでない場合｡
-    if type in {"FIRST_PERSON", "BLEND_SHAPE", "EXPRESSION"}:
-        vrm_extension = get_vrm_extension_root_property("VRM")
-        match type:
-            case "FIRST_PERSON":
-                return vrm_extension.first_person
+    vrm_extension = get_vrm_extension_root_property("VRM")
+    match check_addon_mode():
+        case "0":
+            vrm_secondary = get_vrm_extension_root_property("SECONDARY")
+            match type:
+                case "FIRST_PERSON":
+                    return vrm_extension.first_person
 
-            case "BLEND_SHAPE":
-                return vrm_extension.blend_shape_master
+                case "BLEND_SHAPE":
+                    return vrm_extension.blend_shape_master
 
-            case "EXPRESSION":
-                return vrm_extension.expressions
+                case "COLLIDER_GROUP":
+                    return vrm_secondary.collider_groups
 
-    # Spring Bone関連のプロパティである場合｡
-    else:
-        vrm_extension = get_vrm_extension_root_property(target="SPRING1")
-        if type == "COLLIDER":
-            if check_addon_mode() == "0":
-                return
+                case "SPRING":
+                    return vrm_secondary.bone_groups
 
-            if check_addon_mode() == "1":
-                colliders: ReferenceVrm1ColliderPropertyGroup = vrm_extension.colliders
-                return colliders
+        case "1":
+            vrm_springs = get_vrm_extension_root_property("SPRING1")
 
-        if type == "COLLIDER_GROUP":
-            if check_addon_mode() == "0":
-                return
+            match type:
+                case "FIRST_PERSON":
+                    return vrm_extension.first_person
 
-            if check_addon_mode() == "1":
-                return vrm_extension.collider_groups
+                case "EXPRESSION":
+                    return vrm_extension.expressions
 
-        if type == "SPRING":
-            if check_addon_mode() == "0":
-                return
+                case "COLLIDER":
+                    return vrm_springs.colliders
 
-            if check_addon_mode() == "1":
-                return vrm_extension.springs
+                case "COLLIDER_GROUP":
+                    return vrm_springs.collider_groups
+
+                case "SPRING":
+                    return vrm_springs.springs
 
 
 def is_existing_target_armature_and_mode() -> bool:

@@ -327,6 +327,24 @@ class VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters(bpy.types.PropertyGroup):
 
 
 # ----------------------------------------------------------
+#    Collider Group
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_collider_group_settings(bpy.types.PropertyGroup):
+    """
+    Collider Groupの設定に関するプロパティ
+    """
+
+
+# ----------------------------------------------------------
+#    Spring Bone Groups
+# ----------------------------------------------------------
+class VRMHELPER_SCENE_vrm0_spring_settings(bpy.types.PropertyGroup):
+    """
+    Spring Bone Groupsの設定に関するプロパティ
+    """
+
+
+# ----------------------------------------------------------
 #    for UI List
 # ----------------------------------------------------------
 class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
@@ -541,7 +559,7 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
 
     blend_shape_settings: PointerProperty(
         name="Blend Shape Settings",
-        description="Group of properties for Blend Shape Annotation Settings",
+        description="Group of properties for Blend Shape Settings",
         type=VRMHELPER_SCENE_vrm0_blend_shape_settings,
     )
 
@@ -549,6 +567,18 @@ class VRMHELPER_SCENE_vrm0_root_property_group(bpy.types.PropertyGroup):
         name="MToon0 Stored Parameters",
         description="Allows  MToon0 parameters of the target material to be saved and restored as default values",
         type=VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
+    )
+
+    collider_group_settings: PointerProperty(
+        name="Collider Group Settings",
+        description="Group of properties for Collider Group Settings",
+        type=VRMHELPER_SCENE_vrm0_collider_group_settings,
+    )
+
+    spring_settings: PointerProperty(
+        name="Spring Bone Group Settings",
+        description="Group of properties for Spring Bone Group Settings",
+        type=VRMHELPER_SCENE_vrm0_spring_settings,
     )
 
     active_indexes: PointerProperty(
@@ -2633,6 +2663,8 @@ CLASSES = (
     VRMHELPER_SCENE_vrm0_first_person_settings,
     VRMHELPER_SCENE_vrm0_blend_shape_settings,
     VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
+    VRMHELPER_SCENE_vrm0_collider_group_settings,
+    VRMHELPER_SCENE_vrm0_spring_settings,
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
@@ -2654,6 +2686,8 @@ CLASSES = (
     VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     VRMHELPER_WM_vrm0_material_value_prop_names,
+    VRMHELPER_WM_vrm0_collider_group_list_items,
+    VRMHELPER_WM_vrm0_spring_bone_list_items,
     VRMHELPER_WM_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm1_first_person_list_items,
