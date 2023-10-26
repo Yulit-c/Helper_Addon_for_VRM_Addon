@@ -42,6 +42,8 @@ from .addon_classes import (
     ReferenceVrm0BlendShapeMasterPropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
+    ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
+    ReferenceVrm0SecondaryAnimationPropertyGroup,
     # ----------------------------------------------------------
     MToonMaterialParameters,
     ReferenceVrm1FirstPersonPropertyGroup,
@@ -333,7 +335,7 @@ def get_vrm_extension_root_property(
 # ----------------------------------------------------------
 #    VRM0
 # ----------------------------------------------------------
-def get_vrm0_extension_root_property() -> ReferenceVrm1PropertyGroup:
+def get_vrm0_extension_root_property() -> ReferenceVrm0PropertyGroup:
     vrm_all_root = get_vrm_extension_all_root_property()
     vrm0_root = vrm_all_root.vrm0
     return vrm0_root
@@ -357,6 +359,29 @@ def get_vrm0_extension_active_blend_shape_group() -> ReferenceVrm0BlendShapeGrou
         vrm0_blend_shape_master.active_blend_shape_group_index
     ]
     return active_blend_shape
+
+
+def get_vrm0_extension_secondary_animation() -> ReferenceVrm0SecondaryAnimationPropertyGroup:
+    vrm0_extension = get_vrm0_extension_root_property()
+    vrm_secondary = vrm0_extension.secondary_animation
+
+    return vrm_secondary
+
+
+def get_vrm0_extension_collider_group() -> (
+    bpy.types.bpy_prop_collection
+):  # ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    vrm_secondary = get_vrm0_extension_secondary_animation()
+    vrm0_collider_group = vrm_secondary.collider_groups
+    return vrm0_collider_group
+
+
+def get_vrm0_extension_spring() -> (
+    bpy.types.bpy_prop_collection
+):  # ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    vrm_secondary = get_vrm0_extension_secondary_animation()
+    vrm0_collider_group = vrm_secondary.collider_groups
+    return vrm0_collider_group
 
 
 # ----------------------------------------------------------

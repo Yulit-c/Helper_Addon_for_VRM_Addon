@@ -34,6 +34,9 @@ from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
+    Referencerm0SecondaryAnimationColliderPropertyGroup,
+    ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
+    ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     # ----------------------------------------------------------
     VRMHELPER_UL_base,
 )
@@ -60,6 +63,8 @@ from ..property_groups import (
     get_wm_vrm0_material_value_prop,
     initialize_material_value_prop,
     get_vrm0_wm_root_prop,
+    get_ui_vrm0_collider_group_prop,
+    get_ui_vrm0_spring_prop,
 )
 
 from ..utils_common import (
@@ -74,6 +79,9 @@ from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm0_extension_property_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
+    get_vrm0_extension_secondary_animation,
+    get_vrm0_extension_collider_group,
+    get_vrm0_extension_spring,
 )
 
 
@@ -491,6 +499,36 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="PANEL_CLOSE")
 
+    if items_list := get_ui_vrm0_collider_group_prop():
+        box = layout.box()
+        active_item: VRMHELPER_WM_vrm0_collider_group_list_items = items_list[active_indexes.collider_group]
+        match tuple(active_item.item_type):
+            case (1, 0, 0, 0):
+                pass
+            case (0, 1, 0, 0):
+                pass
+            case (0, 0, 1, 0):
+                target_armature_data = get_target_armature_data()
+                collider_groups = get_vrm0_extension_collider_group()
+                active_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = (
+                    collider_groups[active_item.group_index]
+                )
+                box.prop_search(
+                    active_collider_group.node,
+                    "bone_name",
+                    target_armature_data,
+                    "bones",
+                    text="Bone",
+                )
+            case (0, 0, 0, 1):
+                collider_groups = get_vrm0_extension_collider_group()
+                active_collider_group = collider_groups[active_item.group_index]
+                active_collider: Referencerm0SecondaryAnimationColliderPropertyGroup = (
+                    active_collider_group.colliders[active_item.collider_index]
+                )
+                box.prop(active_collider.bpy_object, "location", text="Location")
+                box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
+
 
 def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     """
@@ -668,7 +706,7 @@ class VRMHELPER_UL_vrm0_collider_group_list(bpy.types.UIList, VRMHELPER_UL_base)
     def draw_item(
         self,
         context,
-        layout,
+        layout: bpy.types.UILayout,
         data,
         item: VRMHELPER_WM_vrm0_collider_group_list_items,
         icon,
@@ -685,16 +723,27 @@ class VRMHELPER_UL_vrm0_collider_group_list(bpy.types.UIList, VRMHELPER_UL_base)
                 row.label(text=target_armature.data.name, icon="OUTLINER_DATA_ARMATURE")
                 return
 
+            # リンクされたボーン名を表示するラベル(グルーピング用)
             case (0, 1, 0, 0):
+                self.add_blank_labels(row, item.parent_count)
                 row.label(text=item.bone_name, icon="BONE_DATA")
                 return
 
+            # コライダーグループを表示
             case (0, 0, 1, 0):
-                row.label(text=item.name, icon="OVERLAY")
+                self.add_blank_labels(row, item.parent_count + 1)
+                row.label(text=item.group_name, icon="OVERLAY")
                 return
 
+            # コライダーグループに登録されたコライダー
             case (0, 0, 0, 1):
-                row.label(text=item.name, icon="MESH_UVSPHERE")
+                self.add_blank_labels(row, item.parent_count + 2)
+                if collider_object := bpy.data.objects.get(item.collider_name):
+                    sp = row.split(factor=0.75)
+                    sp.prop(collider_object, "name", text="", icon="MESH_UVSPHERE", emboss=False)
+                    sp.prop(collider_object, "empty_display_size", text="")
+                else:
+                    row.label(text=item.collider_name, icon="DOT")
                 return
 
 

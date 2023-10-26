@@ -1033,12 +1033,12 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             box = layout.box()
 
             # スプリング全体の設定用プロパティ
-            target_armature = get_target_armature_data()
+            target_armature_data = get_target_armature_data()
             box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
             box.prop_search(
                 spring.center,
                 "bone_name",
-                target_armature,
+                target_armature_data,
                 "bones",
                 text="Center",
             )
@@ -1069,7 +1069,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     box_sub.prop_search(
                         joint.node,
                         "bone_name",
-                        target_armature,
+                        target_armature_data,
                         "bones",
                         text="Selected Joint",
                     )

@@ -151,17 +151,25 @@ def add_items2collider_group_ui_list() -> int:
             group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = group
             new_group: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
             new_group.name = f"{k} {group.name}"
+            new_group.group_name = group.name
             new_group.item_type[2] = True
             new_group.bone_name = k
-            new_group.item_index = n
+            new_group.group_index = n
             new_group.parent_count = parent_count + 1
-            # コライダーグループに関連付けられたコライダーの登録する｡
+
+            # コライダーグループに関連付けられたコライダーを登録する｡
             for m, collider in enumerate(group.colliders):
                 collider: Referencerm0SecondaryAnimationColliderPropertyGroup = collider
                 new_collider: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
                 new_collider.item_type[3] = True
                 new_collider.bone_name = k
-                new_collider.item_index = m
+                if collider.bpy_object:
+                    new_collider.collider_name = collider.bpy_object.name
+                else:
+                    new_collider.collider_name = "Not Defined"
+
+                new_collider.group_index = n
+                new_collider.collider_index = m
                 new_collider.name = f"{k} {collider.bpy_object.name}"
                 new_collider.parent_count = parent_count + 2
 

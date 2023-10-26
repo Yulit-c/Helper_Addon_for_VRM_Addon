@@ -1606,12 +1606,18 @@ class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
         name="Item Type",
         description="[0]: is_label, [1]: is_bone ,[2]: is_collider_group, [3]: is_collider",
         size=4,
-        default=(0, 0, 0,0),
+        default=(0, 0, 0, 0),
     )
 
     bone_name: StringProperty(
         name="Bone Name",
         description="Parent bone name of collider object",
+        default="",
+    )
+
+    group_name: StringProperty(
+        name="String Property",
+        description="Name of Collder Group",
         default="",
     )
 
@@ -1621,21 +1627,21 @@ class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
         default="",
     )
 
-    collider_object: PointerProperty(
-        name="Collider Object",
-        description="Empty Object that defines vrm spring collider",
-        type=bpy.types.Object,
-    )
-
     parent_count: IntProperty(
         name="Parent Count",
         description="Parent count of bone",
         default=0,
     )
 
-    item_index: IntProperty(
+    group_index: IntProperty(
         name="Item Index",
-        description="Index of item in VRM extension compornent",
+        description="Index of item in Collider Group in VRM Extension",
+        default=0,
+    )
+
+    collider_index: IntProperty(
+        name="Item Index",
+        description="Index of item in Collider in VRM Extension",
         default=0,
     )
 
