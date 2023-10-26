@@ -143,6 +143,10 @@ class ReferenceVrm0MaterialValueBindPropertyGroup:
 # ----------------------------------------------------------
 #    Secondary Animation
 # ----------------------------------------------------------
+class Referencerm0SecondaryAnimationColliderPropertyGroup:
+    bpy_object: bpy.types.Object
+
+
 class ReferenceVrm0SecondaryAnimationGroupPropertyGroup:
     comment: bpy.types.StringProperty
     stiffiness: bpy.types.FloatProperty
@@ -326,7 +330,7 @@ class ReferenceVrm1PropertyGroup:
     humanoid: ReferenceVrm1HumanoidPropertyGroup
     first_person: ReferenceVrm1FirstPersonPropertyGroup
     look_at: ReferenceVrm1LookAtPropertyGroup
-    blend_shape_master: ReferenceVrm1ExpressionPropertyGroup
+    expressions: ReferenceVrm1ExpressionPropertyGroup
 
 
 """---------------------------------------------------------

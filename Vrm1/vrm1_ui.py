@@ -299,7 +299,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     # ----------------------------------------------------------
     row = layout.row()
     row.template_list(
-        "VRMHELPER_UL_expression_list",
+        "VRMHELPER_UL_vrm1_expression_list",
         "",
         wm_vrm1_prop,
         "expression_list_items4custom_filter",
@@ -360,7 +360,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         rows = add_items2expression_morph_ui_list()
         row = box.row(align=True)
         row.template_list(
-            "VRMHELPER_UL_expressin_morph_list",
+            "VRMHELPER_UL_vrm1_expressin_morph_list",
             "",
             wm_vrm1_prop,
             "expression_morph_list_items4custom_filter",
@@ -414,7 +414,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
         rows = add_items2expression_material_ui_list()
         row = box.row(align=True)
         row.template_list(
-            "VRMHELPER_UL_expressin_material_list",
+            "VRMHELPER_UL_vrm1_expressin_material_list",
             "",
             wm_vrm1_prop,
             "expression_material_list_items4custom_filter",
@@ -548,7 +548,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     )
 
 
-class VRMHELPER_UL_expression_list(UIList):
+class VRMHELPER_UL_vrm1_expression_list(UIList):
     """Expressionを表示するUI List"""
 
     def draw_item(
@@ -633,7 +633,7 @@ class VRMHELPER_UL_expression_list(UIList):
         row_preview.prop(expression, "preview", text="Preview")
 
 
-class VRMHELPER_UL_expressin_morph_list(UIList):
+class VRMHELPER_UL_vrm1_expressin_morph_list(UIList):
     """Morph Target Bindsを表示するUI List"""
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -664,7 +664,7 @@ class VRMHELPER_UL_expressin_morph_list(UIList):
                 sp.prop(source_bind, "weight", slider=True)
 
 
-class VRMHELPER_UL_expressin_material_list(UIList, VRMHELPER_UL_base):
+class VRMHELPER_UL_vrm1_expressin_material_list(UIList, VRMHELPER_UL_base):
     """Material Color/TextureTransform Bindsを表示するUI List"""
 
     def draw_item(
@@ -1406,9 +1406,9 @@ CLASSES = (
     #    UI List
     # ----------------------------------------------------------
     VRMHELPER_UL_vrm1_first_person_list,
-    VRMHELPER_UL_expression_list,
-    VRMHELPER_UL_expressin_morph_list,
-    VRMHELPER_UL_expressin_material_list,
+    VRMHELPER_UL_vrm1_expression_list,
+    VRMHELPER_UL_vrm1_expressin_morph_list,
+    VRMHELPER_UL_vrm1_expressin_material_list,
     VRMHELPER_UL_vrm1_collider_list,
     VRMHELPER_UL_vrm1_collider_group_list,
     VRMHELPER_UL_vrm1_spring_list,

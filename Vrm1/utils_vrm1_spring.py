@@ -103,9 +103,7 @@ def get_pose_bone_by_name(bone_name: str) -> PoseBone:
 ---------------------------------------------------------"""
 
 
-def get_source_vrm1_colliders() -> (
-    dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
-):
+def get_source_vrm1_colliders() -> dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]:
     """
     Target ArmatureのVRM Extension内のVRM1のコライダーと対応ボーンの情報を格納した辞書を返す｡
 
@@ -126,11 +124,7 @@ def get_source_vrm1_colliders() -> (
         # n : vrm extension colliders内でのインデックス｡
         colliders_dict[collider.node.bone_name].append((n, collider))
 
-    sort_order = [
-        i.name
-        for i in get_target_armature_data().bones
-        if i.name in colliders_dict.keys()
-    ]
+    sort_order = [i.name for i in get_target_armature_data().bones if i.name in colliders_dict.keys()]
 
     def get_index(element):
         if element[0] == "":
@@ -182,7 +176,7 @@ def add_items2collider_ui_list() -> int:
     # コレクションプロパティの初期化処理｡
     items.clear()
 
-    # コレクションプロパティに先頭ラベルとColliderの各情報を追加する｡
+    # コレクションプロパティに先頭ラベル(Armature名表示用)とColliderの各情報を追加する｡
     label = items.add()
     label.item_type[0] = True
     for k in source_collider_dict.keys():
@@ -211,9 +205,7 @@ def add_items2collider_ui_list() -> int:
             new_item.item_index = n
             # タイプがカプセルであれば子Emptyオブジェクトもコレクションプロパティに追加する｡
             if collider.shape_type == "Capsule":
-                child_object_name = (
-                    collider.bpy_object.children[0].name if collider.bpy_object else ""
-                )
+                child_object_name = collider.bpy_object.children[0].name if collider.bpy_object else ""
                 new_item = items.add()
                 new_item.item_type[3] = True
                 new_item.name = f"{k} {child_object_name}"
@@ -260,10 +252,7 @@ def remove_vrm1_collider_by_selected_object(source_object: Object) -> str:
 
         # 'source_object'を削除する｡子が存在すればそれを先に削除する｡
         if source_object.children:
-            [
-                bpy.data.objects.remove(obj, do_unlink=True)
-                for obj in source_object.children
-            ]
+            [bpy.data.objects.remove(obj, do_unlink=True) for obj in source_object.children]
 
         bpy.data.objects.remove(source_object, do_unlink=True)
 
@@ -305,11 +294,7 @@ def generate_tail_collider_position(bone: PoseBone, tail: Vector) -> Matrix:
 
     """
     armature_object = get_target_armature()
-    return (
-        armature_object.matrix_world.inverted()
-        @ bone.matrix.inverted()
-        @ Matrix.Translation(tail)
-    )
+    return armature_object.matrix_world.inverted() @ bone.matrix.inverted() @ Matrix.Translation(tail)
 
 
 # -----------------------------------------------------
@@ -337,9 +322,7 @@ def is_existing_collider_group() -> bool:
         return False
 
 
-def get_active_list_item_in_collider_group() -> (
-    VRMHELPER_WM_vrm1_collider_group_list_items | None
-):
+def get_active_list_item_in_collider_group() -> VRMHELPER_WM_vrm1_collider_group_list_items | None:
     """
     UIリストのアクティブインデックスに対応したコライダーグループを取得する｡
 
@@ -462,9 +445,7 @@ def cleanup_empty_collider_group():
     for collider_group in collider_groups:
         if not collider_group.colliders:
             logger.debug(f"Colliders is empty : {collider_group.name}")
-            remove_vrm1_spring_collider_group_when_removed_collider_group(
-                collider_group.name
-            )
+            remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group.name)
             candidate_remove_target_group_uuid.append(collider_group.uuid)
 
     if candidate_remove_target_group_uuid:

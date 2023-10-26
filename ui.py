@@ -65,6 +65,8 @@ from .operators import (
 from .Vrm0.vrm0_ui import (
     draw_panel_vrm0_first_person,
     draw_panel_vrm0_blend_shape,
+    draw_panel_vrm0_collider_group,
+    draw_panel_vrm0_spring,
 )
 
 

@@ -1596,25 +1596,47 @@ class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
     Collider Group設定･確認用UI Listに表示する候補アイテム｡
     """
 
-    item_type: BoolVectorProperty(
-        name="Item Type",
-        description="[0]: is_label,[1]: is_collider_group, [2]: is_collider",
-        size=3,
-        default=(0, 0, 0),
+    is_locked_bone_name: BoolProperty(
+        name="Is Locked Bone Name",
+        description="Prevents infinite recursion when bone is renamed",
+        default=True,
     )
 
-    item_name: StringProperty(
-        name="Collider Group Name",
-        description=("Name of the collider group component registered in the VRM Extension"),
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: is_bone ,[2]: is_collider_group, [3]: is_collider",
+        size=4,
+        default=(0, 0, 0,0),
+    )
+
+    bone_name: StringProperty(
+        name="Bone Name",
+        description="Parent bone name of collider object",
         default="",
     )
 
-    item_indexes: IntVectorProperty(
+    collider_name: StringProperty(
+        name="Collider Name",
+        description="Name of collider object",
+        default="",
+    )
+
+    collider_object: PointerProperty(
+        name="Collider Object",
+        description="Empty Object that defines vrm spring collider",
+        type=bpy.types.Object,
+    )
+
+    parent_count: IntProperty(
+        name="Parent Count",
+        description="Parent count of bone",
+        default=0,
+    )
+
+    item_index: IntProperty(
         name="Item Index",
-        description="Indexes of item in VRM extension compornent.[0]:Collider Groups, [1]:Collider",
-        size=2,
-        default=(0, 0),
-        min=0,
+        description="Index of item in VRM extension compornent",
+        default=0,
     )
 
 

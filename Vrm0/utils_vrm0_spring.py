@@ -29,16 +29,22 @@ from bpy.types import (
 # )
 
 from ..addon_classes import (
+    Referencerm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
 )
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm0_collider_group_list_items,
     get_target_armature,
     get_target_armature_data,
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
+)
+
+from ..utils_common import (
+    get_parent_count,
 )
 
 from ..utils_vrm_base import (
@@ -67,12 +73,12 @@ def get_source_vrm0_collider_groups() -> (
     dict[str, list[tuple[int, ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]]]
 ):
     """
-    Target ArmatureのVRM Extension内のVRM1のコライダーと対応ボーンの情報を格納した辞書を返す｡
+    Target ArmatureのVRM Extension内のVRM0のコライダーグループと対応ボーンの情報を格納した辞書を返す｡
 
     Returns
     -------
     dict[str, list[tuple[int, ReferenceVrm1ColliderPropertyGroup]]]
-        コライダーとインデックスを格納したタプルのリストを､対応するボーン名をキーとして格納した辞書｡
+        コライダーグループとインデックスを格納したタプルのリストを､対応するボーン名をキーとして格納した辞書｡
 
     """
 
@@ -118,7 +124,45 @@ def add_items2collider_group_ui_list() -> int:
     items = get_ui_vrm0_collider_group_prop()
 
     source_collider_dict = get_source_vrm0_collider_groups()
-    bones = get_target_armature_data().bones
+    target_armature_data = get_target_armature_data()
+    bones = target_armature_data.bones
 
     # コレクションプロパティの初期化処理｡
     items.clear()
+
+    # コレクションプロパティに先頭ラベル(Armature名表示用)とColliderの各情報を追加する｡
+    label: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
+    label.item_type[0] = True
+    label.name = target_armature_data.name
+
+    for k, v in source_collider_dict.items():
+        new_item: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
+        new_item.item_type[1] = True
+        # ボーン名が空文字であれば次のキーに移行｡
+        if not k:
+            continue
+        new_item.name = k
+        new_item.bone_name = k
+        _, parent_count = get_parent_count(bones[k], 0)
+        new_item.parent_count = (parent_count := parent_count + 1)
+
+        # コライダーグループをコレクションプロパティに追加する｡
+        for n, group in v:
+            group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = group
+            new_group: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
+            new_group.name = f"{k} {group.name}"
+            new_group.item_type[2] = True
+            new_group.bone_name = k
+            new_group.item_index = n
+            new_group.parent_count = parent_count + 1
+            # コライダーグループに関連付けられたコライダーの登録する｡
+            for m, collider in enumerate(group.colliders):
+                collider: Referencerm0SecondaryAnimationColliderPropertyGroup = collider
+                new_collider: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
+                new_collider.item_type[3] = True
+                new_collider.bone_name = k
+                new_collider.item_index = m
+                new_collider.name = f"{k} {collider.bpy_object.name}"
+                new_collider.parent_count = parent_count + 2
+
+    return len(items)
