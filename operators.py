@@ -45,6 +45,9 @@ from .property_groups import (
     get_ui_vrm0_first_person_prop,
     get_ui_vrm0_blend_shape_bind_prop,
     get_ui_vrm0_blend_shape_material_prop,
+    get_ui_vrm0_collider_group_prop,
+    get_ui_vrm0_spring_prop,
+
     # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
@@ -326,6 +329,14 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (0, "BLEND_SHAPE_MATERIAL"):
                 list_items = get_ui_vrm0_blend_shape_material_prop()
                 attr_name = "blend_shape_material"
+
+            case (0, "COLLIDER_GROUP"):
+                list_items = get_ui_vrm0_collider_group_prop()
+                attr_name = "collider_group"
+
+            case (0, "SPRING"):
+                list_items = get_ui_vrm0_spring_prop()
+                attr_name = "spring"
             # ---------------------------------------------------------------------------------
             case (1, "FIRST_PERSON"):
                 list_items = get_ui_vrm1_first_person_prop()
@@ -416,17 +427,17 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 #    VRM0
 # ----------------------------------------------------------
 class VRMHELPER_vrm0_first_person_base(VRMHELPER_operator_base):
-    vrm_mode = 0
+    vrm_mode: int = 0
     component_type: str = "FIRST_PERSON"
 
 
 class VRMHELPER_vrm0_blend_shape_base(VRMHELPER_operator_base):
-    vrm_mode = 0
+    vrm_mode: int = 0
     component_type: str = "BLEND_SHAPE"
 
 
 class VRMHELPER_vrm0_blend_shape_sub(VRMHELPER_operator_base):
-    vrm_mode = 0
+    vrm_mode: int = 0
     component_type: str = "BLEND_SHAPE_SUB"
 
     mode_dict: BlendShapeModeDict = {
@@ -435,46 +446,56 @@ class VRMHELPER_vrm0_blend_shape_sub(VRMHELPER_operator_base):
     }
 
 
+class VRMHELPER_vrm0_collider_group_base(VRMHELPER_operator_base):
+    vrm_mode: int = 0
+    component_type: str = "COLLIDER_GROUP"
+
+
+class VRMHELPER_vrm0_spring_base(VRMHELPER_operator_base):
+    vrm_mode: int = 0
+    component_type: str = "SPRING"
+
+
 # ----------------------------------------------------------
 #    VRM1
 # ----------------------------------------------------------
 class VRMHELPER_vrm1_first_person_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "FIRST_PERSON"
 
 
 class VRMHELPER_vrm1_expression_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "EXPRESSION"
 
 
 class VRMHELPER_vrm1_expression_sub_morph(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "EXPRESSION_MORPH"
 
 
 class VRMHELPER_vrm1_expression_sub_material(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "EXPRESSION_MATERIAL"
 
 
 class VRMHELPER_vrm1_collider_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "COLLIDER"
 
 
 class VRMHELPER_vrm1_collider_group_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "COLLIDER_GROUP"
 
 
 class VRMHELPER_vrm1_spring_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "SPRING"
 
 
 class VRMHELPER_vrm1_constraint_base(VRMHELPER_operator_base):
-    vrm_mode = 1
+    vrm_mode: int = 1
     component_type: str = "CONSTRAINT"
 
     constraint_type_dict: ConstraintTypeDict = {

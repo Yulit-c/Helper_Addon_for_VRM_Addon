@@ -154,37 +154,37 @@ from .vrm1_operators import (
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
-    VRMHELPER_OT_collider_create_from_bone,
-    VRMHELPER_OT_collider_remove_from_empty,
+    VRMHELPER_OT_vrm1_collider_create_from_bone,
+    VRMHELPER_OT_vrm1_collider_remove_from_empty,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
-    VRMHELPER_OT_collider_group_add_group,
-    VRMHELPER_OT_collider_group_remove_active_group,
-    VRMHELPER_OT_collider_group_clear_group,
-    VRMHELPER_OT_collider_group_add_collider,
-    VRMHELPER_OT_collider_group_remove_collider,
-    VRMHELPER_OT_collider_group_clear_collider,
-    VRMHELPER_OT_collider_group_register_collider_from_bone,
+    VRMHELPER_OT_vrm1_collider_group_add_group,
+    VRMHELPER_OT_vrm1_collider_group_remove_active_group,
+    VRMHELPER_OT_vrm1_collider_group_clear_group,
+    VRMHELPER_OT_vrm1_collider_group_add_collider,
+    VRMHELPER_OT_vrm1_collider_group_remove_collider,
+    VRMHELPER_OT_vrm1_collider_group_clear_collider,
+    VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone,
     # ----------------------------------------------------------
     #    Spring
     # ----------------------------------------------------------
-    VRMHELPER_OT_spring_add_spring,
-    VRMHELPER_OT_spring_remove_spring,
-    VRMHELPER_OT_spring_clear_spring,
-    VRMHELPER_OT_spring_add_joint,
-    VRMHELPER_OT_spring_remove_joint,
-    VRMHELPER_OT_spring_clear_joint,
-    VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_joints,
-    VRMHELPER_OT_spring_add_collider_group,
-    VRMHELPER_OT_spring_remove_collider_group,
-    VRMHELPER_OT_spring_clear_collider_group,
+    VRMHELPER_OT_vrm1_spring_add_spring,
+    VRMHELPER_OT_vrm1_spring_remove_spring,
+    VRMHELPER_OT_vrm1_spring_clear_spring,
+    VRMHELPER_OT_vrm1_spring_add_joint,
+    VRMHELPER_OT_vrm1_spring_remove_joint,
+    VRMHELPER_OT_vrm1_spring_clear_joint,
+    VRMHELPER_OT_vrm1_spring_add_joint_from_source,
+    VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
+    VRMHELPER_OT_vrm1_spring_add_collider_group,
+    VRMHELPER_OT_vrm1_spring_remove_collider_group,
+    VRMHELPER_OT_vrm1_spring_clear_collider_group,
     # ----------------------------------------------------------
     #    Constraint
     # ----------------------------------------------------------
-    VRMHELPER_OT_constraint_add_vrm_constraint,
-    VRMHELPER_OT_constraint_remove_vrm_constraint,
+    VRMHELPER_OT_vrm1_constraint_add_vrm_constraint,
+    VRMHELPER_OT_vrm1_constraint_remove_vrm_constraint,
 )
 
 
@@ -766,11 +766,11 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     row.prop(collider_prop, "collider_radius")
 
     row = box.row()
-    op = row.operator(VRMHELPER_OT_collider_create_from_bone.bl_idname)
+    op = row.operator(VRMHELPER_OT_vrm1_collider_create_from_bone.bl_idname)
     op.collider_type = collider_prop.collider_type
     op.collider_radius = collider_prop.collider_radius
 
-    op = row.operator(VRMHELPER_OT_collider_remove_from_empty.bl_idname)
+    op = row.operator(VRMHELPER_OT_vrm1_collider_remove_from_empty.bl_idname)
 
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
     if items_list := get_ui_vrm1_collider_prop():
@@ -915,34 +915,34 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
         # UI List右に描画
         col = row.column(align=True)
         col.label(icon="OVERLAY")
-        col.operator(VRMHELPER_OT_collider_group_add_group.bl_idname, text="", icon="ADD")
+        col.operator(VRMHELPER_OT_vrm1_collider_group_add_group.bl_idname, text="", icon="ADD")
         col.operator(
-            VRMHELPER_OT_collider_group_remove_active_group.bl_idname,
+            VRMHELPER_OT_vrm1_collider_group_remove_active_group.bl_idname,
             text="",
             icon="REMOVE",
         )
         col.operator(
-            VRMHELPER_OT_collider_group_clear_group.bl_idname,
+            VRMHELPER_OT_vrm1_collider_group_clear_group.bl_idname,
             text="",
             icon="PANEL_CLOSE",
         )
         col.separator(factor=2.0)
         col.label(icon="MESH_UVSPHERE")
-        col.operator(VRMHELPER_OT_collider_group_add_collider.bl_idname, text="", icon="ADD")
+        col.operator(VRMHELPER_OT_vrm1_collider_group_add_collider.bl_idname, text="", icon="ADD")
         col.operator(
-            VRMHELPER_OT_collider_group_remove_collider.bl_idname,
+            VRMHELPER_OT_vrm1_collider_group_remove_collider.bl_idname,
             text="",
             icon="REMOVE",
         )
         col.operator(
-            VRMHELPER_OT_collider_group_clear_collider.bl_idname,
+            VRMHELPER_OT_vrm1_collider_group_clear_collider.bl_idname,
             text="",
             icon="PANEL_CLOSE",
         )
 
         # UI List下に描画
         row = layout.row(align=True)
-        row.operator(VRMHELPER_OT_collider_group_register_collider_from_bone.bl_idname)
+        row.operator(VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone.bl_idname)
 
 
 class VRMHELPER_UL_vrm1_collider_group_list(UIList, VRMHELPER_UL_base):
@@ -1022,9 +1022,9 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         col_side.label(icon="PHYSICS")
 
         # スプリングの作成/削除に関するオペレーター
-        col_side.operator(VRMHELPER_OT_spring_add_spring.bl_idname, text="", icon="ADD")
-        col_side.operator(VRMHELPER_OT_spring_remove_spring.bl_idname, text="", icon="REMOVE")
-        col_side.operator(VRMHELPER_OT_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
+        col_side.operator(VRMHELPER_OT_vrm1_spring_add_spring.bl_idname, text="", icon="ADD")
+        col_side.operator(VRMHELPER_OT_vrm1_spring_remove_spring.bl_idname, text="", icon="REMOVE")
+        col_side.operator(VRMHELPER_OT_vrm1_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
         col_side.separator(factor=2.0)
 
         # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する｡
@@ -1048,13 +1048,13 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 col_side.label(icon="BONE_DATA")
 
                 # ジョイント作成/削除に関するオペレーター
-                op = col_side.operator(VRMHELPER_OT_spring_add_joint.bl_idname, text="", icon="ADD")
+                op = col_side.operator(VRMHELPER_OT_vrm1_spring_add_joint.bl_idname, text="", icon="ADD")
                 set_properties_to_from_dict(op, joint_properties)
                 op.use_auto_joint_parametter = spring_settings.use_auto_joint_parametter
 
-                col_side.operator(VRMHELPER_OT_spring_remove_joint.bl_idname, text="", icon="REMOVE")
+                col_side.operator(VRMHELPER_OT_vrm1_spring_remove_joint.bl_idname, text="", icon="REMOVE")
                 col_side.operator(
-                    VRMHELPER_OT_spring_clear_joint.bl_idname,
+                    VRMHELPER_OT_vrm1_spring_clear_joint.bl_idname,
                     text="",
                     icon="PANEL_CLOSE",
                 )
@@ -1083,17 +1083,17 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             if active_item.item_type[3] or active_item.name == "Collider Group":
                 col_side.label(icon="OVERLAY")
                 col_side.operator(
-                    VRMHELPER_OT_spring_add_collider_group.bl_idname,
+                    VRMHELPER_OT_vrm1_spring_add_collider_group.bl_idname,
                     text="",
                     icon="ADD",
                 )
                 col_side.operator(
-                    VRMHELPER_OT_spring_remove_collider_group.bl_idname,
+                    VRMHELPER_OT_vrm1_spring_remove_collider_group.bl_idname,
                     text="",
                     icon="REMOVE",
                 )
                 col_side.operator(
-                    VRMHELPER_OT_spring_clear_collider_group.bl_idname,
+                    VRMHELPER_OT_vrm1_spring_clear_collider_group.bl_idname,
                     text="",
                     icon="PANEL_CLOSE",
                 )
@@ -1136,14 +1136,14 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         col = box.column()
         col.scale_y = 1.2
         op = col.operator(
-            VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
+            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
             text="Create from Selected",
         )
         op.source_type = "SELECT"
         set_properties_to_from_dict(op, joint_properties)
 
         op = col.operator(
-            VRMHELPER_OT_spring_add_joint_from_source.bl_idname,
+            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
             text="Create from Bone Group",
         )
         set_properties_to_from_dict(op, joint_properties)
@@ -1154,7 +1154,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         col.separator(factor=2.0)
         op = col.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
             text="Adust Joints from Active",
         )
         op.source_type = "SINGLE"
@@ -1167,7 +1167,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             text="Filtering Strings",
         )
         op = box.operator(
-            VRMHELPER_OT_spring_assign_parameters_to_joints.bl_idname,
+            VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
             text="Adjust Joints from Selected Spring",
         )
         set_properties_to_from_dict(op, joint_properties)
@@ -1317,25 +1317,25 @@ def draw_panel_vrm1_constraint_operator(self, context: Context, layout: UILayout
     """
     col = layout.column()
     op_roll = col.operator(
-        VRMHELPER_OT_constraint_add_vrm_constraint.bl_idname,
+        VRMHELPER_OT_vrm1_constraint_add_vrm_constraint.bl_idname,
         text="Create Roll Constraint",
     )
     op_roll.constraint_type = "ROLL"
 
     op_aim = col.operator(
-        VRMHELPER_OT_constraint_add_vrm_constraint.bl_idname,
+        VRMHELPER_OT_vrm1_constraint_add_vrm_constraint.bl_idname,
         text="Create Aim Constraint",
     )
     op_aim.constraint_type = "AIM"
 
     op_rot = col.operator(
-        VRMHELPER_OT_constraint_add_vrm_constraint.bl_idname,
+        VRMHELPER_OT_vrm1_constraint_add_vrm_constraint.bl_idname,
         text="Create Rotation Constraint",
     )
     op_rot.constraint_type = "ROTATION"
 
     layout.separator()
-    layout.operator(VRMHELPER_OT_constraint_remove_vrm_constraint.bl_idname, icon="REMOVE")
+    layout.operator(VRMHELPER_OT_vrm1_constraint_remove_vrm_constraint.bl_idname, icon="REMOVE")
 
 
 class VRMHELPER_UL_vrm1_constraint_list(UIList, VRMHELPER_UL_base):

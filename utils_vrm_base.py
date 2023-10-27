@@ -412,7 +412,11 @@ def get_vrm_extension_property(
         "SPRING",
     ]
 ) -> (
-    ReferenceVrm1FirstPersonPropertyGroup
+    ReferenceVrm0FirstPersonPropertyGroup
+    | ReferenceVrm0BlendShapeMasterPropertyGroup
+    | ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    | ReferenceVrm0SecondaryAnimationPropertyGroup
+    | ReferenceVrm1FirstPersonPropertyGroup
     | ReferenceVrm1ExpressionPropertyGroup
     | ReferenceVrm1ColliderPropertyGroup
     | ReferenceVrm1ColliderGroupPropertyGroup

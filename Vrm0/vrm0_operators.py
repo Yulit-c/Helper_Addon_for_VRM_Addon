@@ -49,6 +49,9 @@ from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
+    Referencerm0SecondaryAnimationColliderPropertyGroup,
+    ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
+    ReferenceVrm0SecondaryAnimationPropertyGroup,
 )
 
 from ..property_groups import (
@@ -82,6 +85,7 @@ from ..utils_common import (
 )
 
 from ..utils_vrm_base import (
+    get_vrm_extension_property,
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
     get_vrm0_extension_property_first_person,
@@ -116,9 +120,8 @@ from ..operators import (
     VRMHELPER_vrm0_blend_shape_base,
     VRMHELPER_vrm0_blend_shape_sub,
     # VRMHELPER_vrm0_collider_base,
-    # VRMHELPER_vrm0_collider_group_base,
-    # VRMHELPER_vrm0_spring_base,
-    # VRMHELPER_vrm0_constraint_base,
+    VRMHELPER_vrm0_collider_group_base,
+    VRMHELPER_vrm0_spring_base,
 )
 
 """---------------------------------------------------------
@@ -873,6 +876,78 @@ class VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters(VRMHELPER_vrm0_bl
 
 
 """---------------------------------------------------------
+    Collider Group
+---------------------------------------------------------"""
+
+
+class VRMHELPER_OT_vrm0_collider_group_add_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm_collider_group_add_group"
+    bl_label = "Add Collider Group"
+    bl_description = "Add a new VRM0 Spring Bone Collider Group"
+
+    def execute(self, context):
+        target_armature = get_target_armature()
+        new_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = get_vrm_extension_property(
+            "COLLIDER_GROUP"
+        ).add()
+        new_group.uuid = uuid.uuid4().hex
+        new_group.refresh(target_armature)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_collider_group_remove_active_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_remove_active_group"
+    bl_label = "Remove Collider Group"
+    bl_description = "Deletes the collider group that is active in the list."
+
+    @classmethod
+    def poll(self, context):
+        # Collider Groupが存在しており､リストのアクティブアイテムがラベルではない｡
+        return True
+        # return (ai := get_active_list_item_in_collider_group()) and (ai.item_type[1])
+
+    def execute(self, context):
+        os.system("cls")
+
+        # アクティブアイテムのインデックスを取得する｡
+        # active_item = get_active_list_item_in_collider_group()
+        # active_indexes = active_item.item_indexes
+
+        # collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
+
+        # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを
+        # remove_vrm1_spring_collider_group_when_removed_collider_group(collider_groups[active_indexes[0]].name)
+        # collider_groups.remove(active_indexes[0])
+        # self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_clear_group"
+    bl_label = "Clear Collider Group"
+    bl_description = "Clear all collider groups."
+
+    @classmethod
+    def poll(self, context):
+        # Collider Groupが存在する｡
+        return get_vrm_extension_property("COLLIDER_GROUP")
+
+    def execute(self, context):
+        os.system("cls")
+
+        for collider_group in (collider_groups := get_vrm_extension_property("COLLIDER_GROUP")):
+            remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group.name)
+
+        collider_groups.clear()
+        get_vrm0_index_root_prop().collider_group = 0
+        self.offset_active_item_index("SPRING")
+
+        return {"FINISHED"}
+
+
+"""---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
 ------------------------------------------------------------
@@ -906,4 +981,10 @@ CLASSES = (
     VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters,
+    # ----------------------------------------------------------
+    #    Collider Group
+    # ----------------------------------------------------------
+    VRMHELPER_OT_vrm0_collider_group_add_group,
+    VRMHELPER_OT_vrm0_collider_group_remove_active_group,
+    VRMHELPER_OT_vrm0_collider_group_clear_group,
 )

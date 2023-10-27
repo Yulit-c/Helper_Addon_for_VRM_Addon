@@ -136,6 +136,12 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters,
     VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene,
     VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters,
+    # ----------------------------------------------------------
+    #    Collider Group
+    # ----------------------------------------------------------
+    VRMHELPER_OT_vrm0_collider_group_add_group,
+    VRMHELPER_OT_vrm0_collider_group_remove_active_group,
+    VRMHELPER_OT_vrm0_collider_group_clear_group,
 )
 
 """
@@ -495,7 +501,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
 
     col_list = row.column(align=True)
     # col_list.separator(factor=0.5)
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="ADD")
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_add_group.bl_idname, text="", icon="ADD")
     col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="PANEL_CLOSE")
 
@@ -518,7 +524,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                     "bone_name",
                     target_armature_data,
                     "bones",
-                    text="Bone",
+                    text="Parent Bone",
                 )
             case (0, 0, 0, 1):
                 collider_groups = get_vrm0_extension_collider_group()
@@ -526,8 +532,12 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                 active_collider: Referencerm0SecondaryAnimationColliderPropertyGroup = (
                     active_collider_group.colliders[active_item.collider_index]
                 )
+                box.label(text="Active Collider's Parameters")
                 box.prop(active_collider.bpy_object, "location", text="Location")
                 box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
+
+        box_op = box.box()
+        box_op.operator(VRMHELPER_OT_empty_operator.bl_idname, text="Create Colider from Bone")
 
 
 def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):

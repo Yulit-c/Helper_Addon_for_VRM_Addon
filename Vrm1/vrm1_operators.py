@@ -1180,7 +1180,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
+class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_create_from_bone"
     bl_label = "Create Collider"
     bl_description = "Create spring bone collider from selected bone"
@@ -1263,7 +1263,7 @@ class VRMHELPER_OT_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_vrm1_collider_base):
+class VRMHELPER_OT_vrm1_collider_remove_from_empty(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_remove_from_empty"
     bl_label = "Remove Collider"
     bl_description = "Remove spring bone collider from selected empty object"
@@ -1298,10 +1298,10 @@ class VRMHELPER_OT_collider_remove_from_empty(VRMHELPER_vrm1_collider_base):
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
-class VRMHELPER_OT_collider_group_add_group(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_add_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_add_group"
     bl_label = "Add Collider Group"
-    bl_description = "Add a new VRM1 Spring BoneCollider Group"
+    bl_description = "Add a new VRM1 Spring Bone Collider Group"
 
     def execute(self, context):
         new_group = get_vrm_extension_property("COLLIDER_GROUP").add()
@@ -1311,7 +1311,7 @@ class VRMHELPER_OT_collider_group_add_group(VRMHELPER_vrm1_collider_group_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_remove_active_group(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_remove_active_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_active_group"
     bl_label = "Remove Collider Group"
     bl_description = "Deletes the collider group that is active in the list."
@@ -1338,7 +1338,7 @@ class VRMHELPER_OT_collider_group_remove_active_group(VRMHELPER_vrm1_collider_gr
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_clear_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_clear_group"
     bl_label = "Clear Collider Group"
     bl_description = "Clear all collider groups."
@@ -1366,7 +1366,7 @@ class VRMHELPER_OT_collider_group_clear_group(VRMHELPER_vrm1_collider_group_base
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_collider_group_add_collider(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_add_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_add_collider"
     bl_label = "Add Collider"
     bl_description = "Add a new collider to the active group"
@@ -1384,7 +1384,7 @@ class VRMHELPER_OT_collider_group_add_collider(VRMHELPER_vrm1_collider_group_bas
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_remove_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_collider"
     bl_label = "Remove Collider"
     bl_description = "Remove the active collider from group"
@@ -1403,7 +1403,7 @@ class VRMHELPER_OT_collider_group_remove_collider(VRMHELPER_vrm1_collider_group_
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_vrm1_collider_group_base):
+class VRMHELPER_OT_vrm1_collider_group_clear_collider(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_clear_collider"
     bl_label = "Clear Collider"
     bl_description = "Remove all colliders linked to the active group"
@@ -1427,7 +1427,7 @@ class VRMHELPER_OT_collider_group_clear_collider(VRMHELPER_vrm1_collider_group_b
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_collider_group_register_collider_from_bone(VRMHELPER_operator_base):
+class VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone(VRMHELPER_operator_base):
     bl_idname = "vrmhelper.vrm1_collider_group_register_collider_from_bone"
     bl_label = "Create from Bone"
     bl_description = "Registers the colliders linked to the selected bone to the active collider group"
@@ -1477,7 +1477,7 @@ class VRMHELPER_OT_collider_group_register_collider_from_bone(VRMHELPER_operator
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
-class VRMHELPER_OT_spring_add_spring(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_add_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_add_spring"
     bl_label = "Add Spring"
     bl_description = "Add a new VRM1 Spring"
@@ -1489,7 +1489,7 @@ class VRMHELPER_OT_spring_add_spring(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_spring(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_remove_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_spring"
     bl_label = "Add Spring"
     bl_description = "Remove active spring from spring"
@@ -1511,7 +1511,7 @@ class VRMHELPER_OT_spring_remove_spring(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_spring(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_clear_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_clear_spring"
     bl_label = "Clear Spring"
     bl_description = "Remove all springs from spring"
@@ -1526,7 +1526,7 @@ class VRMHELPER_OT_spring_clear_spring(VRMHELPER_vrm1_spring_base):
 # -----------------------------------------------------
 
 
-class VRMHELPER_OT_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
+class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
     bl_idname = "vrmhelper.vrm1_spring_add_joint"
     bl_label = "Add Joint"
     bl_description = "Add a new joint to the active spring"
@@ -1588,7 +1588,7 @@ class VRMHELPER_OT_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_j
             return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_joint(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_remove_joint(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_joint"
     bl_label = "Remove Joint"
     bl_description = "Remove active joint from spring"
@@ -1606,7 +1606,7 @@ class VRMHELPER_OT_spring_remove_joint(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_joint(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_clear_joint(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.spring_clear_joint"
     bl_label = "Clear Joint"
     bl_description = "Remove all joints from spring"
@@ -1629,7 +1629,9 @@ class VRMHELPER_OT_spring_clear_joint(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_add_joint_from_source(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
+class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
+):
     bl_idname = "vrmhelper.vrm1_spring_create_joint_from_selected"
     bl_label = "Create Joint"
     bl_description = "Create spring joints from selected bones"
@@ -1749,7 +1751,7 @@ class VRMHELPER_OT_spring_add_joint_from_source(VRMHELPER_vrm1_spring_base, VRMH
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_assign_parameters_to_joints(
+class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
     VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
@@ -1855,7 +1857,7 @@ class VRMHELPER_OT_spring_assign_parameters_to_joints(
 # -----------------------------------------------------
 
 
-class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_add_collider_group"
     bl_label = "Add Collider Group"
     bl_description = "Add a new collider group to the active spring"
@@ -1875,7 +1877,7 @@ class VRMHELPER_OT_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_remove_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_collider_group"
     bl_label = "Remove Collider Group"
     bl_description = "Remove active collider group from spring"
@@ -1893,7 +1895,7 @@ class VRMHELPER_OT_spring_remove_collider_group(VRMHELPER_vrm1_spring_base):
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
+class VRMHELPER_OT_vrm1_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_clear_collider_group"
     bl_label = "Clear Collider Group"
     bl_description = "Remove all collider groups from spring"
@@ -1921,7 +1923,7 @@ class VRMHELPER_OT_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base):
+class VRMHELPER_OT_vrm1_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base):
     bl_idname = "vrmhelper.vrm1_constraint_add"
     bl_label = "Add Constraint"
     bl_description = "Create a VRM constraint of the specified type"
@@ -2010,7 +2012,7 @@ class VRMHELPER_OT_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_base)
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_constraint_remove_vrm_constraint(VRMHELPER_vrm1_constraint_base):
+class VRMHELPER_OT_vrm1_constraint_remove_vrm_constraint(VRMHELPER_vrm1_constraint_base):
     bl_idname = "vrmhelper.vrm1_constraint_remove"
     bl_label = "Remove Constraint"
     bl_description = "Remove the selected VRM constraint in UI List"
@@ -2093,35 +2095,35 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
-    VRMHELPER_OT_collider_create_from_bone,
-    VRMHELPER_OT_collider_remove_from_empty,
+    VRMHELPER_OT_vrm1_collider_create_from_bone,
+    VRMHELPER_OT_vrm1_collider_remove_from_empty,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
-    VRMHELPER_OT_collider_group_add_group,
-    VRMHELPER_OT_collider_group_remove_active_group,
-    VRMHELPER_OT_collider_group_clear_group,
-    VRMHELPER_OT_collider_group_add_collider,
-    VRMHELPER_OT_collider_group_remove_collider,
-    VRMHELPER_OT_collider_group_clear_collider,
-    VRMHELPER_OT_collider_group_register_collider_from_bone,
+    VRMHELPER_OT_vrm1_collider_group_add_group,
+    VRMHELPER_OT_vrm1_collider_group_remove_active_group,
+    VRMHELPER_OT_vrm1_collider_group_clear_group,
+    VRMHELPER_OT_vrm1_collider_group_add_collider,
+    VRMHELPER_OT_vrm1_collider_group_remove_collider,
+    VRMHELPER_OT_vrm1_collider_group_clear_collider,
+    VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone,
     # ----------------------------------------------------------
     #    Spring
     # ----------------------------------------------------------
-    VRMHELPER_OT_spring_add_spring,
-    VRMHELPER_OT_spring_remove_spring,
-    VRMHELPER_OT_spring_clear_spring,
-    VRMHELPER_OT_spring_add_joint,
-    VRMHELPER_OT_spring_remove_joint,
-    VRMHELPER_OT_spring_clear_joint,
-    VRMHELPER_OT_spring_add_joint_from_source,
-    VRMHELPER_OT_spring_assign_parameters_to_joints,
-    VRMHELPER_OT_spring_add_collider_group,
-    VRMHELPER_OT_spring_remove_collider_group,
-    VRMHELPER_OT_spring_clear_collider_group,
+    VRMHELPER_OT_vrm1_spring_add_spring,
+    VRMHELPER_OT_vrm1_spring_remove_spring,
+    VRMHELPER_OT_vrm1_spring_clear_spring,
+    VRMHELPER_OT_vrm1_spring_add_joint,
+    VRMHELPER_OT_vrm1_spring_remove_joint,
+    VRMHELPER_OT_vrm1_spring_clear_joint,
+    VRMHELPER_OT_vrm1_spring_add_joint_from_source,
+    VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
+    VRMHELPER_OT_vrm1_spring_add_collider_group,
+    VRMHELPER_OT_vrm1_spring_remove_collider_group,
+    VRMHELPER_OT_vrm1_spring_clear_collider_group,
     # ----------------------------------------------------------
     #    Constraint
     # ----------------------------------------------------------
-    VRMHELPER_OT_constraint_add_vrm_constraint,
-    VRMHELPER_OT_constraint_remove_vrm_constraint,
+    VRMHELPER_OT_vrm1_constraint_add_vrm_constraint,
+    VRMHELPER_OT_vrm1_constraint_remove_vrm_constraint,
 )

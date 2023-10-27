@@ -140,11 +140,14 @@ def add_items2collider_group_ui_list() -> int:
         new_item.item_type[1] = True
         # ボーン名が空文字であれば次のキーに移行｡
         if not k:
-            continue
-        new_item.name = k
-        new_item.bone_name = k
-        _, parent_count = get_parent_count(bones[k], 0)
-        new_item.parent_count = (parent_count := parent_count + 1)
+            parent_count = 0
+            new_item.bone_name = "Not Defined"
+            new_item.name = ""
+        else:
+            new_item.name = k
+            new_item.bone_name = k
+            _, parent_count = get_parent_count(bones[k], 0)
+            new_item.parent_count = (parent_count := parent_count + 1)
 
         # コライダーグループをコレクションプロパティに追加する｡
         for n, group in v:
