@@ -143,7 +143,7 @@ class ReferenceVrm0MaterialValueBindPropertyGroup:
 # ----------------------------------------------------------
 #    Secondary Animation
 # ----------------------------------------------------------
-class Referencerm0SecondaryAnimationColliderPropertyGroup:
+class ReferencerVrm0SecondaryAnimationColliderPropertyGroup:
     bpy_object: bpy.types.Object
 
 

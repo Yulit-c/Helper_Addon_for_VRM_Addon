@@ -114,7 +114,7 @@ from .utils_vrm1_first_person import (
 )
 
 from .utils_vrm1_expression import (
-    add_items2expression_ui_list,
+    vrm1_add_items2expression_ui_list,
     get_active_list_item_in_expression,
     get_active_expression,
     search_existing_morph_bind_and_update,
@@ -144,13 +144,13 @@ from .utils_vrm1_spring import (
     # ----------------------------------------------------------
     get_active_list_item_in_spring,
     remove_vrm1_spring_collider_group_when_removed_collider_group,
-    add_list_item2bone_group_list4operator,
-    add_list_item2collider_group_list4operator,
-    add_list_item2joint_list4operator,
+    vrm1_add_list_item2bone_group_list4operator,
+    vrm1_add_list_item2collider_group_list4operator,
+    vrm1_add_list_item2joint_list4operator,
 )
 
 from .utils_vrm1_constraint import (
-    add_items2constraint_ui_list,
+    vrm1_add_items2constraint_ui_list,
     detect_constrainted_and_target_element,
     set_vrm_constraint_parametters,
     detect_constraint_or_label,
@@ -426,7 +426,7 @@ class VRMHELPER_OT_vrm1_expression_move_custom_expression(VRMHELPER_vrm1_express
                 )
 
         # Expressionリストの更新
-        add_items2expression_ui_list()
+        vrm1_add_items2expression_ui_list()
         expressions_list = get_ui_vrm1_expression_prop()
         for n, expression in enumerate(expressions_list):
             if expression.name == stored_expression_name:
@@ -1330,7 +1330,7 @@ class VRMHELPER_OT_vrm1_collider_group_remove_active_group(VRMHELPER_vrm1_collid
 
         collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
 
-        # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを
+        # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを更新する｡
         remove_vrm1_spring_collider_group_when_removed_collider_group(collider_groups[active_indexes[0]].name)
         collider_groups.remove(active_indexes[0])
         self.offset_active_item_index(self.component_type)
@@ -1652,11 +1652,11 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
     def invoke(self, context, event):
         if self.source_type == "SELECT":
-            add_list_item2collider_group_list4operator()
+            vrm1_add_list_item2collider_group_list4operator()
             return context.window_manager.invoke_props_dialog(self, width=360)
 
-        add_list_item2bone_group_list4operator()
-        add_list_item2collider_group_list4operator()
+        vrm1_add_list_item2bone_group_list4operator()
+        vrm1_add_list_item2collider_group_list4operator()
         return context.window_manager.invoke_props_dialog(self, width=360)
 
     def draw(self, context):
@@ -1782,7 +1782,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
     def invoke(self, context, event):
         os.system("cls")
 
-        add_list_item2joint_list4operator()
+        vrm1_add_list_item2joint_list4operator()
         if self.source_type == "MULTIPLE":
             spring_collection = get_ui_vrm1_operator_spring_prop()
             # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
@@ -1992,7 +1992,7 @@ class VRMHELPER_OT_vrm1_constraint_add_vrm_constraint(VRMHELPER_vrm1_constraint_
 
         # 作成されたコンストレイントがリスト内のアクティブアイテムになるようにUI Listインデックスを調整する｡
         current_ui_constraint_type = constraint_prop.constraint_type
-        add_items2constraint_ui_list(current_ui_constraint_type)
+        vrm1_add_items2constraint_ui_list(current_ui_constraint_type)
         constraint_collection = get_ui_vrm1_constraint_prop()
         target_constraint_index = 0
 

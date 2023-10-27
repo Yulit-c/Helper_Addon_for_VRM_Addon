@@ -454,46 +454,6 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
         context.view_layer.objects.active = current_object_in_loop
 
-    def select_constraint_by_ui_list(self, context):
-        """
-        Node ConstraintのUIリストアクティブアイテムが更新された際に､
-        アクティブアイテムインデックスに対応したコンストレイントを持つ要素を可能なら選択状態にする｡
-        """
-        # 現在のインデックスからアクティブアイテムを取得する｡
-        constraint_ui_list = get_ui_vrm1_constraint_prop()
-        active_index = get_vrm1_active_index_prop("CONSTRAINT")
-        if len(constraint_ui_list) - 1 < active_index:
-            return
-
-        active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[active_index]
-        # アクティブアイテムがブランクまたはラベルの場合は何もしない｡
-        if active_item.is_blank or active_item.is_label:
-            return
-
-        # アクティブアイテムがオブジェクトコンストレイントの場合
-        if active_item.is_object_constraint:
-            if not context.mode == "OBJECT":
-                return
-
-            # アクティブアイテムが参照しているコンストレイントが付与されたオブジェクトを選択する｡
-            constrainted_object: bpy.types.Object = bpy.data.objects.get(active_item.name)
-            context.view_layer.objects.active = constrainted_object
-            bpy.ops.object.select_all(action="DESELECT")
-            constrainted_object.select_set(True)
-
-        # アクティブアイテムがボーンコンストレイントの場合
-        else:
-            if not context.mode == "POSE":
-                return
-
-            # アクティブアイテムが参照しているコンストレイントが付与されたポーズボーンを選択する｡
-            target_armature = get_target_armature()
-            pose_bones = target_armature.pose.bones
-            constrainted_bone: bpy.types.PoseBone = pose_bones.get(active_item.name)
-            target_armature.data.bones.active = constrainted_bone.bone
-            bpy.ops.pose.select_all(action="DESELECT")
-            constrainted_bone.bone.select = True
-
     # -----------------------------------------------------
 
     is_locked_update: BoolProperty(

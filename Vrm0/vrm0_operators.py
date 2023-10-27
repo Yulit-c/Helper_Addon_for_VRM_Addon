@@ -7,6 +7,7 @@ if "bpy" in locals():
         "utils_vrm_base",
         "utils_vrm0_first_person",
         "utils_vrm0_blend_shape",
+        "utils_vrm0_spring",
     ]
 
     for module in reloadable_modules:
@@ -19,6 +20,7 @@ else:
     from .. import utils_vrm_base
     from . import utils_vrm0_first_person
     from . import utils_vrm0_blend_shape
+    from . import utils_vrm0_spring
 
 
 import os, time, uuid
@@ -49,7 +51,7 @@ from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
-    Referencerm0SecondaryAnimationColliderPropertyGroup,
+    ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
 )
@@ -112,6 +114,11 @@ from .utils_vrm0_blend_shape import (
     search_existing_material_color_and_update,
     search_existing_material_uv_and_update,
     set_mtoon0_parameters_from_material_value,
+)
+
+from .utils_vrm0_spring import (
+    remove_vrm0_collider_when_removed_collider_group,
+    get_active_list_item_in_collider_group,
 )
 
 from ..operators import (
@@ -904,22 +911,20 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_group(VRMHELPER_vrm0_collid
     @classmethod
     def poll(self, context):
         # Collider Groupが存在しており､リストのアクティブアイテムがラベルではない｡
-        return True
-        # return (ai := get_active_list_item_in_collider_group()) and (ai.item_type[1])
+        return (ai := get_active_list_item_in_collider_group()) and (ai.item_type[2])
 
     def execute(self, context):
         os.system("cls")
 
         # アクティブアイテムのインデックスを取得する｡
-        # active_item = get_active_list_item_in_collider_group()
-        # active_indexes = active_item.item_indexes
+        active_item = get_active_list_item_in_collider_group()
+        active_index = active_item.group_index
 
-        # collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
-
-        # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを
-        # remove_vrm1_spring_collider_group_when_removed_collider_group(collider_groups[active_indexes[0]].name)
-        # collider_groups.remove(active_indexes[0])
-        # self.offset_active_item_index(self.component_type)
+        collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
+        # 対象コライダーグループを参照していたスプリングの値を更新後に対象を削除する｡その後アクティブインデックスを更新する
+        remove_vrm0_collider_when_removed_collider_group(active_index)
+        collider_groups.remove(active_index)
+        self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
 
@@ -937,12 +942,13 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
     def execute(self, context):
         os.system("cls")
 
-        for collider_group in (collider_groups := get_vrm_extension_property("COLLIDER_GROUP")):
-            remove_vrm1_spring_collider_group_when_removed_collider_group(collider_group.name)
+        collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
+        for n, _collider_group in enumerate(collider_groups):
+            remove_vrm0_collider_when_removed_collider_group(n)
 
         collider_groups.clear()
         get_vrm0_index_root_prop().collider_group = 0
-        self.offset_active_item_index("SPRING")
+        self.offset_active_item_index("COLLIDER_GROUP")
 
         return {"FINISHED"}
 

@@ -151,26 +151,18 @@ def determine_constraint_type(
     )
 
     if is_roll_or_rotation:
-        if (
-            int(source_constraint.use_x)
-            + int(source_constraint.use_y)
-            + int(source_constraint.use_z)
-        ) == 1:
+        if (int(source_constraint.use_x) + int(source_constraint.use_y) + int(source_constraint.use_z)) == 1:
             return VrmRollConstraint()
 
     # Aim Constraint
-    if isinstance(
-        source_constraint, DampedTrackConstraint
-    ) and evaluate_aim_constraint_target(source_constraint, target_armature):
+    if isinstance(source_constraint, DampedTrackConstraint) and evaluate_aim_constraint_target(
+        source_constraint, target_armature
+    ):
         return VrmAimConstraint()
 
     # Rotation Constraint
     if is_roll_or_rotation:
-        if (
-            source_constraint.use_x
-            and source_constraint.use_y
-            and source_constraint.use_z
-        ):
+        if source_constraint.use_x and source_constraint.use_y and source_constraint.use_z:
             return VrmRotationConstraint()
 
 
@@ -265,9 +257,7 @@ def get_candidate_constraints_for_draw_ui(
                     )
                     rotation_constraint_list.append(temp_tuple)
 
-    candidate_constraints = (
-        roll_constraint_list + aim_constraint_list + rotation_constraint_list
-    )
+    candidate_constraints = roll_constraint_list + aim_constraint_list + rotation_constraint_list
 
     return candidate_constraints
 
@@ -276,9 +266,7 @@ def exclude_circular_dependency_constraints(
     candidate_constraints_list: list[CandidateConstraitProperties],
 ) -> list[CandidateConstraitProperties]:
     excluded_constraint_list: list[Constraint] = []
-    source_constraint_list = [
-        constraint for _, _, _, _, constraint in candidate_constraints_list
-    ]
+    source_constraint_list = [constraint for _, _, _, _, constraint in candidate_constraints_list]
 
     for search_constraint in source_constraint_list:
         # TODO : Aim Constraint's circular dependency detectio
@@ -308,9 +296,7 @@ def exclude_circular_dependency_constraints(
 
             match current_constraint.target.type:
                 case "ARMATURE" if current_constraint.subtarget:
-                    bone = current_constraint.target.pose.bones[
-                        current_constraint.subtarget
-                    ]
+                    bone = current_constraint.target.pose.bones[current_constraint.subtarget]
                     target_constraints = bone.constraints
 
                 case _:
@@ -356,7 +342,7 @@ def exclude_circular_dependency_constraints(
     return detected_circular_dependency_constraints
 
 
-def add_items2constraint_ui_list(constraint_type: Literal["OBJECT", "BONE"]) -> int:
+def vrm1_add_items2constraint_ui_list(constraint_type: Literal["OBJECT", "BONE"]) -> int:
     """
     現在の描画タイプに応じて､Constraintの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -374,9 +360,7 @@ def add_items2constraint_ui_list(constraint_type: Literal["OBJECT", "BONE"]) -> 
     candidate_constraints_list = get_candidate_constraints_for_draw_ui(constraint_type)
     # logger.debug(len(candidate_constraints_list))
 
-    candidate_constraints_list = exclude_circular_dependency_constraints(
-        candidate_constraints_list
-    )
+    candidate_constraints_list = exclude_circular_dependency_constraints(candidate_constraints_list)
     # pprint(candidate_constraints_list)
 
     # コレクションプロパティの初期化処理｡
@@ -489,9 +473,7 @@ def draw_name(layout: UILayout, source_constraint: Constraint):
     col.prop(source_constraint, "name", text="Constraint Name")
 
 
-def draw_target(
-    layout: UILayout, source_constraint: Constraint, target_is_object: bool = False
-):
+def draw_target(layout: UILayout, source_constraint: Constraint, target_is_object: bool = False):
     """
     コンストレイントのパラメーターの内､ターゲットに関わる部分を描画する
 
@@ -530,9 +512,7 @@ def draw_target(
                 sub = row.row(align=True)
                 sub.prop(source_constraint, "head_tail")
 
-                sub.prop(
-                    source_constraint, "use_bbone_shape", text="", icon="IPO_BEZIER"
-                )
+                sub.prop(source_constraint, "use_bbone_shape", text="", icon="IPO_BEZIER")
                 row.prop_decorator(source_constraint, "head_tail")
 
         case _:
@@ -697,9 +677,7 @@ def detect_constraint_or_label() -> VRMHELPER_WM_vrm1_constraint_list_items:
         return
 
     active_index = get_vrm1_active_index_prop("CONSTRAINT")
-    active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[
-        active_index
-    ]
+    active_item: VRMHELPER_WM_vrm1_constraint_list_items = constraint_ui_list[active_index]
 
     if active_item.is_blank or active_item.is_label:
         return
@@ -754,9 +732,7 @@ def detect_constrainted_and_target_element() -> (
                         return no_target
 
                     excluded_armature_list = [
-                        obj
-                        for obj in context.selected_objects
-                        if obj.type != "ARMATURE"
+                        obj for obj in context.selected_objects if obj.type != "ARMATURE"
                     ]
                     target_object = excluded_armature_list[0]
                     source_elements = [active_element, target_object]  # 'Bone & Object'

@@ -6,8 +6,13 @@ if "bpy" in locals():
         "addon_classes",
         "utils_common",
         "utils_vrm_base",
-        "utils_first_person",
-        "utils_spring",
+        "utils_vrm0_first_person",
+        "utils_vrm0_blend_shape",
+        "utils_vrm0_spring",
+        "utils_vrm1_first_person",
+        "utils_vrm1_expression",
+        "utils_vrm1_spring",
+        "utils_vrm1_constraint,",
     ]
 
     for module in reloadable_modules:
@@ -19,8 +24,13 @@ else:
     from . import addon_classes
     from . import utils_common
     from . import utils_vrm_base
+    from .Vrm0 import utils_vrm0_first_person
+    from .Vrm0 import utils_vrm0_blend_shape
+    from .Vrm0 import utils_vrm0_spring
     from .Vrm1 import utils_vrm1_first_person
+    from .Vrm1 import utils_vrm1_expression
     from .Vrm1 import utils_vrm1_spring
+    from .Vrm1 import utils_vrm1_constraint
 
 
 import os
@@ -47,7 +57,6 @@ from .property_groups import (
     get_ui_vrm0_blend_shape_material_prop,
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
-
     # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
@@ -80,33 +89,29 @@ from .Vrm0.utils_vrm0_blend_shape import (
     vrm0_add_items2blend_shape_material_ui_list,
 )
 
+from .Vrm0.utils_vrm0_spring import (
+    vrm0_add_items2collider_group_ui_list,
+    vrm0_add_items2spring_ui_list,
+)
+
 from .Vrm1.utils_vrm1_first_person import (
     vrm1_add_items2annotation_ui_list,
 )
 
 from .Vrm1.utils_vrm1_expression import (
-    add_items2expression_ui_list,
-    add_items2expression_morph_ui_list,
-    add_items2expression_material_ui_list,
+    vrm1_add_items2expression_ui_list,
+    vrm1_add_items2expression_morph_ui_list,
+    vrm1_add_items2expression_material_ui_list,
 )
 
 from .Vrm1.utils_vrm1_spring import (
-    # ----------------------------------------------------------
-    #    Collider
-    # ----------------------------------------------------------
-    add_items2collider_ui_list,
-    # ----------------------------------------------------------
-    #    Collider Group
-    # ----------------------------------------------------------
-    add_items2collider_group_ui_list,
-    # ----------------------------------------------------------
-    #    Spring
-    # ----------------------------------------------------------
-    add_items2spring_ui_list,
+    vrm1_add_items2collider_ui_list,
+    vrm1_add_items2collider_group_ui_list,
+    vrm1_add_items2spring_ui_list,
 )
 
 from .Vrm1.utils_vrm1_constraint import (
-    add_items2constraint_ui_list,
+    vrm1_add_items2constraint_ui_list,
 )
 
 
@@ -238,30 +243,36 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (0, "BLEND_SHAPE_MATERIAL"):
                 vrm0_add_items2blend_shape_material_ui_list()
 
+            case (0, "COLLIDER_GROUP"):
+                vrm0_add_items2collider_group_ui_list()
+
+            case (0, "SPRING"):
+                vrm0_add_items2spring_ui_list()
+            # ---------------------------------------------------------------------------------
             case (1, "EXPRESSION"):
-                add_items2expression_ui_list()
+                vrm1_add_items2expression_ui_list()
 
             case (1, "EXPRESSION_MORPH"):
-                add_items2expression_morph_ui_list()
+                vrm1_add_items2expression_morph_ui_list()
 
             case (1, "EXPRESSION_MATERIAL"):
-                add_items2expression_material_ui_list()
+                vrm1_add_items2expression_material_ui_list()
 
             case (0, "COLLIDER"):
-                add_items2collider_ui_list()
+                vrm1_add_items2collider_ui_list()
 
             case (1, "COLLIDER"):
-                add_items2collider_ui_list()
+                vrm1_add_items2collider_ui_list()
 
             case (1, "COLLIDER_GROUP"):
-                add_items2collider_group_ui_list()
+                vrm1_add_items2collider_group_ui_list()
 
             case (1, "SPRING"):
-                add_items2spring_ui_list()
+                vrm1_add_items2spring_ui_list()
 
             case (1, "CONSTRAINT"):
                 constraint_type = get_scene_vrm1_constraint_prop().constraint_type
-                add_items2constraint_ui_list(constraint_type)
+                vrm1_add_items2constraint_ui_list(constraint_type)
 
     def offset_active_item_index(
         self,

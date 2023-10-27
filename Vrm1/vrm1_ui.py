@@ -91,22 +91,22 @@ from .utils_vrm1_first_person import (
 )
 
 from .utils_vrm1_expression import (
-    add_items2expression_ui_list,
+    vrm1_add_items2expression_ui_list,
     get_active_expression,
-    add_items2expression_morph_ui_list,
-    add_items2expression_material_ui_list,
+    vrm1_add_items2expression_morph_ui_list,
+    vrm1_add_items2expression_material_ui_list,
 )
 
 from .utils_vrm1_spring import (
     get_active_list_item_in_spring,
     get_active_vrm1_collider,
-    add_items2collider_ui_list,
-    add_items2collider_group_ui_list,
-    add_items2spring_ui_list,
+    vrm1_add_items2collider_ui_list,
+    vrm1_add_items2collider_group_ui_list,
+    vrm1_add_items2spring_ui_list,
 )
 
 from .utils_vrm1_constraint import (
-    add_items2constraint_ui_list,
+    vrm1_add_items2constraint_ui_list,
     draw_roll_constraint,
     draw_aim_constraint,
     draw_rotation_constraint,
@@ -292,7 +292,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     expression_prop = scene_vrm1_prop.expression_settings
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-    rows = add_items2expression_ui_list()
+    rows = vrm1_add_items2expression_ui_list()
 
     # ----------------------------------------------------------
     #    登録されているExpressionのリスト描画
@@ -357,7 +357,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     # Morph Target Bind
     ######################################
     if expression_prop.editing_target == "MORPH":
-        rows = add_items2expression_morph_ui_list()
+        rows = vrm1_add_items2expression_morph_ui_list()
         row = box.row(align=True)
         row.template_list(
             "VRMHELPER_UL_vrm1_expressin_morph_list",
@@ -411,7 +411,7 @@ def draw_panel_vrm1_expression(self, context: Context, layout: UILayout):
     # Material Bind
     ##################################
     if expression_prop.editing_target == "MATERIAL":
-        rows = add_items2expression_material_ui_list()
+        rows = vrm1_add_items2expression_material_ui_list()
         row = box.row(align=True)
         row.template_list(
             "VRMHELPER_UL_vrm1_expressin_material_list",
@@ -743,7 +743,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     layout.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-    rows = add_items2collider_ui_list()
+    rows = vrm1_add_items2collider_ui_list()
 
     layout.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
@@ -902,7 +902,7 @@ def draw_panel_vrm1_collider_group(self, context: Context, layout: UILayout):
 
     if mode == "1":
         # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-        rows = add_items2collider_group_ui_list()
+        rows = vrm1_add_items2collider_group_ui_list()
         row.template_list(
             "VRMHELPER_UL_vrm1_collider_group_list",
             "",
@@ -1006,7 +1006,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
 
     if mode == "1":
         # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-        rows = add_items2spring_ui_list()
+        rows = vrm1_add_items2spring_ui_list()
 
         row.template_list(
             "VRMHELPER_UL_vrm1_spring_list",
@@ -1258,7 +1258,7 @@ def draw_panel_vrm1_constraint_ui_list(self, context: Context, layout: UILayout)
     row.scale_y = 1.3
     row.prop(constraint_prop, "constraint_type", text=" ", expand=True)
 
-    rows = add_items2constraint_ui_list(constraint_prop.constraint_type)
+    rows = vrm1_add_items2constraint_ui_list(constraint_prop.constraint_type)
     row = layout.row()
     row.template_list(
         "VRMHELPER_UL_vrm1_constraint_list",

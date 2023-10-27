@@ -17,7 +17,10 @@ else:
     from .. import utils_common
 
 import re
-from typing import Literal
+from typing import (
+    Literal,
+    Optional,
+)
 import bpy
 from bpy.types import (
     PropertyGroup,
@@ -29,7 +32,7 @@ from bpy.types import (
 # )
 
 from ..addon_classes import (
-    Referencerm0SecondaryAnimationColliderPropertyGroup,
+    ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
@@ -41,6 +44,7 @@ from ..property_groups import (
     get_target_armature_data,
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
+    get_vrm0_active_index_prop,
 )
 
 from ..utils_common import (
@@ -107,7 +111,7 @@ def get_source_vrm0_collider_groups() -> (
     return sorted_collider_groups
 
 
-def add_items2collider_group_ui_list() -> int:
+def vrm0_add_items2collider_group_ui_list() -> int:
     """
     VRM0のSpring Bone_Collider Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -162,7 +166,7 @@ def add_items2collider_group_ui_list() -> int:
 
             # コライダーグループに関連付けられたコライダーを登録する｡
             for m, collider in enumerate(group.colliders):
-                collider: Referencerm0SecondaryAnimationColliderPropertyGroup = collider
+                collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = collider
                 new_collider: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
                 new_collider.item_type[3] = True
                 new_collider.bone_name = k
@@ -177,3 +181,58 @@ def add_items2collider_group_ui_list() -> int:
                 new_collider.parent_count = parent_count + 2
 
     return len(items)
+
+
+def remove_vrm0_collider_when_removed_collider_group(collider_group_index: int):
+    """
+    VRM0のコライダーグループが削除される時に､それを参照しているコライダーオブジェクト(Empty Object)を削除する｡
+
+    Parameters
+    ----------
+    collider_group_index : int
+        削除されるコライダーグループのインデックス｡
+
+    """
+
+    collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
+    target_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = collider_groups[
+        collider_group_index
+    ]
+    for collider in target_group.colliders:
+        collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = collider
+        if not (collider_object := bpy.data.objects.get(collider.bpy_object.name)):
+            continue
+        bpy.data.objects.remove(collider_object)
+
+
+def get_active_list_item_in_collider_group() -> Optional[VRMHELPER_WM_vrm0_collider_group_list_items]:
+    """
+    UIリストのアクティブインデックスに対応したコライダーグループを取得する｡
+
+    Returns
+    -------
+    PropertyGroup | None
+        取得されたコライダーグループ｡取得できなければNone｡
+
+    """
+    if collider_group_list := get_ui_vrm0_collider_group_prop():
+        return collider_group_list[get_vrm0_active_index_prop("COLLIDER_GROUP")]
+    else:
+        return None
+
+
+def get_source_vrm0_springs():
+    pass
+
+
+def vrm0_add_items2spring_ui_list() -> int:
+    """
+    VRM0のSpring Bone_Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
+    UI Listのrows入力用にアイテム数を返す｡
+
+    Returns
+    -------
+    int
+        リストに表示するアイテム数｡
+    """
+    pass

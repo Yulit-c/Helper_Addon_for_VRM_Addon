@@ -187,7 +187,7 @@ def get_source_vrm1_expression4ui_list() -> (
     return candidate_preset_expressions, candidate_custom_expressions
 
 
-def add_items2expression_ui_list() -> int:
+def vrm1_add_items2expression_ui_list() -> int:
     """
     Expressionの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -289,7 +289,7 @@ def get_source_vrm1_expression_morph4ui_list() -> (
     return morph_target_binds_dict
 
 
-def add_items2expression_morph_ui_list() -> int:
+def vrm1_add_items2expression_morph_ui_list() -> int:
     """
     Morph Target Bindの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -421,7 +421,7 @@ def get_source_vrm1_expression_material4ui_list():
     return material_binds_dict
 
 
-def add_items2expression_material_ui_list() -> int:
+def vrm1_add_items2expression_material_ui_list() -> int:
     """
     Morph Target Bindの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡

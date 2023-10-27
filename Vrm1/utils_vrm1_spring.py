@@ -154,7 +154,7 @@ def get_active_vrm1_collider(
         return collider
 
 
-def add_items2collider_ui_list() -> int:
+def vrm1_add_items2collider_ui_list() -> int:
     """
     VRM1のSpring Bone_Colliderの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -322,7 +322,7 @@ def is_existing_collider_group() -> bool:
         return False
 
 
-def get_active_list_item_in_collider_group() -> VRMHELPER_WM_vrm1_collider_group_list_items | None:
+def get_active_list_item_in_collider_group() -> Optional[VRMHELPER_WM_vrm1_collider_group_list_items]:
     """
     UIリストのアクティブインデックスに対応したコライダーグループを取得する｡
 
@@ -372,7 +372,7 @@ def get_operator_target_collider_group() -> list[str]:
     return target_name_list
 
 
-def add_items2collider_group_ui_list() -> int:
+def vrm1_add_items2collider_group_ui_list() -> int:
     """
     VRM1のSpring Bone_Collider Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -496,7 +496,7 @@ def get_source_vrm1_springs() -> (
     return ((spring, spring.joints, spring.collider_groups) for spring in springs)
 
 
-def add_items2spring_ui_list() -> int:
+def vrm1_add_items2spring_ui_list() -> int:
     """
     VRM1のSpringの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
     UI Listのrows入力用にアイテム数を返す｡
@@ -570,7 +570,7 @@ def remove_vrm1_spring_collider_group_when_removed_collider_group(
     collider_group_name: str,
 ):
     """
-    VRM1のコライダーグループが削除され時に､それを参照しているスプリングのコライダーグループの値を更新する｡
+    VRM1のコライダーグループが削除される時に､それを参照しているスプリングのコライダーグループの値を更新する｡
 
     Parameters
     ----------
@@ -592,7 +592,7 @@ def remove_vrm1_spring_collider_group_when_removed_collider_group(
 # ----------------------------------------------------------
 
 
-def add_list_item2bone_group_list4operator():
+def vrm1_add_list_item2bone_group_list4operator():
     """
     オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
@@ -611,7 +611,7 @@ def add_list_item2bone_group_list4operator():
             new_item.is_target = True
 
 
-def add_list_item2collider_group_list4operator():
+def vrm1_add_list_item2collider_group_list4operator():
     """
     オペレーターの処理対象コライダーグループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
@@ -625,7 +625,7 @@ def add_list_item2collider_group_list4operator():
         new_item.is_target = True
 
 
-def add_list_item2joint_list4operator():
+def vrm1_add_list_item2joint_list4operator():
     """
     オペレーターの処理対象ジョインツを定義するためのコレクションプロパティにアイテムを登録する｡
     """

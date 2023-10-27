@@ -34,7 +34,7 @@ from ..addon_classes import (
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
-    Referencerm0SecondaryAnimationColliderPropertyGroup,
+    ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     # ----------------------------------------------------------
@@ -102,7 +102,7 @@ from .utils_vrm0_blend_shape import (
 )
 
 from .utils_vrm0_spring import (
-    add_items2collider_group_ui_list,
+    vrm0_add_items2collider_group_ui_list,
 )
 
 
@@ -483,7 +483,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     )
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-    rows = add_items2collider_group_ui_list()
+    rows = vrm0_add_items2collider_group_ui_list()
 
     # ----------------------------------------------------------
     #    登録されているBlend Shapeのリスト描画
@@ -502,8 +502,8 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     col_list = row.column(align=True)
     # col_list.separator(factor=0.5)
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_add_group.bl_idname, text="", icon="ADD")
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="PANEL_CLOSE")
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_remove_active_group.bl_idname, text="", icon="REMOVE")
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_clear_group.bl_idname, text="", icon="PANEL_CLOSE")
 
     if items_list := get_ui_vrm0_collider_group_prop():
         box = layout.box()
@@ -529,7 +529,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
             case (0, 0, 0, 1):
                 collider_groups = get_vrm0_extension_collider_group()
                 active_collider_group = collider_groups[active_item.group_index]
-                active_collider: Referencerm0SecondaryAnimationColliderPropertyGroup = (
+                active_collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = (
                     active_collider_group.colliders[active_item.collider_index]
                 )
                 box.label(text="Active Collider's Parameters")
