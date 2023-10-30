@@ -341,20 +341,20 @@ def get_vrm0_extension_root_property() -> ReferenceVrm0PropertyGroup:
     return vrm0_root
 
 
-def get_vrm0_extension_property_first_person() -> ReferenceVrm0FirstPersonPropertyGroup:
+def get_vrm0_extension_first_person() -> ReferenceVrm0FirstPersonPropertyGroup:
     vrm0_extension = get_vrm0_extension_root_property()
     vrm0_first_person = vrm0_extension.first_person
     return vrm0_first_person
 
 
-def get_vrm0_extension_property_blend_shape() -> ReferenceVrm0BlendShapeMasterPropertyGroup:
+def get_vrm0_extension_blend_shape() -> ReferenceVrm0BlendShapeMasterPropertyGroup:
     vrm0_extension = get_vrm0_extension_root_property()
     vrm0_blend_shapes = vrm0_extension.blend_shape_master
     return vrm0_blend_shapes
 
 
 def get_vrm0_extension_active_blend_shape_group() -> ReferenceVrm0BlendShapeGroupPropertyGroup:
-    vrm0_blend_shape_master = get_vrm0_extension_property_blend_shape()
+    vrm0_blend_shape_master = get_vrm0_extension_blend_shape()
     active_blend_shape = vrm0_blend_shape_master.blend_shape_groups[
         vrm0_blend_shape_master.active_blend_shape_group_index
     ]

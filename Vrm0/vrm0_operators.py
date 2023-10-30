@@ -90,9 +90,11 @@ from ..utils_vrm_base import (
     get_vrm_extension_property,
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
-    get_vrm0_extension_property_first_person,
-    get_vrm0_extension_property_blend_shape,
+    get_vrm0_extension_first_person,
+    get_vrm0_extension_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
+    get_vrm0_extension_secondary_animation,
+    get_vrm0_extension_collider_group,
     reset_shape_keys_value_in_morph_binds,
     store_mtoon_current_values,
     set_mtoon_default_values,
@@ -166,7 +168,7 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_
         return [obj for obj in context.selected_objects if filtering_mesh_type(obj)]
 
     def execute(self, context):
-        mesh_annotations = get_vrm0_extension_property_first_person().mesh_annotations
+        mesh_annotations = get_vrm0_extension_first_person().mesh_annotations
         annotation_type = get_scene_vrm0_first_person_prop().annotation_type
 
         # 選択オブジェクトの数だけMesh Annotationを追加する｡
@@ -203,7 +205,7 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(VRMHELPER_vrm0_
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm0_extension_property_first_person().mesh_annotations
+        return get_vrm0_extension_first_person().mesh_annotations
 
     def execute(self, context):
         # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
@@ -232,7 +234,7 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(VRMHE
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm0_extension_property_first_person().mesh_annotations
+        return get_vrm0_extension_first_person().mesh_annotations
 
     def execute(self, context):
         # アドオンのプロパティとVRM Extensionのプロパティを取得する｡
@@ -259,10 +261,10 @@ class VRMHELPER_OT_vrm0_first_person_clear_annotation(VRMHELPER_vrm0_first_perso
     @classmethod
     def poll(cls, context):
         # Mesh Annotationが1つ以上存在しなければ使用不可｡
-        return get_vrm0_extension_property_first_person().mesh_annotations
+        return get_vrm0_extension_first_person().mesh_annotations
 
     def execute(self, context):
-        mesh_annotations = get_vrm0_extension_property_first_person().mesh_annotations
+        mesh_annotations = get_vrm0_extension_first_person().mesh_annotations
         mesh_annotations.clear()
 
         self.offset_active_item_index(self.component_type)
@@ -298,12 +300,12 @@ class VRMHELPER_OT_0_blend_shape_remove_blend_shape(VRMHELPER_vrm0_blend_shape_b
     @classmethod
     def poll(cls, context):
         # ブレンドシェイプが1つ以上存在している
-        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        blend_shapes = get_vrm0_extension_blend_shape().blend_shape_groups
         return blend_shapes
 
     def execute(self, context):
         target_armature = get_target_armature()
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         target_index = blend_shape_master.active_blend_shape_group_index
 
         bpy.ops.vrm.remove_vrm0_blend_shape_group(
@@ -322,11 +324,11 @@ class VRMHELPER_OT_0_blend_shape_clear_blend_shape(VRMHELPER_vrm0_blend_shape_ba
     @classmethod
     def poll(cls, context):
         # ブレンドシェイプが1つ以上存在している
-        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        blend_shapes = get_vrm0_extension_blend_shape().blend_shape_groups
         return blend_shapes
 
     def execute(self, context):
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         blend_shapes = blend_shape_master.blend_shape_groups
         blend_shapes.clear()
         blend_shape_master.active_blend_shape_group_index = 0
@@ -343,12 +345,12 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
     @classmethod
     def poll(cls, context):
         # ブレンドシェイプが1つ以上存在している
-        blend_shapes = get_vrm0_extension_property_blend_shape().blend_shape_groups
+        blend_shapes = get_vrm0_extension_blend_shape().blend_shape_groups
         return blend_shapes
 
     def execute(self, context):
         os.system("cls")
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         blend_shape_groups = blend_shape_master.blend_shape_groups
         target_index = blend_shape_master.active_blend_shape_group_index
         active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_groups[target_index]
@@ -428,7 +430,7 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_create(VRMHELPER_vrm0_blend
 
     def execute(self, context):
         armature_data_name = get_target_armature_data().name
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         active_index = blend_shape_master.active_blend_shape_group_index
 
         match self.mode:
@@ -481,7 +483,7 @@ class VRMHELPER_OT_vrm0_blend_shape_bind_or_material_remove(VRMHELPER_vrm0_blend
         target_armature = get_target_armature()
         active_bind_item = vrm0_get_active_bind_in_ui()
         active_mat_value_item = vrm0_get_active_material_value_in_ui()
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         blend_shape_index = blend_shape_master.active_blend_shape_group_index
 
         # TODO : アクティブ要素がラベルであればそのラベルに属する要素を全て削除｡
@@ -948,7 +950,61 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
 
         collider_groups.clear()
         get_vrm0_index_root_prop().collider_group = 0
-        self.offset_active_item_index("COLLIDER_GROUP")
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+"""---------------------------------------------------------
+    Collider
+---------------------------------------------------------"""
+
+
+class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_remove_active_collider"
+    bl_label = "Remove Active Collider"
+    bl_description = "Remove the active collider in UI List"
+
+    @classmethod
+    def poll(self, context):
+        # UI Listのアクティブアイテムがコライダーである｡
+        if active_item := get_active_list_item_in_collider_group():
+            return active_item.item_type[3]
+
+    def execute(self, context):
+        aaaaaa
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_collider_group_clear_colliders(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_clear_colliders"
+    bl_label = "Clear Colliders"
+    bl_description = "Remove all colliders in active collider group"
+
+    @classmethod
+    def poll(self, context):
+        # UI Listのアクティブアイテムがコライダーグループまたはコライダーである｡
+        if active_item := get_active_list_item_in_collider_group():
+            return active_item.item_type[2] or active_item.item_type[3]
+
+    def execute(self, context):
+        os.system("cls")
+        # UI ListのアクティブアイテムとVRM Extensionのコライダーグループを取得する｡
+        ext_collider_group = get_vrm0_extension_collider_group()
+        active_item = get_active_list_item_in_collider_group()
+        target_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = ext_collider_group[
+            active_item.group_index
+        ]
+        colliders = target_collider_group.colliders
+        # UI Listのアクティブアイテムに対応したコライダーグループのコライダーを全て削除する｡
+        # コライダーを定義しているEmptyも削除する｡
+        collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup
+        for collider in colliders:
+            if collider.bpy_object:
+                bpy.data.objects.remove(collider.bpy_object)
+        colliders.clear()
+        self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
 
@@ -993,4 +1049,6 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
+    VRMHELPER_OT_vrm0_collider_group_clear_colliders,
 )

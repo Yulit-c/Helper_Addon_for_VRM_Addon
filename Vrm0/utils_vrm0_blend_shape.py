@@ -67,7 +67,7 @@ from ..utils_common import (
 )
 
 from ..utils_vrm_base import (
-    get_vrm0_extension_property_blend_shape,
+    get_vrm0_extension_blend_shape,
     serach_vrm_shader_node,
     check_vrm_material_mode,
     get_mtoon_color_current_parameters,
@@ -95,7 +95,7 @@ logger = preparating_logger(__name__)
 
 
 def get_active_blend_shape() -> Optional[ReferenceVrm0BlendShapeGroupPropertyGroup]:
-    blend_shape_master = get_vrm0_extension_property_blend_shape()
+    blend_shape_master = get_vrm0_extension_blend_shape()
     active_index = blend_shape_master.active_blend_shape_group_index
     if not (blend_shape_groups := blend_shape_master.blend_shape_groups):
         return

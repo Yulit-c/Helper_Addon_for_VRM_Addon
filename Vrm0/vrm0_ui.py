@@ -77,7 +77,7 @@ from ..utils_vrm_base import (
     is_existing_target_armature,
     check_addon_mode,
     get_vrm_extension_root_property,
-    get_vrm0_extension_property_blend_shape,
+    get_vrm0_extension_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
     get_vrm0_extension_secondary_animation,
     get_vrm0_extension_collider_group,
@@ -142,6 +142,8 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
+    VRMHELPER_OT_vrm0_collider_group_clear_colliders,
 )
 
 """
@@ -267,7 +269,7 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
     blend_shape_prop: VRMHELPER_SCENE_vrm0_blend_shape_settings = scene_vrm0_prop.blend_shape_settings
-    blend_shape_master = get_vrm0_extension_property_blend_shape()
+    blend_shape_master = get_vrm0_extension_blend_shape()
     blend_shapes = blend_shape_master.blend_shape_groups
     active_blend_shape = get_active_blend_shape()
 
@@ -490,7 +492,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # ----------------------------------------------------------
     row = layout.row()
     row.template_list(
-        "VRMHELPER_UL_vrm0_collider_group_list",
+        VRMHELPER_UL_vrm0_collider_group_list.__name__,
         "",
         wm_vrm0_prop,
         "collider_group_list_items4custom_filter",
@@ -500,10 +502,18 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     )
 
     col_list = row.column(align=True)
-    # col_list.separator(factor=0.5)
+    # コライダーグループの作成/削除を行うオペレーター
+    col_list.label(text="", icon="OVERLAY")
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_add_group.bl_idname, text="", icon="ADD")
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_remove_active_group.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_clear_group.bl_idname, text="", icon="PANEL_CLOSE")
+    # ---------------------------------------------------------------------------------
+    # コライダーの削除を行うオペレーター
+    col_list.label(text="", icon="MESH_UVSPHERE")
+    col_list.operator(
+        VRMHELPER_OT_vrm0_collider_group_remove_active_collider.bl_idname, text="", icon="REMOVE"
+    )
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_clear_colliders.bl_idname, text="", icon="PANEL_CLOSE")
 
     if items_list := get_ui_vrm0_collider_group_prop():
         box = layout.box()
@@ -622,7 +632,7 @@ class VRMHELPER_UL_vrm0_blend_shape_bind_list(bpy.types.UIList):
             return
 
         # Morph Target Bindの各プロパティを描画する
-        blend_shape_master = get_vrm0_extension_property_blend_shape()
+        blend_shape_master = get_vrm0_extension_blend_shape()
         blend_shape_groups = blend_shape_master.blend_shape_groups
         active_index = blend_shape_master.active_blend_shape_group_index
         active_blend_shape_binds = blend_shape_groups[active_index].binds

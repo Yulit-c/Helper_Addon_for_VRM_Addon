@@ -154,8 +154,8 @@ def vrm0_add_items2collider_group_ui_list() -> int:
             new_item.parent_count = (parent_count := parent_count + 1)
 
         # コライダーグループをコレクションプロパティに追加する｡
+        group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
         for n, group in v:
-            group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = group
             new_group: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
             new_group.name = f"{k} {group.name}"
             new_group.group_name = group.name
@@ -165,8 +165,8 @@ def vrm0_add_items2collider_group_ui_list() -> int:
             new_group.parent_count = parent_count + 1
 
             # コライダーグループに関連付けられたコライダーを登録する｡
+            collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup
             for m, collider in enumerate(group.colliders):
-                collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = collider
                 new_collider: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
                 new_collider.item_type[3] = True
                 new_collider.bone_name = k
