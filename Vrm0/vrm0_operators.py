@@ -972,7 +972,20 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_col
             return active_item.item_type[3]
 
     def execute(self, context):
-        aaaaaa
+        # UI ListのアクティブアイテムとVRM Extensionのコライダーグループを取得する｡
+        ext_collider_group = get_vrm0_extension_collider_group()
+        active_item = get_active_list_item_in_collider_group()
+        target_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = ext_collider_group[
+            active_item.group_index
+        ]
+        colliders = target_collider_group.colliders
+        collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = colliders[
+            active_item.collider_index
+        ]
+        if collider.bpy_object:
+            bpy.data.objects.remove(collider.bpy_object)
+        colliders.remove(active_item.collider_index)
+        self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
 
