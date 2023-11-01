@@ -183,6 +183,31 @@ def get_selected_bone(
     return bones
 
 
+def get_pose_bone_by_name(source: bpy.types.Object, bone_name: str) -> Optional[bpy.types.PoseBone]:
+    """
+    "source"のArmatureオブジェクト内のPose Boneを名前によって取得する｡
+
+    Parameters
+    ----------
+    source : bpy.types.Object
+        処理対象のArmatureオブジェクト
+
+    bone_name : str
+        取得したいボーンのなめ
+
+    Returns
+    -------
+    bpy.types.PoseBone
+        取得されたPose Bone
+
+    """
+    if source.type != "ARMATURE":
+        return
+
+    obtained_pose_bone = source.pose.bones[bone_name]
+    return obtained_pose_bone
+
+
 def get_branch_root_bone(source_bone: bpy.types.Bone) -> Optional[bpy.types.Bone]:
     """
     source_boneの親ボーンを再帰的に走査して枝ボーンの根元となるボーンを取得する｡

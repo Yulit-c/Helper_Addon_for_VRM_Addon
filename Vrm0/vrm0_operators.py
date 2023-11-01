@@ -24,7 +24,7 @@ else:
 
 
 import os, time, uuid
-from pprint import pprint
+import numpy as np
 from typing import (
     Literal,
 )
@@ -79,6 +79,7 @@ from ..utils_common import (
     filtering_mesh_type,
     link_object2collection,
     get_selected_bone,
+    get_pose_bone_by_name,
     is_including_empty_in_selected_object,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
@@ -98,6 +99,7 @@ from ..utils_vrm_base import (
     reset_shape_keys_value_in_morph_binds,
     store_mtoon_current_values,
     set_mtoon_default_values,
+    is_existing_target_armature_and_mode,
 )
 
 from .utils_vrm0_first_person import (
@@ -1022,6 +1024,80 @@ class VRMHELPER_OT_vrm0_collider_group_clear_colliders(VRMHELPER_vrm0_collider_g
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrm_helper.vrm0_collider_create_from_bone"
+    bl_label = "Create Collider"
+    bl_description = "Create spring bone collider from selected bone"
+
+    collider_radius: FloatProperty(
+        name="Collider Radius",
+        description="Radius of the collider to be created",
+        default=0.05,
+        unit="LENGTH",
+        options={"HIDDEN"},
+    )
+
+    @classmethod
+    def poll(cls, context):
+        # Target Armatureの1ボーンを1つ以上選択していなければ使用不可｡
+        return is_existing_target_armature_and_mode()
+
+    def execute(self, context):
+        os.system("cls")
+        time_start = time.perf_counter()
+        target_armature = get_target_armature()
+        armature_data: bpy.types.Armature = target_armature.data
+        collider_group = get_vrm_extension_property("COLLIDER_GROUP")
+        addon_collection_dict = setting_vrm_helper_collection()
+        dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+
+        # 選択ボーン全てに対してコライダーを作成してパラメーターをセットする｡
+        # Target Armature.dataの'use_mirror_x'が有効の場合は処理の間は無効化する｡
+        is_changed_use_mirror = False
+        if armature_data.use_mirror_x:
+            armature_data.use_mirror_x = False
+            is_changed_use_mirror = True
+
+        bones = get_selected_bone(target_armature.data)
+        for bone in bones:
+            if not (pose_bone := get_pose_bone_by_name(target_armature, bone.name)):
+                continue
+            # コライダーグループ内に既に同じボーンを指定したグループがある場合はそのグループ内にコライダーを追加する｡
+            groups = [i for i in collider_group if i.node.bone_name == bone.name]
+            target_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+            if groups:
+                target_group = groups[0]
+            else:
+                target_group = collider_group.add()
+                target_group.uuid = uuid.uuid4().hex
+                target_group.refresh(target_armature)
+
+            # 新規コライダーの作成｡
+            colliders = target_group.colliders
+            # https://github.com/saturday06/VRM-Addon-for-Blender
+            collider_object = bpy.data.objects.new(
+                name=f"{target_armature.name}_{bone.name}_collider", object_data=None
+            )
+            collider_object.parent = target_armature
+            collider_object.parent_type = "BONE"
+            collider_object.parent_bone = bone.name
+            collider_object.empty_display_type = "SPHERE"
+            collider_object.empty_display_size = 0.25
+            bone_head = pose_bone.head
+            bone_tail = pose_bone.tail
+            difference = bone_tail - bone_head
+            logger.debug(bone_head)
+            logger.debug(bone_tail)
+
+            aaaaa
+
+            link_object2collection(collider_object, dest_collection)
+            collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = colliders.add()
+            collider.bpy_object = collider_object
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -1064,4 +1140,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_clear_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
+    VRMHELPER_OT_vrm0_collider_create_from_bone,
 )

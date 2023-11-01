@@ -87,6 +87,7 @@ from ..utils_common import (
     filtering_mesh_type,
     link_object2collection,
     get_selected_bone,
+    get_pose_bone_by_name,
     is_including_empty_in_selected_object,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
@@ -130,7 +131,6 @@ from .utils_vrm1_spring import (
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
-    get_pose_bone_by_name,
     generate_head_collider_position,
     generate_tail_collider_position,
     remove_vrm1_collider_by_selected_object,
@@ -1227,7 +1227,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         # bones = context.selected_bones if context.selected_bones else context.selected_pose_bones
         bones = get_selected_bone(target_armature.data)
         for bone in bones:
-            bone = get_pose_bone_by_name(bone.name)
+            bone = get_pose_bone_by_name(target_armature,bone.name)
             new_item = colliders.add()
             new_item.uuid = uuid.uuid4().hex
 

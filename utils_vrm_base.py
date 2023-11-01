@@ -411,17 +411,7 @@ def get_vrm_extension_property(
         "COLLIDER_GROUP",
         "SPRING",
     ]
-) -> (
-    ReferenceVrm0FirstPersonPropertyGroup
-    | ReferenceVrm0BlendShapeMasterPropertyGroup
-    | ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
-    | ReferenceVrm0SecondaryAnimationPropertyGroup
-    | ReferenceVrm1FirstPersonPropertyGroup
-    | ReferenceVrm1ExpressionPropertyGroup
-    | ReferenceVrm1ColliderPropertyGroup
-    | ReferenceVrm1ColliderGroupPropertyGroup
-    | ReferenceSpringBone1SpringPropertyGroup
-):
+) -> bpy.types.bpy_prop_collection:
     """
     Target ArmatureのVRM Extensionの中から引数で指定したProperty Groupを取得する｡
 
@@ -439,7 +429,7 @@ def get_vrm_extension_property(
 
     Returns
     -------
-    VrmAddonVrmAddonArmatureExtensionPropertyGroup
+    bpy.types.bpy_prop_collection
         VRM Addon定義のPropertyGroupのうち､引数で指定したもの
 
     """
