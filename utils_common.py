@@ -24,6 +24,7 @@ from typing import (
     Any,
 )
 import bpy
+from mathutils import Vector, Matrix
 
 from .addon_classes import (
     VRMHelper_Addon_Collection_Dict,
@@ -310,6 +311,50 @@ def get_bones_for_each_branch_from_source_bones(
     retrieved_bones = [get_child_bones_in_branch(i, []) for i in branch_root_bones]
 
     return retrieved_bones
+
+
+def generate_head_collider_position(head: Vector) -> Matrix:
+    """
+    ボーンのヘッドの位置のマトリックスを返す｡
+
+    Parameters
+    ----------
+    head : Vector
+        親ボーンのヘッド
+
+    Returns
+    -------
+    Matrix
+        親ボーンのヘッドを基に生成されたマトリックス｡
+
+    """
+    return Matrix.Translation(head)
+
+
+def generate_tail_collider_position(
+    armature_object: bpy.types.Object, pose_bone: bpy.types.PoseBone, tail: Vector
+) -> Matrix:
+    """
+    ボーンのテールの位置のマトリックスを返す｡
+
+    Parameters
+    ----------
+    armature_object: bpy.types.Object
+        処理対象のボーンが属しているArmatureオブジェクト
+
+    pose_bone : EditBone | PoseBone
+        ヘッドコライダーの親ボーン｡
+
+    tail : Vector
+        親ボーンのテール｡
+
+    Returns
+    -------
+    Matrix
+        親ボーンのテールを基に生成されたマトリックス｡
+
+    """
+    return armature_object.matrix_world.inverted() @ pose_bone.matrix.inverted() @ Matrix.Translation(tail)
 
 
 """---------------------------------------------------------

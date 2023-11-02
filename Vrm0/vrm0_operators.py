@@ -80,6 +80,8 @@ from ..utils_common import (
     link_object2collection,
     get_selected_bone,
     get_pose_bone_by_name,
+    generate_head_collider_position,
+    generate_tail_collider_position,
     is_including_empty_in_selected_object,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
@@ -1078,22 +1080,21 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             collider_object = bpy.data.objects.new(
                 name=f"{target_armature.name}_{bone.name}_collider", object_data=None
             )
+            # Empty Objectのパラメーター
             collider_object.parent = target_armature
             collider_object.parent_type = "BONE"
             collider_object.parent_bone = bone.name
             collider_object.empty_display_type = "SPHERE"
             collider_object.empty_display_size = 0.25
-            bone_head = pose_bone.head
-            bone_tail = pose_bone.tail
-            difference = bone_tail - bone_head
-            logger.debug(bone_head)
-            logger.debug(bone_tail)
-
-            aaaaa
-
+            mid_point = (pose_bone.tail + pose_bone.head) / 2
+            collider_object.matrix_world = generate_head_collider_position(mid_point)
+            # オブジェクトをコレクションにリンク
             link_object2collection(collider_object, dest_collection)
+            # VRM Extensionのパラメーター
             collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = colliders.add()
             collider.bpy_object = collider_object
+
+            # TODO : ボーンの長さに応じたコライダーの敷き詰め?
 
         return {"FINISHED"}
 

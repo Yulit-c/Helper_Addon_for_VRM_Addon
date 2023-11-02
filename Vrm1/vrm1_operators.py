@@ -88,6 +88,8 @@ from ..utils_common import (
     link_object2collection,
     get_selected_bone,
     get_pose_bone_by_name,
+    generate_head_collider_position,
+    generate_tail_collider_position,
     is_including_empty_in_selected_object,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
@@ -128,11 +130,6 @@ from .utils_vrm1_expression import (
 )
 
 from .utils_vrm1_spring import (
-    # ----------------------------------------------------------
-    #    Collider
-    # ----------------------------------------------------------
-    generate_head_collider_position,
-    generate_tail_collider_position,
     remove_vrm1_collider_by_selected_object,
     # ----------------------------------------------------------
     #    Collider Group
@@ -1227,13 +1224,13 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         # bones = context.selected_bones if context.selected_bones else context.selected_pose_bones
         bones = get_selected_bone(target_armature.data)
         for bone in bones:
-            bone = get_pose_bone_by_name(target_armature,bone.name)
+            pose_bone = get_pose_bone_by_name(target_armature, bone.name)
             new_item = colliders.add()
             new_item.uuid = uuid.uuid4().hex
 
             # コライダーのタイプ､半径､位置を設定
             new_item.shape_type = self.collider_type
-            new_item.node.bone_name = bone.name
+            new_item.node.bone_name = pose_bone.name
 
             if self.collider_type == "Sphere":
                 new_item.shape.sphere.radius = self.collider_radius
@@ -1246,11 +1243,13 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
                 new_item.shape.capsule.radius = self.collider_radius
 
                 # コライダーオブジェクトの位置設定｡
-                collider_head = new_item.bpy_object
-                collider_tail = new_item.bpy_object.children[0]
-                collider_head.matrix_world = generate_head_collider_position(bone.head)
+                collider_head: bpy.types.Object = new_item.bpy_object
+                collider_tail: bpy.types.Object = new_item.bpy_object.children[0]
+                collider_head.matrix_world = generate_head_collider_position(pose_bone.head)
                 collider_head.rotation_euler = Vector((0, 0, 0))
-                collider_tail.matrix_basis = generate_tail_collider_position(bone, bone.tail)
+                collider_tail.matrix_basis = generate_tail_collider_position(
+                    target_armature, pose_bone, pose_bone.tail
+                )
 
                 # コライダーオブジェクトを対象コレクションにリンクする｡
                 re_link_all_collider_object2collection()

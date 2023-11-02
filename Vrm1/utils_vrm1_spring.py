@@ -248,46 +248,6 @@ def remove_vrm1_collider_by_selected_object(source_object: Object) -> str:
         bpy.data.objects.remove(source_object, do_unlink=True)
 
 
-def generate_head_collider_position(head: Vector) -> Matrix:
-    """
-    コライダーをボーンのヘッドに設置するためのマトリックスを返す｡
-
-    Parameters
-    ----------
-    head : Vector
-        親ボーンのヘッド
-
-    Returns
-    -------
-    Matrix
-        親ボーンのヘッドを基に生成されたマトリックス｡
-
-    """
-    return Matrix.Translation(head)
-
-
-def generate_tail_collider_position(bone: PoseBone, tail: Vector) -> Matrix:
-    """
-    コライダーをボーンのテールの位置に設置するためのマトリックスを返す｡
-
-    Parameters
-    ----------
-    bone : EditBone | PoseBone
-        ヘッドコライダーの親ボーン｡
-
-    tail : Vector
-        親ボーンのテール｡
-
-    Returns
-    -------
-    Matrix
-        親ボーンのテールを基に生成されたマトリックス｡
-
-    """
-    armature_object = get_target_armature()
-    return armature_object.matrix_world.inverted() @ bone.matrix.inverted() @ Matrix.Translation(tail)
-
-
 # -----------------------------------------------------
 
 
