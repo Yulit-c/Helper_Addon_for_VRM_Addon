@@ -82,7 +82,7 @@ from ..utils_common import (
     get_pose_bone_by_name,
     generate_head_collider_position,
     generate_tail_collider_position,
-    is_including_empty_in_selected_object,
+    filtering_empty_from_selected_objects,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
     get_all_materials,
@@ -1085,7 +1085,7 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             collider_object.parent_type = "BONE"
             collider_object.parent_bone = bone.name
             collider_object.empty_display_type = "SPHERE"
-            collider_object.empty_display_size = 0.25
+            collider_object.empty_display_size = self.collider_radius
             mid_point = (pose_bone.tail + pose_bone.head) / 2
             collider_object.matrix_world = generate_head_collider_position(mid_point)
             # オブジェクトをコレクションにリンク
@@ -1095,6 +1095,39 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             collider.bpy_object = collider_object
 
             # TODO : ボーンの長さに応じたコライダーの敷き詰め?
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_collider_remove_from_empty(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrm_helper.vrm0_collider_remove_from_empty"
+    bl_label = "Remove Collider"
+    bl_description = "Remove spring bone collider from selected empty object"
+
+    @classmethod
+    def poll(cls, context):
+        # 選択オブジェクトにEmptyが含まれていなければ使用不可｡
+        return filtering_empty_from_selected_objects()
+
+    def execute(self, context):
+        # 処理中はプロパティのアップデートのコールバック関数をロックする｡
+        # index_prop = get_vrm1_index_root_prop()
+        # index_prop.is_locked_update = True
+
+        # 選択Emptyオブジェクトのうち､コライダーとして登録されているものがあればコライダー設定とともに削除する｡
+        logger.debug("Remove Collider & Empty Object")
+        for obj in filtering_empty_from_selected_objects():
+            logger.debug(obj.name)
+            # remove_vrm1_collider_by_selected_object(obj)
+
+        # アクティブインデックスをオフセットしてエラーを回避する｡
+        # logger.debug("Offset UI List Index : Collider")
+        # self.offset_active_item_index(self.component_type)
+        # logger.debug("Offset UI List Index : Collider Group")
+        # self.offset_active_item_index("COLLIDER_GROUP")
+        # logger.debug("Offset UI List Index : Spring")
+        # self.offset_active_item_index("SPRING")
+        # index_prop.is_locked_update = False
 
         return {"FINISHED"}
 
@@ -1142,4 +1175,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
+    VRMHELPER_OT_vrm0_collider_remove_from_empty,
 )

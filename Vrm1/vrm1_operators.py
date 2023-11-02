@@ -90,7 +90,7 @@ from ..utils_common import (
     get_pose_bone_by_name,
     generate_head_collider_position,
     generate_tail_collider_position,
-    is_including_empty_in_selected_object,
+    filtering_empty_from_selected_objects,
     setting_vrm_helper_collection,
     get_all_materials_from_source_collection_objects,
     get_all_materials,
@@ -1270,7 +1270,7 @@ class VRMHELPER_OT_vrm1_collider_remove_from_empty(VRMHELPER_vrm1_collider_base)
     @classmethod
     def poll(cls, context):
         # 選択オブジェクトにEmptyが含まれていなければ使用不可｡
-        return is_including_empty_in_selected_object()
+        return filtering_empty_from_selected_objects()
 
     def execute(self, context):
         # 処理中はプロパティのアップデートのコールバック関数をロックする｡
@@ -1279,7 +1279,7 @@ class VRMHELPER_OT_vrm1_collider_remove_from_empty(VRMHELPER_vrm1_collider_base)
 
         # 選択Emptyオブジェクトのうち､コライダーとして登録されているものがあればコライダー設定とともに削除する｡
         logger.debug("Remove Collider & Empty Object")
-        for obj in [obj for obj in context.selected_objects if obj.type == "EMPTY"]:
+        for obj in filtering_empty_from_selected_objects():
             remove_vrm1_collider_by_selected_object(obj)
 
         # アクティブインデックスをオフセットしてエラーを回避する｡

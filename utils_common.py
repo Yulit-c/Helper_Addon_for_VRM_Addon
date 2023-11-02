@@ -663,20 +663,21 @@ def get_parent_count(
     return get_parent_count(source, parent_count)
 
 
-def is_including_empty_in_selected_object() -> bool:
+def filtering_empty_from_selected_objects() -> Optional[list[bpy.types.Object]]:
     """
-    選択オブジェクトにEmptyが含まれているか否かを判定する｡
+    選択オブジェクトに含まれるEmptyオブジェクトを抽出する｡
 
     Returns
     -------
-    bool
-        選択オブジェクト中にEmptyが存在していればTrueが､それ以外はFalseが返る｡
+    Optional[list[bpy.types.Object]]
+        選択オブジェクト中に含まれるEmptyオブジェクトのリスト｡一つもない場合はNoneが返る｡
     """
 
-    if not [i for i in bpy.context.selected_objects if i.type == "EMPTY"]:
-        return False
+    empty_object_list = [i for i in bpy.context.selected_objects if i.type == "EMPTY"]
+    if not empty_object_list:
+        return None
 
-    return True
+    return empty_object_list
 
 
 def define_ui_list_rows(item_count: int, max_length: int = 10) -> int:

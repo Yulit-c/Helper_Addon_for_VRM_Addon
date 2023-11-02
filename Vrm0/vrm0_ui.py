@@ -145,6 +145,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
+    VRMHELPER_OT_vrm0_collider_remove_from_empty,
 )
 
 """
@@ -548,9 +549,9 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                 box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
 
         box_op = box.box()
-        box_op.operator(
-            VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname, text="Create Colider from Bone"
-        )
+        op = box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
+        op.collider_radius = 0.08
+        box_op.operator(VRMHELPER_OT_vrm0_collider_remove_from_empty.bl_idname)
 
 
 def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
