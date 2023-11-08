@@ -236,3 +236,50 @@ def vrm0_add_items2spring_ui_list() -> int:
         リストに表示するアイテム数｡
     """
     pass
+
+
+def remove_vrm0_collider_by_selected_object(
+    source_object: bpy.types.Object,
+) -> Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]:
+    """
+    VRM0 collider_group内にある､引数'collider_object'と同一のオブジェクトが登録されたコライダを消去する｡
+
+    Parameters
+    ----------
+    source_object : Object
+        削除対象となるオブジェクト名｡
+
+    Returns
+    -------
+    Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]
+        この関数内でコライダーが削除されたコライダーグループ｡
+
+    """
+
+    collider_group = get_vrm_extension_property("COLLIDER_GROUP")
+    target_group = None
+    target_collider = None
+
+    # 全コライダーグループの中から'source_object'に対応するコライダーを取得する｡
+    group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    for group in collider_group:
+        collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup
+        for n, collider in enumerate(group.colliders):
+            if collider.bpy_object == source_object:
+                target_group = group
+                target_collider = collider
+                index = n
+    if not target_collider:
+        return
+
+    # 取得したコライダーとエンプティオブジェクトを削除する｡
+    target_group.colliders.remove(index)
+    bpy.data.objects.remove(source_object, do_unlink=True)
+
+    return target_group
+
+
+def vrm0_remove_collider_group_in_springs(
+    collider_group: Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup],
+):
+    pass

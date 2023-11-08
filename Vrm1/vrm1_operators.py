@@ -53,6 +53,7 @@ from mathutils import (
 
 from ..addon_classes import (
     ReferenceVrm1TextureTransformBindPropertyGroup,
+    ReferenceVrm1ColliderPropertyGroup,
     VRMHELPER_VRM1_joint_property,
 )
 
@@ -1210,6 +1211,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         os.system("cls")
         time_start = time.perf_counter()
         target_armature = get_target_armature()
+        armature_data:bpy.types.Armature = target_armature.data
         colliders = get_vrm_extension_property("COLLIDER")
         addon_collection_dict = setting_vrm_helper_collection()
         dest_collection = addon_collection_dict["VRM1_COLLIDER"]
@@ -1217,15 +1219,15 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         # 選択ボーン全てに対してコライダーを作成してパラメーターをセットする｡
         # Target Armature.dataの'use_mirror_x'が有効の場合は処理の間は無効化する｡
         is_changed_use_mirror = False
-        if target_armature.data.use_mirror_x:
-            target_armature.data.use_mirror_x = False
+        if armature_data.use_mirror_x:
+            armature_data.use_mirror_x = False
             is_changed_use_mirror = True
 
         # bones = context.selected_bones if context.selected_bones else context.selected_pose_bones
-        bones = get_selected_bone(target_armature.data)
+        bones = get_selected_bone(armature_data)
         for bone in bones:
             pose_bone = get_pose_bone_by_name(target_armature, bone.name)
-            new_item = colliders.add()
+            new_item: ReferenceVrm1ColliderPropertyGroup = colliders.add()
             new_item.uuid = uuid.uuid4().hex
 
             # コライダーのタイプ､半径､位置を設定
@@ -1235,6 +1237,8 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
             if self.collider_type == "Sphere":
                 new_item.shape.sphere.radius = self.collider_radius
                 collider_object = new_item.bpy_object
+                mid_point = (pose_bone.tail + pose_bone.head) / 2
+                collider_object.matrix_world = generate_head_collider_position(mid_point)
                 link_object2collection(collider_object, dest_collection)
 
             if self.collider_type == "Capsule":
@@ -1256,7 +1260,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
 
         # 'use_mirror_x'の値を変更していた場合は元に戻す｡
         if is_changed_use_mirror:
-            target_armature.data.use_mirror_x = True
+            armature_data.use_mirror_x = True
 
         logger.debug(f"Processing Time : {time.perf_counter() - time_start:.3f} s")
         return {"FINISHED"}
@@ -1647,6 +1651,12 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
         ),
         default="SELECT",
     )
+
+    rows_property: IntProperty(
+        name="Rows Property",
+        description="Number of properties displayed per column",
+        default=12,
+    )
     # -----------------------------------------------------
 
     def invoke(self, context, event):
@@ -1656,7 +1666,9 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
         vrm1_add_list_item2bone_group_list4operator()
         vrm1_add_list_item2collider_group_list4operator()
-        return context.window_manager.invoke_props_dialog(self, width=360)
+        bone_groups = get_ui_vrm1_operator_bone_group_prop()
+        width_popup = math.ceil(len(bone_groups) / self.rows_property) * 240
+        return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
     def draw(self, context):
         layout = self.layout
@@ -1669,9 +1681,18 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
             anchor_layout = row.column(align=True)
             box_sub = anchor_layout.box()
             box_sub.label(text="Target Bone Group")
-            for group in bone_group_collection:
-                row_sub = box_sub.row(align=True)
+            row_root = box_sub.row()
+            for n, group in enumerate(bone_group_collection):
+                if n % self.rows_property == 0:
+                    col = row_root.column()
+                row_sub = col.row(align=True)
                 row_sub.prop(group, "is_target", text=group.name)
+
+        # for n, spring in enumerate(spring_collection):
+        #     if n % self.rows_property == 0:
+        # col = row_root.column()
+        # row = col.row(align=True)
+        #     row.prop(spring, "is_target", text=spring.name)
 
         # 処理対象のコライダーグループを選択するエリア｡
         anchor_layout = row.column(align=True)

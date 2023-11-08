@@ -125,6 +125,7 @@ from .utils_vrm0_blend_shape import (
 from .utils_vrm0_spring import (
     remove_vrm0_collider_when_removed_collider_group,
     get_active_list_item_in_collider_group,
+    remove_vrm0_collider_by_selected_object,
 )
 
 from ..operators import (
@@ -1060,6 +1061,8 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             armature_data.use_mirror_x = False
             is_changed_use_mirror = True
 
+        bpy.ops.object.select_all(action="DESELECT")
+
         bones = get_selected_bone(target_armature.data)
         for bone in bones:
             if not (pose_bone := get_pose_bone_by_name(target_armature, bone.name)):
@@ -1094,6 +1097,12 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = colliders.add()
             collider.bpy_object = collider_object
 
+            collider_object.select_set(True)
+
+        # 'use_mirror_x'の値を変更していた場合は元に戻す｡
+        if is_changed_use_mirror:
+            armature_data.use_mirror_x = True
+
             # TODO : ボーンの長さに応じたコライダーの敷き詰め?
 
         return {"FINISHED"}
@@ -1111,23 +1120,30 @@ class VRMHELPER_OT_vrm0_collider_remove_from_empty(VRMHELPER_vrm0_collider_group
 
     def execute(self, context):
         # 処理中はプロパティのアップデートのコールバック関数をロックする｡
-        # index_prop = get_vrm1_index_root_prop()
-        # index_prop.is_locked_update = True
+        index_prop = get_vrm0_index_root_prop()
+        index_prop.is_locked_update = True
 
+        collider_groups = get_vrm0_extension_collider_group()
         # 選択Emptyオブジェクトのうち､コライダーとして登録されているものがあればコライダー設定とともに削除する｡
         logger.debug("Remove Collider & Empty Object")
         for obj in filtering_empty_from_selected_objects():
             logger.debug(obj.name)
-            # remove_vrm1_collider_by_selected_object(obj)
+            target_collider_group = remove_vrm0_collider_by_selected_object(obj)
+            if not target_collider_group:
+                continue
+
+            if not target_collider_group.colliders:
+                index = list(collider_groups).index(target_collider_group)
+                collider_groups.remove(index)
+
+                # スプリング内で削除したコライダーグループが参照されていればそれを取り除く｡
+                # TODO : vrm0_remove_collider_group_in_springs()
 
         # アクティブインデックスをオフセットしてエラーを回避する｡
-        # logger.debug("Offset UI List Index : Collider")
-        # self.offset_active_item_index(self.component_type)
-        # logger.debug("Offset UI List Index : Collider Group")
+        self.offset_active_item_index(self.component_type)
         # self.offset_active_item_index("COLLIDER_GROUP")
-        # logger.debug("Offset UI List Index : Spring")
         # self.offset_active_item_index("SPRING")
-        # index_prop.is_locked_update = False
+        index_prop.is_locked_update = False
 
         return {"FINISHED"}
 

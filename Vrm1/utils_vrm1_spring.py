@@ -210,19 +210,15 @@ def vrm1_add_items2collider_ui_list() -> int:
     return len(list(items))
 
 
-def remove_vrm1_collider_by_selected_object(source_object: Object) -> str:
+def remove_vrm1_collider_by_selected_object(source_object: Object):
     """
-    VRM1 Collidersの内､引数'collider_name'と同一のオブジェクトが登録されたコライダを消去する｡
+    VRM1 Collidersの内､引数'source_object'と同一のオブジェクトが登録されたコライダを消去する｡
 
     Parameters
     ----------
     source_object : Object
         削除対象となるオブジェクト名｡
 
-    Returns
-    -------
-    str
-        削除対象のコライダーに登録されていたuuidの値｡
     """
 
     colliders = get_vrm_extension_property("COLLIDER")
@@ -234,7 +230,7 @@ def remove_vrm1_collider_by_selected_object(source_object: Object) -> str:
         if i.bpy_object == source_object
         or (i.bpy_object.children and i.bpy_object.children[0] == source_object)
     ]:
-        target_collider = collider[0]
+        target_collider: ReferenceVrm1ColliderPropertyGroup = collider[0]
         target_uuid = target_collider.uuid
 
         # 'source_object'とそれに対応したコライダーを削除する｡
