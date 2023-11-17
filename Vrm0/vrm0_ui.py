@@ -31,6 +31,7 @@ import bpy
 
 
 from ..addon_classes import (
+    ReferenceBonePropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
@@ -48,7 +49,7 @@ from ..addon_constants import (
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm0_blend_shape_settings,
-    VRMHELPER_SCENE_vrm0_collider_group_settings,
+    VRMHELPER_SCENE_vrm0_spring_settings,
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
@@ -103,6 +104,8 @@ from .utils_vrm0_blend_shape import (
 
 from .utils_vrm0_spring import (
     vrm0_add_items2collider_group_ui_list,
+    vrm0_add_items2spring_ui_list,
+    vrm0_get_active_list_item_in_spring,
 )
 
 
@@ -482,9 +485,6 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
-    collider_group_prop: VRMHELPER_SCENE_vrm0_collider_group_settings = (
-        scene_vrm0_prop.collider_group_settings
-    )
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = vrm0_add_items2collider_group_ui_list()
@@ -558,7 +558,51 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     """
     VRM0のSpring Bone Group に関する設定/オペレーターを描画する
     """
-    pass
+    # Property Groupの取得｡
+    wm_vrm0_prop = get_vrm0_wm_root_prop()
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
+    spring_prop: VRMHELPER_SCENE_vrm0_spring_settings = scene_vrm0_prop.spring_settings
+
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = vrm0_add_items2spring_ui_list()
+
+    # ----------------------------------------------------------
+    #    登録されているBlend Shapeのリスト描画
+    # ----------------------------------------------------------
+    row = layout.row()
+    row.template_list(
+        VRMHELPER_UL_vrm0_spring_list.__name__,
+        "",
+        wm_vrm0_prop,
+        "spring_bone_list_items4custom_filter",
+        scene_vrm0_prop.active_indexes,
+        "spring",
+        rows=define_ui_list_rows(rows),
+    )
+
+    # ボーンの作成/削除を行うオペレーター
+    col_list = row.column(align=True)
+    col_list.label(text="", icon="BONE_DATA")
+    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="ADD")
+    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")
+    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="PANEL_CLOSE")
+
+    box = layout.box()
+    if active_item := vrm0_get_active_list_item_in_spring():
+        bone_groups = get_vrm0_extension_spring()
+        bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
+            active_item.item_indexes[0]
+        ]
+
+        box.label(text=f"Active Bone Group Parameters")
+        box.prop(bone_group, "comment", icon="BOOKMARKS")
+        box.prop(bone_group.center, "bone_name", text="Center", icon="PIVOT_MEDIAN")
+        box.prop(bone_group, "stiffiness", text="Stiffiness")
+        box.prop(bone_group, "drag_force", text="Drag Force")
+        box.prop(bone_group, "hit_radius", text="Hit Radius")
+        box.prop(bone_group, "gravity_dir", text="Gravity Dir")
+        box.prop(bone_group, "gravity_power", text="Gravity Power")
 
 
 """---------------------------------------------------------
@@ -779,7 +823,7 @@ class VRMHELPER_UL_vrm0_spring_list(bpy.types.UIList, VRMHELPER_UL_base):
     def draw_item(
         self,
         context,
-        layout,
+        layout: bpy.types.UILayout,
         data,
         item: VRMHELPER_WM_vrm0_spring_bone_list_items,
         icon,
@@ -788,19 +832,25 @@ class VRMHELPER_UL_vrm0_spring_list(bpy.types.UIList, VRMHELPER_UL_base):
         index,
     ):
         row = layout.row(align=True)
+        bone_groups = get_vrm0_extension_spring()
 
         # ラベルの描画
-        if item.item_type[0]:
-            if not item.name:
-                row.label(text="")
-                return
+        match tuple(item.item_type):
+            case (0, 1, 0):
+                bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
+                    item.item_indexes[0]
+                ]
+                row.label(text="", icon="BOOKMARKS")
+                row.prop(bone_group, "comment", text="", emboss=False)
 
-            label_icon = "OVERLAY"
-            if item.name == "Joint":
-                label_icon = "BONE_DATA"
-            row.separator(factor=2.0)
-            row.label(text=item.name, icon=label_icon)
-            return
+            case (0, 0, 1):
+                self.add_blank_labels(row, 2)
+                bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
+                    item.item_indexes[0]
+                ]
+                bone: ReferenceBonePropertyGroup = bone_group.bones[item.item_indexes[1]]
+                row.label(text="", icon="BONE_DATA")
+                row.prop(bone, "bone_name", text="", emboss=False)
 
 
 """---------------------------------------------------------

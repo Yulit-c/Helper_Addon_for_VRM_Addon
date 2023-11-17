@@ -126,6 +126,7 @@ from .utils_vrm0_spring import (
     remove_vrm0_collider_when_removed_collider_group,
     get_active_list_item_in_collider_group,
     remove_vrm0_collider_by_selected_object,
+    vrm0_remove_collider_group_in_springs,
 )
 
 from ..operators import (
@@ -1061,7 +1062,10 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             armature_data.use_mirror_x = False
             is_changed_use_mirror = True
 
+        current_mode = context.mode
+        bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action="DESELECT")
+        bpy.ops.object.mode_set(mode=current_mode.replace("EDIT_ARMATURE", "EDIT"))
 
         bones = get_selected_bone(target_armature.data)
         for bone in bones:
@@ -1105,6 +1109,9 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
 
             # TODO : ボーンの長さに応じたコライダーの敷き詰め?
 
+        bpy.ops.object.mode_set(mode="OBJECT")
+        # TODO : 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
+
         return {"FINISHED"}
 
 
@@ -1131,13 +1138,13 @@ class VRMHELPER_OT_vrm0_collider_remove_from_empty(VRMHELPER_vrm0_collider_group
             target_collider_group = remove_vrm0_collider_by_selected_object(obj)
             if not target_collider_group:
                 continue
-
+            target_collider_group_name = target_collider_group.name
             if not target_collider_group.colliders:
                 index = list(collider_groups).index(target_collider_group)
                 collider_groups.remove(index)
 
                 # スプリング内で削除したコライダーグループが参照されていればそれを取り除く｡
-                # TODO : vrm0_remove_collider_group_in_springs()
+                vrm0_remove_collider_group_in_springs(target_collider_group_name)
 
         # アクティブインデックスをオフセットしてエラーを回避する｡
         self.offset_active_item_index(self.component_type)

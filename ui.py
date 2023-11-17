@@ -294,12 +294,12 @@ class VRMHELPER_PT_ui_each_tools(VRMHELPER_PT_Base):
                             box_sub = box.box()
                             draw_panel_vrm0_collider_group(self, context, box_sub)
 
-                        case "SPRING":
+                        case "BONE_GROUP":
                             box_spring = draw_spring_setting_box(box_spring, layout, basic_prop)
                             box = box_spring.box()
                             box.label(text="Spring Bone Tools", icon="BONE_DATA")
                             box_sub = box.box()
-                            # draw_panel_vrm0_spring(self, context, box_sub)
+                            draw_panel_vrm0_spring(self, context, box_sub)
 
                     if len(basic_prop.vrm1_component_type) > 1:
                         layout.separator(factor=0.25)

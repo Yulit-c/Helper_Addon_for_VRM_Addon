@@ -213,6 +213,7 @@ def vrm1_add_items2collider_ui_list() -> int:
 def remove_vrm1_collider_by_selected_object(source_object: Object):
     """
     VRM1 Collidersの内､引数'source_object'と同一のオブジェクトが登録されたコライダを消去する｡
+    その後､'source_object'を削除する｡
 
     Parameters
     ----------

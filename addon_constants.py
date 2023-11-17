@@ -182,7 +182,7 @@ MOVE_DOWN_CUSTOM_EXPRESSION_OPS_NAME = "vrm.move_down_vrm1_expressions_custom_ex
 ---------------------------------------------------------"""
 JOINT_PROP_NAMES = (
     "hit_radius",
-    "stiffness",
+    "stiffiness",
     "drag_force",
     "gravity_power",
     "gravity_dir",

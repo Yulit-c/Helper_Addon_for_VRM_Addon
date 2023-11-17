@@ -789,9 +789,9 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         precision=3,
     )
 
-    stiffness: FloatProperty(
-        name="Stiffness",
-        description="stiffness value of joint set by operator",
+    stiffiness: FloatProperty(
+        name="stiffiness",
+        description="stiffiness value of joint set by operator",
         default=1.0,
         min=0.0,
         soft_max=4.0,
@@ -1614,9 +1614,9 @@ class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
 
     item_type: BoolVectorProperty(
         name="Item Type",
-        description="[0]: is_label, [1]: is_spring, [2]: is_joint, [3]: is_collider_group",
-        size=4,
-        default=(0, 0, 0, 0),
+        description="[0]: is_label, [1]: is_Bone_Group [2]: is_Bone",
+        size=3,
+        default=(0, 0, 0),
     )
 
     item_name: StringProperty(
@@ -1627,9 +1627,9 @@ class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
 
     item_indexes: IntVectorProperty(
         name="Item Indexes",
-        description="Indexes of item in VRM extension compornent.[0]:Springs, [1]:Joints, [2]:Collider Groups",
-        size=3,
-        default=(0, 0, 0),
+        description="Indexes of item in VRM extension compornent.[0]:Bone Groups, [1]:Bone",
+        size=2,
+        default=(0, 0),
         min=0,
     )
 

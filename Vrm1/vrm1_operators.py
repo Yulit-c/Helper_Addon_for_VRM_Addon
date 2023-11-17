@@ -1130,13 +1130,15 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
         # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}
         for bind in morph_target_binds:
-            bind_mesh = bpy.data.objects.get(bind.node.mesh_object_name).data
+            if not (reference_object := bpy.data.objects.get(bind.node.mesh_object_name)):
+                continue
+            bind_mesh = reference_object.data
             existing_bind_info.setdefault(bind_mesh, []).append((bind.index, bind.weight))
 
         for mesh, sk_info in existing_bind_info.items():
             for sk_name, sk_value in sk_info:
-                sk = mesh.shape_keys.key_blocks.get(sk_name)
-                sk.value = sk_value
+                if sk := mesh.shape_keys.key_blocks.get(sk_name):
+                    sk.value = sk_value
 
         # Color/Transform Bindで指定されている全てのマテリアルの特定パラメーターは一度すべて初期値にセットする｡
         if existing_bind_material := {bind.material for bind in material_color_binds} | {
@@ -1148,24 +1150,28 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
                 logger.debug(f"Reset Values : {mat.name}")
                 set_mtoon_default_values(mat)
 
-        bpy.ops.vrm_helper.vrm1_expression_restore_mtoon1_parameters()
-        # ----------------------------------------------------------
-        #    Material Color Binds
-        # ----------------------------------------------------------
-        # アクティブエクスプレッションのMaterial Color Bindsの全てのBindの
-        # Materialに対してパラメーターを反映する｡
-        for color_bind in material_color_binds:
-            set_mtoon1_colors_from_bind(color_bind)
+        expression_material_collection = bpy.data.collections.get(
+            get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
+        )
+        if expression_material_collection.all_objects:
+            bpy.ops.vrm_helper.vrm1_expression_restore_mtoon1_parameters()
+            # ----------------------------------------------------------
+            #    Material Color Binds
+            # ----------------------------------------------------------
+            # アクティブエクスプレッションのMaterial Color Bindsの全てのBindの
+            # Materialに対してパラメーターを反映する｡
+            for color_bind in material_color_binds:
+                set_mtoon1_colors_from_bind(color_bind)
 
-        # ----------------------------------------------------------
-        #    Texture Transform Binds
-        # ----------------------------------------------------------
-        # アクティブエクスプレッションのTexture Transform Bindsの全てのBindの
-        # Materialに対してパラメーターを反映する｡
-        for transform_bind in texture_transform_binds:
-            set_mtoon1_texture_transform_from_bind(transform_bind)
+            # ----------------------------------------------------------
+            #    Texture Transform Binds
+            # ----------------------------------------------------------
+            # アクティブエクスプレッションのTexture Transform Bindsの全てのBindの
+            # Materialに対してパラメーターを反映する｡
+            for transform_bind in texture_transform_binds:
+                set_mtoon1_texture_transform_from_bind(transform_bind)
 
-        # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
+            # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
         return {"FINISHED"}
 
@@ -1211,7 +1217,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         os.system("cls")
         time_start = time.perf_counter()
         target_armature = get_target_armature()
-        armature_data:bpy.types.Armature = target_armature.data
+        armature_data: bpy.types.Armature = target_armature.data
         colliders = get_vrm_extension_property("COLLIDER")
         addon_collection_dict = setting_vrm_helper_collection()
         dest_collection = addon_collection_dict["VRM1_COLLIDER"]
@@ -1239,7 +1245,11 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
                 collider_object = new_item.bpy_object
                 mid_point = (pose_bone.tail + pose_bone.head) / 2
                 collider_object.matrix_world = generate_head_collider_position(mid_point)
+                # コライダーオブジェクトを対象コレクションにリンクする｡
                 link_object2collection(collider_object, dest_collection)
+                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                collider_object.select_set(True)
+                bpy.context.view_layer.objects.active = collider_object
 
             if self.collider_type == "Capsule":
                 # コライダーオブジェクトの作成･初期化｡
@@ -1254,13 +1264,21 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
                 collider_tail.matrix_basis = generate_tail_collider_position(
                     target_armature, pose_bone, pose_bone.tail
                 )
-
                 # コライダーオブジェクトを対象コレクションにリンクする｡
                 re_link_all_collider_object2collection()
+                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                collider_head.select_set(True)
+                context.view_layer.objects.active = collider_head
 
         # 'use_mirror_x'の値を変更していた場合は元に戻す｡
         if is_changed_use_mirror:
             armature_data.use_mirror_x = True
+
+        # Object Modeに移行してArmature Objectの選択を解除する｡
+        bpy.ops.object.mode_set(mode="OBJECT")
+        target_armature.select_set(False)
+
+        # TODO : 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
 
         logger.debug(f"Processing Time : {time.perf_counter() - time_start:.3f} s")
         return {"FINISHED"}
@@ -1571,7 +1589,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_V
             # 'assign_from_parent_joint'がTrueであれば親ボーンのジョイントからパラメーターを引き継ぐ｡
             if self.use_auto_joint_parametter:
                 new_joint.hit_radius = previous_joint.hit_radius
-                new_joint.stiffness = previous_joint.stiffness
+                new_joint.stiffiness = previous_joint.stiffiness
                 new_joint.drag_force = previous_joint.drag_force
                 new_joint.gravity_power = previous_joint.gravity_power
                 new_joint.gravity_dir = previous_joint.gravity_dir
@@ -1583,7 +1601,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_V
 
         except:
             new_joint.hit_radius = self.hit_radius
-            new_joint.stiffness = self.stiffness
+            new_joint.stiffiness = self.stiffiness
             new_joint.drag_force = self.drag_force
             new_joint.gravity_power = self.gravity_power
             new_joint.gravity_dir = self.gravity_dir
@@ -1745,7 +1763,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
                 target_item.node.bone_name = bone.name
                 target_item.hit_radius = self.hit_radius
-                target_item.stiffness = self.stiffness * damping
+                target_item.stiffiness = self.stiffiness * damping
                 target_item.drag_force = self.drag_force * damping
                 target_item.gravity_power = self.gravity_power
                 target_item.gravity_dir[0] = self.gravity_dir[0]
@@ -1862,7 +1880,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
             damping = 1.0
             for joint in spring.joints:
                 joint.hit_radius = self.hit_radius
-                joint.stiffness = self.stiffness * damping
+                joint.stiffiness = self.stiffiness * damping
                 joint.drag_force = self.drag_force * damping
                 joint.gravity_power = self.gravity_power
                 joint.gravity_dir[0] = self.gravity_dir[0]

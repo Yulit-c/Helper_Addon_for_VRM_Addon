@@ -378,10 +378,10 @@ def get_vrm0_extension_collider_group() -> (
 
 def get_vrm0_extension_spring() -> (
     bpy.types.bpy_prop_collection
-):  # ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+):  # ReferenceVrm0SecondaryAnimationGroupPropertyGroup
     vrm_secondary = get_vrm0_extension_secondary_animation()
-    vrm0_collider_group = vrm_secondary.collider_groups
-    return vrm0_collider_group
+    vrm0_bone_groups = vrm_secondary.bone_groups
+    return vrm0_bone_groups
 
 
 # ----------------------------------------------------------

@@ -32,6 +32,8 @@ from bpy.types import (
 # )
 
 from ..addon_classes import (
+    ReferenceStringPropertyGroup,
+    ReferenceBonePropertyGroup,
     ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
@@ -40,6 +42,7 @@ from ..addon_classes import (
 
 from ..property_groups import (
     VRMHELPER_WM_vrm0_collider_group_list_items,
+    VRMHELPER_WM_vrm0_spring_bone_list_items,
     get_target_armature,
     get_target_armature_data,
     get_ui_vrm0_collider_group_prop,
@@ -91,8 +94,8 @@ def get_source_vrm0_collider_groups() -> (
 
     # VRM1のSpring Bone Colliderをリストに格納して返す｡
     collider_groups_dict = {}
+    collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
     for n, collider_group in enumerate(cojllider_groups):
-        collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = collider_group
         collider_groups_dict.setdefault(collider_group.node.bone_name, [])
         # n : vrm extension cojllider_groups内でのインデックス｡
         collider_groups_dict[collider_group.node.bone_name].append((n, collider_group))
@@ -123,8 +126,6 @@ def vrm0_add_items2collider_group_ui_list() -> int:
 
     """
 
-    # wm_prop = get_addon_prop_group("WM")
-    # items = wm_prop.collider_list_items4custom_filter
     items = get_ui_vrm0_collider_group_prop()
 
     source_collider_dict = get_source_vrm0_collider_groups()
@@ -221,23 +222,6 @@ def get_active_list_item_in_collider_group() -> Optional[VRMHELPER_WM_vrm0_colli
         return None
 
 
-def get_source_vrm0_springs():
-    pass
-
-
-def vrm0_add_items2spring_ui_list() -> int:
-    """
-    VRM0のSpring Bone_Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
-    UI Listのrows入力用にアイテム数を返す｡
-
-    Returns
-    -------
-    int
-        リストに表示するアイテム数｡
-    """
-    pass
-
-
 def remove_vrm0_collider_by_selected_object(
     source_object: bpy.types.Object,
 ) -> Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]:
@@ -280,6 +264,77 @@ def remove_vrm0_collider_by_selected_object(
 
 
 def vrm0_remove_collider_group_in_springs(
-    collider_group: Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup],
+    removed_collider_group_name: str,
 ):
-    pass
+    bone_groups = get_vrm_extension_property("SPRING")
+
+    bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+    for bone_group in bone_groups:
+        collider_group: ReferenceStringPropertyGroup
+        for collider_group in bone_group.collider_groups:
+            if collider_group.value == removed_collider_group_name:
+                index = list(bone_group.collider_groups).index(collider_group)
+                bone_group.collider_groups.remove(index)
+
+
+# ----------------------------------------------------------
+#    Spring Bone Group
+# ----------------------------------------------------------
+def get_source_vrm0_springs() -> tuple[ReferenceVrm0SecondaryAnimationGroupPropertyGroup]:
+    # VRM ExtensionのSpring Bone Groupsを取得する
+    ext_bone_groups = get_vrm_extension_property("SPRING")
+
+    # VRM1のSpring Bone Groupsをリストに格納して返す｡
+    bone_groups = tuple(ext_bone_groups)
+
+    return bone_groups
+
+
+def vrm0_add_items2spring_ui_list() -> int:
+    """
+    VRM0のSpring Bone_Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
+    UI Listのrows入力用にアイテム数を返す｡
+
+    Returns
+    -------
+    int
+        リストに表示するアイテム数｡
+    """
+    bone_groups = get_source_vrm0_springs()
+    items = get_ui_vrm0_spring_prop()
+
+    # コレクションプロパティの初期化処理｡
+    items.clear()
+
+    # # コレクションプロパティに先頭ラベル(Armature名表示用)とColliderの各情報を追加する｡
+    # label: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
+    # label.item_type[0] = True
+    # label.name = target_armature_data.name
+
+    # for k, v in source_collider_dict.items():
+
+    for n, bone_group in enumerate(bone_groups):
+        # 登録されているBone Groupを追加する｡
+        comment = bone_group.comment
+        new_group: VRMHELPER_WM_vrm0_spring_bone_list_items = items.add()
+        new_group.item_type[1] = True
+        new_group.name = comment
+        new_group.item_name = comment
+        new_group.item_indexes = (n, 0)
+
+        # 登録されているBoneをアイテムに追加する｡
+        bone: ReferenceBonePropertyGroup
+        for m, bone in enumerate(bone_group.bones):
+            new_bone: VRMHELPER_WM_vrm0_spring_bone_list_items = items.add()
+            new_bone.item_type[2] = True
+            new_bone.name = f"{comment} {bone.bone_name}"
+            new_bone.item_name = bone.bone_name
+            new_bone.item_indexes = (n, m)
+
+    return len(items)
+
+
+def vrm0_get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm0_spring_bone_list_items]:
+    if bone_group_list := get_ui_vrm0_spring_prop():
+        return bone_group_list[get_vrm0_active_index_prop("BONE_GROUPS")]
+    return None
