@@ -212,7 +212,7 @@ def get_active_list_item_in_collider_group() -> Optional[VRMHELPER_WM_vrm0_colli
 
     Returns
     -------
-    PropertyGroup | None
+    Optional[VRMHELPER_WM_vrm0_collider_group_list_items]
         取得されたコライダーグループ｡取得できなければNone｡
 
     """
@@ -314,8 +314,16 @@ def vrm0_add_items2spring_ui_list() -> int:
     # for k, v in source_collider_dict.items():
 
     for n, bone_group in enumerate(bone_groups):
-        # 登録されているBone Groupを追加する｡
         comment = bone_group.comment
+        if n > 0:
+            # 2つ目以降のアイテムの場合はブランク行を追加する｡
+            new_label: VRMHELPER_WM_vrm0_spring_bone_list_items = items.add()
+            new_label.item_type[0] = True
+            new_label.name = comment
+            new_label.item_name = ""
+            new_label.item_indexes = (0, 0)
+
+        # 登録されているBone Groupを追加する｡
         new_group: VRMHELPER_WM_vrm0_spring_bone_list_items = items.add()
         new_group.item_type[1] = True
         new_group.name = comment
@@ -335,6 +343,15 @@ def vrm0_add_items2spring_ui_list() -> int:
 
 
 def vrm0_get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm0_spring_bone_list_items]:
+    """
+    UIリストのアクティブインデックスに対応したスプリングボーングループを取得する｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm0_spring_bone_list_items]
+        取得されたスプリングボーングループ｡取得できなければNone｡
+
+    """
     if bone_group_list := get_ui_vrm0_spring_prop():
-        return bone_group_list[get_vrm0_active_index_prop("BONE_GROUPS")]
+        return bone_group_list[get_vrm0_active_index_prop("BONE_GROUP")]
     return None

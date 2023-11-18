@@ -495,7 +495,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         min=0,
     )
 
-    spring: IntProperty(
+    bone_group: IntProperty(
         name="List Index of Spring",
         description="Index of active items in Spring UI List",
         default=0,
@@ -2368,13 +2368,13 @@ def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
             list_items = get_ui_vrm0_blend_shape_material_prop()
             index = vrm0_index_prop.blend_shape_material
 
-        case "BONE_GROUPS":
-            list_items = get_ui_vrm0_spring_prop()
-            index = vrm0_index_prop.spring
-
         case "COLLIDER_GROUP":
             list_items = get_ui_vrm0_collider_group_prop()
             index = vrm0_index_prop.collider_group
+
+        case "BONE_GROUP":
+            list_items = get_ui_vrm0_spring_prop()
+            index = vrm0_index_prop.bone_group
 
     active_index = evaluation_active_index_prop(list_items, index)
     return active_index

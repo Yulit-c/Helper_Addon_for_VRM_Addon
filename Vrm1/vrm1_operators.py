@@ -1513,10 +1513,11 @@ class VRMHELPER_OT_vrm1_spring_add_spring(VRMHELPER_vrm1_spring_base):
 class VRMHELPER_OT_vrm1_spring_remove_spring(VRMHELPER_vrm1_spring_base):
     bl_idname = "vrmhelper.vrm1_spring_remove_spring"
     bl_label = "Add Spring"
-    bl_description = "Remove active spring from spring"
+    bl_description = "Remove the active spring from spring"
 
     @classmethod
     def poll(self, context):
+        # UIリストのアイテムが存在し､アクティブアイテムがブランク以外である｡
         return (active_item := get_active_list_item_in_spring()) and active_item.name
 
     def execute(self, context):

@@ -21,7 +21,7 @@ VRM0_COMPONENT_TYPES = Literal[
     "BLEND_SHAPE",
     "blend_shape_bind",
     "BLEND_SHAPE_MATERIAL",
-    "BONE_GROUPS",
+    "BONE_GROUP",
     "COLLIDER_GROUP",
 ]
 

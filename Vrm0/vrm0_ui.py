@@ -82,7 +82,7 @@ from ..utils_vrm_base import (
     get_vrm0_extension_active_blend_shape_group,
     get_vrm0_extension_secondary_animation,
     get_vrm0_extension_collider_group,
-    get_vrm0_extension_spring,
+    get_vrm0_extension_spring_bone_group,
 )
 
 
@@ -149,6 +149,15 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
     VRMHELPER_OT_vrm0_collider_remove_from_empty,
+    # ----------------------------------------------------------
+    #    Spring Bone Group
+    # ----------------------------------------------------------
+    VRMHELPER_OT_vrm0_spring_add_bone_group,
+    VRMHELPER_OT_vrm0_spring_remove_bone_group,
+    VRMHELPER_OT_vrm0_spring_clear_bone_group,
+    VRMHELPER_OT_vrm0_spring_add_bone,
+    VRMHELPER_OT_vrm0_spring_remove_bone,
+    VRMHELPER_OT_vrm0_spring_clear_bone,
 )
 
 """
@@ -559,6 +568,7 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     VRM0のSpring Bone Group に関する設定/オペレーターを描画する
     """
     # Property Groupの取得｡
+    target_armature = get_target_armature()
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
@@ -577,27 +587,41 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
         wm_vrm0_prop,
         "spring_bone_list_items4custom_filter",
         scene_vrm0_prop.active_indexes,
-        "spring",
+        "bone_group",
         rows=define_ui_list_rows(rows),
     )
 
     # ボーンの作成/削除を行うオペレーター
     col_list = row.column(align=True)
+    col_list.label(text="", icon="GROUP_BONE")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_add_bone_group.bl_idname, text="", icon="ADD")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone_group.bl_idname, text="", icon="REMOVE")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone_group.bl_idname, text="", icon="PANEL_CLOSE")
+    col_list.separator()
     col_list.label(text="", icon="BONE_DATA")
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="ADD")
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="REMOVE")
-    col_list.operator(VRMHELPER_OT_empty_operator.bl_idname, text="", icon="PANEL_CLOSE")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_add_bone.bl_idname, text="", icon="ADD")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone.bl_idname, text="", icon="REMOVE")
+    col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone.bl_idname, text="", icon="PANEL_CLOSE")
 
     box = layout.box()
     if active_item := vrm0_get_active_list_item_in_spring():
-        bone_groups = get_vrm0_extension_spring()
+        bone_groups = get_vrm0_extension_spring_bone_group()
         bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
             active_item.item_indexes[0]
         ]
 
-        box.label(text=f"Active Bone Group Parameters")
+        row = box.row()
+        row.scale_y = 1.2
+        row.label(text=f"Active Bone Group Parameters")
         box.prop(bone_group, "comment", icon="BOOKMARKS")
-        box.prop(bone_group.center, "bone_name", text="Center", icon="PIVOT_MEDIAN")
+        box.prop_search(
+            bone_group.center,
+            "bone_name",
+            target_armature.data,
+            "bones",
+            text="Center",
+            icon="PIVOT_MEDIAN",
+        )
         box.prop(bone_group, "stiffiness", text="Stiffiness")
         box.prop(bone_group, "drag_force", text="Drag Force")
         box.prop(bone_group, "hit_radius", text="Hit Radius")
@@ -832,25 +856,31 @@ class VRMHELPER_UL_vrm0_spring_list(bpy.types.UIList, VRMHELPER_UL_base):
         index,
     ):
         row = layout.row(align=True)
-        bone_groups = get_vrm0_extension_spring()
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        target_armature_data = get_target_armature_data()
 
         # ラベルの描画
+        bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+        bone_group = bone_groups[item.item_indexes[0]]
         match tuple(item.item_type):
+            case (1, 0, 0):
+                row.label(text="")
+
             case (0, 1, 0):
-                bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
-                    item.item_indexes[0]
-                ]
                 row.label(text="", icon="BOOKMARKS")
                 row.prop(bone_group, "comment", text="", emboss=False)
 
             case (0, 0, 1):
                 self.add_blank_labels(row, 2)
-                bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
-                    item.item_indexes[0]
-                ]
-                bone: ReferenceBonePropertyGroup = bone_group.bones[item.item_indexes[1]]
-                row.label(text="", icon="BONE_DATA")
-                row.prop(bone, "bone_name", text="", emboss=False)
+                bone: ReferenceBonePropertyGroup
+                bone = bone_group.bones[item.item_indexes[1]]
+                row.prop_search(
+                    bone,
+                    "bone_name",
+                    target_armature_data,
+                    "bones",
+                    text="",
+                )
 
 
 """---------------------------------------------------------

@@ -246,7 +246,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (0, "COLLIDER_GROUP"):
                 vrm0_add_items2collider_group_ui_list()
 
-            case (0, "SPRING"):
+            case (0, "BONE_GROUP"):
                 vrm0_add_items2spring_ui_list()
             # ---------------------------------------------------------------------------------
             case (1, "EXPRESSION"):
@@ -286,6 +286,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "EXPRESSION_MATERIAL",
             "COLLIDER",
             "COLLIDER_GROUP",
+            "BONE_GROUP",
             "SPRING",
             "CONSTRAINT",
         ],
@@ -306,6 +307,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "EXPRESSION_MATERIAL",
             "COLLIDER",
             "COLLIDER_GROUP",
+            "BONE_GROUP",
             "SPRING",
             'CONSTRAINT',
         ]
@@ -345,9 +347,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
                 list_items = get_ui_vrm0_collider_group_prop()
                 attr_name = "collider_group"
 
-            case (0, "SPRING"):
+            case (0, "BONE_GROUP"):
                 list_items = get_ui_vrm0_spring_prop()
-                attr_name = "spring"
+                attr_name = "bone_group"
             # ---------------------------------------------------------------------------------
             case (1, "FIRST_PERSON"):
                 list_items = get_ui_vrm1_first_person_prop()
@@ -397,7 +399,6 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         # ----------------------------------------------------------
         #    前方にオフセットする場合の処理
         # ----------------------------------------------------------
-
         loop_count = 0
         while True:
             # UI Listアイテムのリストが空なら中断｡
@@ -462,9 +463,9 @@ class VRMHELPER_vrm0_collider_group_base(VRMHELPER_operator_base):
     component_type: str = "COLLIDER_GROUP"
 
 
-class VRMHELPER_vrm0_spring_base(VRMHELPER_operator_base):
+class VRMHELPER_vrm0_bone_group_base(VRMHELPER_operator_base):
     vrm_mode: int = 0
-    component_type: str = "SPRING"
+    component_type: str = "BONE_GROUP"
 
 
 # ----------------------------------------------------------

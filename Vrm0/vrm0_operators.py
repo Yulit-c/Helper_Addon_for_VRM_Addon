@@ -48,12 +48,14 @@ from ..preferences import (
 )
 
 from ..addon_classes import (
+    ReferenceBonePropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
     ReferenceVrm0MaterialValueBindPropertyGroup,
     ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
+    ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
 )
 
 from ..property_groups import (
@@ -98,6 +100,7 @@ from ..utils_vrm_base import (
     get_vrm0_extension_active_blend_shape_group,
     get_vrm0_extension_secondary_animation,
     get_vrm0_extension_collider_group,
+    get_vrm0_extension_spring_bone_group,
     reset_shape_keys_value_in_morph_binds,
     store_mtoon_current_values,
     set_mtoon_default_values,
@@ -127,6 +130,7 @@ from .utils_vrm0_spring import (
     get_active_list_item_in_collider_group,
     remove_vrm0_collider_by_selected_object,
     vrm0_remove_collider_group_in_springs,
+    vrm0_get_active_list_item_in_spring,
 )
 
 from ..operators import (
@@ -134,9 +138,8 @@ from ..operators import (
     VRMHELPER_vrm0_first_person_base,
     VRMHELPER_vrm0_blend_shape_base,
     VRMHELPER_vrm0_blend_shape_sub,
-    # VRMHELPER_vrm0_collider_base,
     VRMHELPER_vrm0_collider_group_base,
-    VRMHELPER_vrm0_spring_base,
+    VRMHELPER_vrm0_bone_group_base,
 )
 
 """---------------------------------------------------------
@@ -1156,6 +1159,131 @@ class VRMHELPER_OT_vrm0_collider_remove_from_empty(VRMHELPER_vrm0_collider_group
 
 
 """---------------------------------------------------------
+    Spring Bone Group
+---------------------------------------------------------"""
+
+
+class VRMHELPER_OT_vrm0_spring_add_bone_group(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_add_bone_group"
+    bl_label = "Add Bone Group"
+    bl_description = "Add a new VRM0 Spring Bone Group"
+
+    def execute(self, context):
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        new_spring = bone_groups.add()
+        new_spring.comment = "New Bone Group"
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_remove_bone_group(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_remove_bone_group"
+    bl_label = "Remove Bone Group"
+    bl_description = "Remove the active VRM0 Spring Bone Group"
+
+    @classmethod
+    def poll(cls, context):
+        # UIリストのアイテムが存在し､アクティブアイテムがブランク以外である｡
+        if not (active_item := vrm0_get_active_list_item_in_spring()):
+            return False
+
+        match tuple(active_item.item_type):
+            case (1, 0, 0):
+                return False
+            case _:
+                return True
+
+    def execute(self, context):
+        active_item = vrm0_get_active_list_item_in_spring()
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        target_index = active_item.item_indexes[0]
+        bone_groups.remove(target_index)
+
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_clear_bone_group(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_clear_bone_group"
+    bl_label = "Clear Bone Group"
+    bl_description = "Clear the active VRM0 Spring Bone Group"
+
+    @classmethod
+    def poll(cls, context):
+        # UIリストのアイテムが一つ以上存在する｡
+        return vrm0_get_active_list_item_in_spring()
+
+    def execute(self, context):
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        bone_groups.clear()
+        get_vrm0_index_root_prop().bone_group = 0
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_add_bone(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_add_bone"
+    bl_label = "Add Bone"
+    bl_description = "Add a new VRM0 Spring Bone on Active Bone Group"
+
+    @classmethod
+    def poll(cls, context):
+        # UIリストのアクティブアイテムがボーングループまたはボーンである｡
+        if not (active_item := vrm0_get_active_list_item_in_spring()):
+            return
+        match tuple(active_item.item_type):
+            case (0, 1, 0) | (0, 0, 1):
+                return True
+
+    def execute(self, context):
+        target_armature = get_target_armature()
+        # UIリストのアクティブアイテムに対応したボーングループの'bones'に要素を新規作成する｡
+        active_item = vrm0_get_active_list_item_in_spring()
+        target_index = active_item.item_indexes[0]
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        active_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[target_index]
+        bones = active_bone_group.bones
+        new_bone: ReferenceBonePropertyGroup = bones.add()
+        # アクティブボーンまたはポーズボーンがあればそのボーンを作成した'bone'にセットする｡
+        match context.mode:
+            case "POSE":
+                if active_bone := context.active_pose_bone:
+                    new_bone.bone_name = active_bone.name
+            case "EDIT_ARMATURE":
+                if active_bone := context.active_bone:
+                    new_bone.bone_name = active_bone.name
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_remove_bone(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_remove_bone"
+    bl_label = "Remove Bone"
+    bl_description = "Remove the active VRM0 Spring Bone on Bone Group"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_clear_bone(VRMHELPER_vrm0_bone_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_clear_bone"
+    bl_label = "Clear Bone"
+    bl_description = "Clear all VRM0 Spring Bone on Bone Group"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+"""---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
 ------------------------------------------------------------
@@ -1199,4 +1327,13 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
     VRMHELPER_OT_vrm0_collider_remove_from_empty,
+    # ----------------------------------------------------------
+    #    Spring Bone Group
+    # ----------------------------------------------------------
+    VRMHELPER_OT_vrm0_spring_add_bone_group,
+    VRMHELPER_OT_vrm0_spring_remove_bone_group,
+    VRMHELPER_OT_vrm0_spring_clear_bone_group,
+    VRMHELPER_OT_vrm0_spring_add_bone,
+    VRMHELPER_OT_vrm0_spring_remove_bone,
+    VRMHELPER_OT_vrm0_spring_clear_bone,
 )
