@@ -499,7 +499,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     rows = vrm0_add_items2collider_group_ui_list()
 
     # ----------------------------------------------------------
-    #    登録されているBlend Shapeのリスト描画
+    #    登録されているCollider Groupのリスト描画
     # ----------------------------------------------------------
     row = layout.row()
     row.template_list(
@@ -520,6 +520,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_clear_group.bl_idname, text="", icon="PANEL_CLOSE")
     # ---------------------------------------------------------------------------------
     # コライダーの削除を行うオペレーター
+    col_list.separator(factor=2.0)
     col_list.label(text="", icon="MESH_UVSPHERE")
     col_list.operator(
         VRMHELPER_OT_vrm0_collider_group_remove_active_collider.bl_idname, text="", icon="REMOVE"
@@ -597,7 +598,7 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_vrm0_spring_add_bone_group.bl_idname, text="", icon="ADD")
     col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone_group.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone_group.bl_idname, text="", icon="PANEL_CLOSE")
-    col_list.separator()
+    col_list.separator(factor=2.0)
     col_list.label(text="", icon="BONE_DATA")
     col_list.operator(VRMHELPER_OT_vrm0_spring_add_bone.bl_idname, text="", icon="ADD")
     col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone.bl_idname, text="", icon="REMOVE")

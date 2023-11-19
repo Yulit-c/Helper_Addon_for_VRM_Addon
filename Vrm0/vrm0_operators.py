@@ -1264,9 +1264,24 @@ class VRMHELPER_OT_vrm0_spring_remove_bone(VRMHELPER_vrm0_bone_group_base):
 
     @classmethod
     def poll(cls, context):
-        return True
+        # アクティブアイテムがボーンである｡
+        if not (active_item := vrm0_get_active_list_item_in_spring()):
+            return
+        match tuple(active_item.item_type):
+            case (0, 0, 1):
+                return True
 
     def execute(self, context):
+        active_item = vrm0_get_active_list_item_in_spring()
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        target_group_index = active_item.item_indexes[0]
+        active_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[target_group_index]
+        bones = active_bone_group.bones
+        target_bone_index = active_item.item_indexes[1]
+        bones.remove(target_bone_index)
+
+        self.offset_active_item_index(self.component_type)
+
         return {"FINISHED"}
 
 
@@ -1277,9 +1292,27 @@ class VRMHELPER_OT_vrm0_spring_clear_bone(VRMHELPER_vrm0_bone_group_base):
 
     @classmethod
     def poll(cls, context):
-        return True
+        # アクティブアイテムがラベル以外であり､アクティブボーングループにボーンが1つ以上存在する｡
+        if not (active_item := vrm0_get_active_list_item_in_spring()):
+            return
+        match tuple(active_item.item_type):
+            case (1, 0, 0):
+                return
+
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        active_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+        active_bone_group = bone_groups[active_item.item_indexes[0]]
+        return active_bone_group.bones
 
     def execute(self, context):
+        active_item = vrm0_get_active_list_item_in_spring()
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        active_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+        active_bone_group = bone_groups[active_item.item_indexes[0]]
+        active_bone_group.bones.clear()
+
+        self.offset_active_item_index(self.component_type)
+
         return {"FINISHED"}
 
 
