@@ -57,6 +57,7 @@ from ..property_groups import (
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     VRMHELPER_WM_vrm0_collider_group_list_items,
     VRMHELPER_WM_vrm0_spring_bone_list_items,
+    VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
@@ -646,6 +647,20 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     )
     op.source_type = "BONE_GROUP"
 
+    # Bone GroupにリンクされたCollider Groupのリストを描画｡
+    rows = 5
+
+    row = layout.row()
+    row.template_list(
+        VRMHELPER_UL_vrm0_linked_collider_grouplist.__name__,
+        "",
+        wm_vrm0_prop,
+        "linked_collider_group_list_items4custom_filter",
+        scene_vrm0_prop.active_indexes,
+        "linked_collider_group",
+        rows=define_ui_list_rows(rows),
+    )
+
 
 """---------------------------------------------------------
 ------------------------------------------------------------
@@ -899,6 +914,29 @@ class VRMHELPER_UL_vrm0_spring_list(bpy.types.UIList, VRMHELPER_UL_base):
                     "bones",
                     text="",
                 )
+
+
+class VRMHELPER_UL_vrm0_linked_collider_grouplist(bpy.types.UIList, VRMHELPER_UL_base):
+    """
+    Vrm0のSpring Bone GroupにリンクされたCollider Groupを表示するUI List
+    """
+
+    def draw_item(
+        self,
+        context,
+        layout: bpy.types.UILayout,
+        data,
+        item: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        row = layout.row(align=True)
+        bone_groups = get_vrm0_extension_spring_bone_group()
+        target_armature_data = get_target_armature_data()
+
+        # ラベルの描画
 
 
 """---------------------------------------------------------

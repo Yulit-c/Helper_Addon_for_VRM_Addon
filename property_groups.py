@@ -502,6 +502,13 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         min=0,
     )
 
+    linked_collider_group: IntProperty(
+        name="List Index of Linked Collider Group",
+        description="Index of active items in Linked Collider Group UI List",
+        default=0,
+        min=0,
+    )
+
 
 # ----------------------------------------------------------
 #    VRM0 Root Property
@@ -1630,7 +1637,7 @@ class VRMHELPER_WM_vrm0_collider_group_list_items(bpy.types.PropertyGroup):
 
 class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
     """
-    Spring Bone設定･確認用UI Listに表示する候補アイテム｡
+    Spring Bone Group設定･確認用UI Listに表示する候補アイテム｡
     """
 
     item_type: BoolVectorProperty(
@@ -1649,6 +1656,33 @@ class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
     item_indexes: IntVectorProperty(
         name="Item Indexes",
         description="Indexes of item in VRM extension compornent.[0]:Bone Groups, [1]:Bone",
+        size=2,
+        default=(0, 0),
+        min=0,
+    )
+
+
+class VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items(bpy.types.PropertyGroup):
+    """
+    Spring Bone GroupにリンクされたCollider Group設定･確認用UI Listに表示する候補アイテム｡
+    """
+
+    item_type: BoolVectorProperty(
+        name="Item Type",
+        description="[0]: is_label, [1]: is_Bone_Group [2]: is_Bone",
+        size=3,
+        default=(0, 0, 0),
+    )
+
+    item_name: StringProperty(
+        name="Item Name",
+        description="Name of the springs component registered in the VRM extension",
+        default="",
+    )
+
+    item_indexes: IntVectorProperty(
+        name="Item Indexes",
+        description="Indexes of item in VRM extension compornent.[0]:Bone Group, [1]:Collider Group",
         size=2,
         default=(0, 0),
         min=0,
@@ -1728,6 +1762,12 @@ class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
         name="Candidate Spring Bone List Items",
         description="Elements registered with this collection property are displayed in the UI List",
         type=VRMHELPER_WM_vrm0_spring_bone_list_items,
+    )
+
+    linked_collider_group_list_items4custom_filter: CollectionProperty(
+        name="Candidate Linked Collider Group List Items",
+        description="Elements registered with this collection property are displayed in the UI List",
+        type=VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items,
     )
 
     collider_group_list4operator: CollectionProperty(
@@ -2383,18 +2423,25 @@ def initialize_material_value_prop():
         target_item.name = name
 
 
-def get_ui_vrm0_collider_group_prop() -> (
-    bpy.types.CollectionProperty
-):  # VRMHELPER_WM_vrm0_collider_group_list_items
+def get_ui_vrm0_collider_group_prop() -> bpy.types.CollectionProperty:
+    """VRMHELPER_WM_vrm0_collider_group_list_items"""
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     collider_group_filter = wm_vrm0_root_prop.collider_group_list_items4custom_filter
     return collider_group_filter
 
 
-def get_ui_vrm0_spring_prop() -> bpy.types.CollectionProperty:  # VRMHELPER_WM_vrm0_spring_bone_list_items
+def get_ui_vrm0_spring_prop() -> bpy.types.CollectionProperty:
+    """VRMHELPER_WM_vrm0_spring_bone_list_items"""
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     spring_bone_filter = wm_vrm0_root_prop.spring_bone_list_items4custom_filter
     return spring_bone_filter
+
+
+def get_ui_vrm0_linked_collider_group_prop() -> bpy.types.CollectionProperty:
+    """VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items"""
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    linked_collider_group_filter = wm_vrm0_root_prop.linked_collider_group_list_items4custom_filter
+    return linked_collider_group_filter
 
 
 def get_ui_vrm0_operator_collider_group_prop() -> bpy.types.bpy_prop_collection:
@@ -2759,6 +2806,7 @@ CLASSES = (
     VRMHELPER_WM_vrm0_material_value_prop_names,
     VRMHELPER_WM_vrm0_collider_group_list_items,
     VRMHELPER_WM_vrm0_spring_bone_list_items,
+    VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items,
     VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
     VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
     VRMHELPER_WM_vrm0_root_property_group,

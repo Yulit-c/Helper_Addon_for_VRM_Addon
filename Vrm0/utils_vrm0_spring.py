@@ -52,6 +52,7 @@ from ..property_groups import (
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
     get_ui_bone_group_prop,
+    get_ui_vrm0_linked_collider_group_prop,
     get_ui_vrm0_operator_collider_group_prop,
     get_ui_vrm0_operator_spring_bone_group_prop,
     get_vrm0_active_index_prop,
