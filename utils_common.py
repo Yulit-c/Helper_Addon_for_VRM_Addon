@@ -155,7 +155,7 @@ def set_properties_to_from_dict(target: object, source_dict: dict[str, Any]):
 
 def get_selected_bone(
     target_armature: bpy.types.Armature,
-) -> Optional[list[bpy.types.Bone]]:
+) -> list[bpy.types.Bone]:
     """
     Edit/Pose Modeで選択されたボーンの名前と一致するボーンをtarget_armatureのbonesから取得する｡
 
@@ -166,18 +166,24 @@ def get_selected_bone(
 
     Returns
     -------
-    Optional[list[bpy.types.Bone]]
+    list[bpy.types.Bone]
         target_armatureのbonesから取得した､選択中ボーンのリスト
 
     """
 
     context = bpy.context
-    bones = None
-    bone_names = (
-        [i.name for i in context.selected_bones]
-        if context.selected_bones
-        else [i.name for i in context.selected_pose_bones]
-    )
+    bones = []
+    # 選択ボーンが存在しない場合は空のリストを返す｡
+    if not (context.selected_bones or context.selected_pose_bones):
+        return bones
+
+    match context.mode:
+        case "EDIT_ARMATURE":
+            bone_names = [i.name for i in context.selected_bones]
+
+        case "POSE":
+            bone_names = [i.name for i in context.selected_pose_bones]
+
     if bone_names:
         bones = [i for i in target_armature.bones if i.name in bone_names]
 

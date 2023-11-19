@@ -54,6 +54,8 @@ from mathutils import (
 from ..addon_classes import (
     ReferenceVrm1TextureTransformBindPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
+    ReferenceSpringBone1SpringPropertyGroup,
+    ReferenceSpringBone1JointPropertyGroup,
     VRMHELPER_VRM_joint_operator_property,
 )
 
@@ -71,7 +73,7 @@ from ..property_groups import (
     get_ui_vrm1_expression_prop,
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
-    get_ui_vrm1_operator_bone_group_prop,
+    get_ui_bone_group_prop,
     get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_operator_spring_prop,
     get_ui_vrm1_constraint_prop,
@@ -109,6 +111,7 @@ from ..utils_vrm_base import (
     store_mtoon_current_values,
     set_mtoon_default_values,
     re_link_all_collider_object2collection,
+    add_list_item2bone_group_list4operator,
 )
 
 from .utils_vrm1_first_person import (
@@ -142,7 +145,6 @@ from .utils_vrm1_spring import (
     # ----------------------------------------------------------
     get_active_list_item_in_spring,
     remove_vrm1_spring_collider_group_when_removed_collider_group,
-    vrm1_add_list_item2bone_group_list4operator,
     vrm1_add_list_item2collider_group_list4operator,
     vrm1_add_list_item2joint_list4operator,
 )
@@ -1679,15 +1681,22 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
     # -----------------------------------------------------
 
     def invoke(self, context, event):
-        if self.source_type == "SELECT":
-            vrm1_add_list_item2collider_group_list4operator()
-            return context.window_manager.invoke_props_dialog(self, width=360)
+        match self.source_type:
+            case "SELECT":
+                vrm1_add_list_item2collider_group_list4operator()
+                return context.window_manager.invoke_props_dialog(self, width=360)
 
-        vrm1_add_list_item2bone_group_list4operator()
-        vrm1_add_list_item2collider_group_list4operator()
-        bone_groups = get_ui_vrm1_operator_bone_group_prop()
-        width_popup = math.ceil(len(bone_groups) / self.rows_property) * 240
-        return context.window_manager.invoke_props_dialog(self, width=width_popup)
+            case "BONE_GROUP":
+                add_list_item2bone_group_list4operator()
+                vrm1_add_list_item2collider_group_list4operator()
+                if not (bone_groups := get_ui_bone_group_prop()):
+                    self.report({"INFO"}, "Bone group does not exist in Target Armature")
+                    return {"CANCELLED"}
+                width_popup = math.ceil(len(bone_groups) / self.rows_property) * 240
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
+
+            case _:
+                return {"CANCELLED"}
 
     def draw(self, context):
         layout = self.layout
@@ -1696,7 +1705,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
         # 処理対象のボーングループを選択するエリア｡
         if self.source_type == "BONE_GROUP":
-            bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
+            bone_group_collection = get_ui_bone_group_prop()
             anchor_layout = row.column(align=True)
             box_sub = anchor_layout.box()
             box_sub.label(text="Target Bone Group")
@@ -1706,12 +1715,6 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
                     col = row_root.column()
                 row_sub = col.row(align=True)
                 row_sub.prop(group, "is_target", text=group.name)
-
-        # for n, spring in enumerate(spring_collection):
-        #     if n % self.rows_property == 0:
-        # col = row_root.column()
-        # row = col.row(align=True)
-        #     row.prop(spring, "is_target", text=spring.name)
 
         # 処理対象のコライダーグループを選択するエリア｡
         anchor_layout = row.column(align=True)
@@ -1740,6 +1743,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
             # 枝に含まれているボーンがいずれかのスプリングに登録されている場合はそのスプリングのジョインツに追記する｡
             target_joints = None
             for dict in spring_and_joint_dicts:
+                spring: ReferenceSpringBone1SpringPropertyGroup
                 for spring, joints in dict.items():
                     if {i.name for i in branch} & {i.node.bone_name for i in joints}:
                         target_joints = spring.joints
@@ -1757,6 +1761,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
                     continue
                 # ボーンが登録されていないジョイントが存在する場合､そちらに値を代入する｡
                 logger.debug(f"Source Bone : {bone.name}")
+                target_item: ReferenceSpringBone1JointPropertyGroup
                 if empty_item := [i for i in target_joints if not i.node.bone_name]:
                     target_item = empty_item[0]
                 else:
@@ -1869,6 +1874,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
             springs_filter_list = [i.name for i in springs_collection if filter_strings in i.name]
 
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
+        spring: ReferenceSpringBone1SpringPropertyGroup
         for spring, filter in zip(springs, springs_collection):
             if springs_filter_list and not spring.vrm_name in springs_filter_list:
                 logger.debug(f"Skip 0 : {spring.vrm_name}")
@@ -1879,6 +1885,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
                 continue
 
             damping = 1.0
+            joint: ReferenceSpringBone1JointPropertyGroup
             for joint in spring.joints:
                 joint.hit_radius = self.hit_radius
                 joint.stiffness = self.stiffness * damping

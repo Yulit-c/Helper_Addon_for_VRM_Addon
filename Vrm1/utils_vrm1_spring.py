@@ -54,7 +54,7 @@ from ..property_groups import (
     get_ui_vrm1_collider_group_prop,
     get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_spring_prop,
-    get_ui_vrm1_operator_bone_group_prop,
+    get_ui_bone_group_prop,
     get_ui_vrm1_operator_spring_prop,
     # ----------------------------------------------------------
     get_target_armature,
@@ -538,27 +538,6 @@ def remove_vrm1_spring_collider_group_when_removed_collider_group(
 # ----------------------------------------------------------
 #    For Operator
 # ----------------------------------------------------------
-
-
-def vrm1_add_list_item2bone_group_list4operator():
-    """
-    オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
-    """
-
-    addon_pref = get_addon_preferences()
-    filtering_word = addon_pref.bone_group_filter_name
-
-    bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
-    bone_group_collection.clear()
-    for n, group in enumerate(get_target_armature().pose.bone_groups):
-        new_item = bone_group_collection.add()
-        new_item.name = group.name
-        new_item.group_index = n
-        # Bone Groupの名前に'filter_word'が含まれる場合は初期値をTrueにする｡
-        if filtering_word in group.name:
-            new_item.is_target = True
-
-
 def vrm1_add_list_item2collider_group_list4operator():
     """
     オペレーターの処理対象コライダーグループを定義するためのコレクションプロパティにアイテムを登録する｡

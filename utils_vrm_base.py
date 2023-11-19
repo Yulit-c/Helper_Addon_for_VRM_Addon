@@ -67,6 +67,10 @@ from .addon_constants import (
     MTOON1_DEFAULT_VALUES,
 )
 
+
+from .preferences import get_addon_preferences
+
+
 from .property_groups import (
     VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
@@ -74,7 +78,7 @@ from .property_groups import (
     get_scene_basic_prop,
     get_target_armature,
     get_target_armature_data,
-    get_ui_vrm1_operator_bone_group_prop,
+    get_ui_bone_group_prop,
     get_scene_vrm0_mtoon_stored_prop,
     get_scene_vrm1_mtoon_stored_prop,
 )
@@ -83,6 +87,7 @@ from .utils_common import (
     get_attr_from_strings,
     set_attr_from_strings,
     get_selected_bone,
+    get_branch_root_bone,
     get_bones_for_each_branch_from_source_bones,
     unlink_object_from_all_collections,
     setting_vrm_helper_collection,
@@ -189,7 +194,7 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
 
     """
 
-    bone_group_collection = get_ui_vrm1_operator_bone_group_prop()
+    bone_group_collection = get_ui_bone_group_prop()
 
     target_group_index_list = [i.group_index for i in bone_group_collection if i.is_target]
     target_bone_list = [
@@ -199,6 +204,24 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
     ]
 
     return target_bone_list
+
+
+def get_branch_root_bones_by_type(
+    source_type: Literal["SELECT", "BONE_GROUP"],
+    target_armature: Object,
+) -> list[Bone]:
+    target_armature = get_target_armature()
+    if source_type == "SELECT":
+        source_bones = get_selected_bone(target_armature.data)
+
+    if source_type == "BONE_GROUP":
+        source_bones = get_bones_from_bone_groups(target_armature)
+
+    branch_root_bones = list({get_branch_root_bone(i) for i in source_bones})
+    sort_order = [i.name for i in target_armature.data.bones if i in branch_root_bones]
+    branch_root_bones.sort(key=lambda x: sort_order.index(x.name))
+
+    return branch_root_bones
 
 
 def get_bones_for_each_branch_by_type(
@@ -376,9 +399,8 @@ def get_vrm0_extension_collider_group() -> (
     return vrm0_collider_group
 
 
-def get_vrm0_extension_spring_bone_group() -> (
-    bpy.types.bpy_prop_collection
-):  # ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+def get_vrm0_extension_spring_bone_group() -> bpy.types.bpy_prop_collection:
+    """ReferenceVrm0SecondaryAnimationGroupPropertyGroup"""
     vrm_secondary = get_vrm0_extension_secondary_animation()
     vrm0_bone_groups = vrm_secondary.bone_groups
     return vrm0_bone_groups
@@ -1151,3 +1173,22 @@ def re_link_all_collider_object2collection():
     for obj in collider_objects:
         unlink_object_from_all_collections(obj)
         vrm1_collider_collection.objects.link(obj)
+
+
+def add_list_item2bone_group_list4operator():
+    """
+    オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
+    """
+
+    addon_pref = get_addon_preferences()
+    filtering_word = addon_pref.bone_group_filter_name
+
+    bone_group_collection = get_ui_bone_group_prop()
+    bone_group_collection.clear()
+    for n, group in enumerate(get_target_armature().pose.bone_groups):
+        new_item = bone_group_collection.add()
+        new_item.name = group.name
+        new_item.group_index = n
+        # Bone Groupの名前に'filter_word'が含まれる場合は初期値をTrueにする｡
+        if filtering_word in group.name:
+            new_item.is_target = True

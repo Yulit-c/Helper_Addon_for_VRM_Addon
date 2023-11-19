@@ -1243,8 +1243,29 @@ class VRMHELPER_SCENE_root_property_group(bpy.types.PropertyGroup):
 
 
 """---------------------------------------------------------
+------------------------------------------------------------
     Window Manager
+------------------------------------------------------------
 ---------------------------------------------------------"""
+"""---------------------------------------------------------
+    Common Property
+---------------------------------------------------------"""
+
+
+class VRMHELPER_WM_operator_spring_bone_group_list_items(bpy.types.PropertyGroup):
+    is_target: BoolProperty(
+        name="Is Target",
+        description="This is the target group of the operator",
+        default=False,
+    )
+
+    group_index: IntProperty(
+        name="Bone Group Index",
+        description="Stores the index of the bone group",
+        default=0,
+    )
+
+
 """---------------------------------------------------------
     VRM0 Property
 ---------------------------------------------------------"""
@@ -1634,6 +1655,40 @@ class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
     )
 
 
+class VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items(bpy.types.PropertyGroup):
+    is_target: BoolProperty(
+        name="Is Target",
+        description="This is the target group of the operator",
+        default=False,
+    )
+
+    bone_name: StringProperty(
+        name="Bone Name",
+        description="Parent Bone Name defined vrm extension",
+        default="",
+    )
+
+    group_index: IntProperty(
+        name="Group Index",
+        description="Index in Collider Group",
+        default=0,
+    )
+
+
+class VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items(bpy.types.PropertyGroup):
+    is_target: BoolProperty(
+        name="Is Target",
+        description="This is the target group of the operator",
+        default=False,
+    )
+
+    group_index: IntProperty(
+        name="Group Index",
+        description="Index in Spring Bone Group",
+        default=0,
+    )
+
+
 class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
     """---------------------------------------------------------
     WindowManager階層下のVRM0用プロパティグループ群
@@ -1673,6 +1728,18 @@ class VRMHELPER_WM_vrm0_root_property_group(bpy.types.PropertyGroup):
         name="Candidate Spring Bone List Items",
         description="Elements registered with this collection property are displayed in the UI List",
         type=VRMHELPER_WM_vrm0_spring_bone_list_items,
+    )
+
+    collider_group_list4operator: CollectionProperty(
+        name="Operator's Target Collider Group",
+        description="Target collider group collection for operators",
+        type=VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
+    )
+
+    spring_bone_group_list4operator: CollectionProperty(
+        name="Operator's Target Spring Bone Group",
+        description="Target spring bone group collection for operators",
+        type=VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
     )
 
 
@@ -1894,20 +1961,6 @@ class VRMHELPER_WM_vrm1_spring_list_items(bpy.types.PropertyGroup):
     )
 
 
-class VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items(bpy.types.PropertyGroup):
-    is_target: BoolProperty(
-        name="Is Target",
-        description="This is the target group of the operator",
-        default=False,
-    )
-
-    group_index: IntProperty(
-        name="Bone Group Index",
-        description="Stores the index of the bone group",
-        default=0,
-    )
-
-
 class VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items(bpy.types.PropertyGroup):
     is_target: BoolProperty(
         name="Is Target",
@@ -2083,21 +2136,15 @@ class VRMHELPER_WM_vrm1_root_property_group(bpy.types.PropertyGroup):
         type=VRMHELPER_WM_vrm1_spring_list_items,
     )
 
-    bone_group_list4operator: CollectionProperty(
-        name="Operator's Target Bone Group",
-        description="Collection for storing the operator's target bone group",
-        type=VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items,
-    )
-
     collider_group_list4operator: CollectionProperty(
         name="Operator's Target Collider Group",
-        description="Collection for storing the operator's target collider group",
+        description="Target collider group collection for operators",
         type=VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items,
     )
 
     spring_list4operator: CollectionProperty(
-        name="Operator's Target Collider Group",
-        description="Collection for storing the operator's target joint",
+        name="Operator's Target Springs",
+        description="Target springs collection for operators",
         type=VRMHELPER_WM_vrm1_operator_spring_list_items,
     )
 
@@ -2129,6 +2176,12 @@ class VRMHELPER_WM_root_property_group(bpy.types.PropertyGroup):
         name="VRM1 Properties",
         description="WindowManager's Properties for VRM1",
         type=VRMHELPER_WM_vrm1_root_property_group,
+    )
+
+    bone_group_list4operator: CollectionProperty(
+        name="Operator's Target Bone Group",
+        description="Collection for storing the operator's target bone group",
+        type=VRMHELPER_WM_operator_spring_bone_group_list_items,
     )
 
 
@@ -2226,6 +2279,13 @@ def get_scene_misc_prop() -> VRMHELPER_SCENE_misc_tools_settings:
     scene_root_prop = get_scene_prop_root()
     scene_misc_prop = scene_root_prop.misc_settings
     return scene_misc_prop
+
+
+def get_ui_bone_group_prop() -> bpy.types.bpy_prop_collection:
+    """VRMHELPER_WM_operator_spring_bone_group_list_items"""
+    wm_root_prop = get_wm_prop_root()
+    bone_group_filter = wm_root_prop.bone_group_list4operator
+    return bone_group_filter
 
 
 """---------------------------------------------------------
@@ -2335,6 +2395,20 @@ def get_ui_vrm0_spring_prop() -> bpy.types.CollectionProperty:  # VRMHELPER_WM_v
     wm_vrm0_root_prop = get_vrm0_wm_root_prop()
     spring_bone_filter = wm_vrm0_root_prop.spring_bone_list_items4custom_filter
     return spring_bone_filter
+
+
+def get_ui_vrm0_operator_collider_group_prop() -> bpy.types.bpy_prop_collection:
+    """VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items"""
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    collider_group_filter = wm_vrm0_root_prop.collider_group_list4operator
+    return collider_group_filter
+
+
+def get_ui_vrm0_operator_spring_bone_group_prop() -> bpy.types.bpy_prop_collection:
+    """VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items"""
+    wm_vrm0_root_prop = get_vrm0_wm_root_prop()
+    spring_filter = wm_vrm0_root_prop.spring_bone_group_list4operator
+    return spring_filter
 
 
 def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
@@ -2621,14 +2695,6 @@ def get_ui_vrm1_spring_prop() -> bpy.types.bpy_prop_collection:  # VRMHELPER_WM_
     return spring_filter
 
 
-def get_ui_vrm1_operator_bone_group_prop() -> (
-    bpy.types.bpy_prop_collection
-):  # VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items
-    wm_vrm1_root_prop = get_vrm1_wm_root_prop()
-    bone_group_filter = wm_vrm1_root_prop.bone_group_list4operator
-    return bone_group_filter
-
-
 def get_ui_vrm1_operator_collider_group_prop() -> (
     bpy.types.bpy_prop_collection
 ):  # VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
@@ -2685,12 +2751,16 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Window Manager
     # ----------------------------------------------------------
+    VRMHELPER_WM_operator_spring_bone_group_list_items,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm0_first_person_list_items,
     VRMHELPER_WM_vrm0_blend_shape_bind_list_items,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
     VRMHELPER_WM_vrm0_material_value_prop_names,
     VRMHELPER_WM_vrm0_collider_group_list_items,
     VRMHELPER_WM_vrm0_spring_bone_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
     VRMHELPER_WM_vrm0_root_property_group,
     # ---------------------------------------------------------------------------------
     VRMHELPER_WM_vrm1_first_person_list_items,
@@ -2700,7 +2770,6 @@ CLASSES = (
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_collider_group_list_items,
     VRMHELPER_WM_vrm1_spring_list_items,
-    VRMHELPER_WM_vrm1_operator_spring_bone_group_list_items,
     VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items,
     VRMHELPER_WM_vrm1_operator_spring_list_items,
     VRMHELPER_WM_vrm1_constraint_properties,

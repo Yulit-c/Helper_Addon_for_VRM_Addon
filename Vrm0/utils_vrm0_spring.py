@@ -40,13 +40,20 @@ from ..addon_classes import (
     ReferenceVrm0SecondaryAnimationPropertyGroup,
 )
 
+from ..preferences import get_addon_preferences
+
 from ..property_groups import (
     VRMHELPER_WM_vrm0_collider_group_list_items,
     VRMHELPER_WM_vrm0_spring_bone_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
     get_target_armature,
     get_target_armature_data,
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
+    get_ui_bone_group_prop,
+    get_ui_vrm0_operator_collider_group_prop,
+    get_ui_vrm0_operator_spring_bone_group_prop,
     get_vrm0_active_index_prop,
 )
 
@@ -56,6 +63,7 @@ from ..utils_common import (
 
 from ..utils_vrm_base import (
     get_vrm_extension_property,
+    get_vrm0_extension_spring_bone_group,
 )
 
 
@@ -355,3 +363,52 @@ def vrm0_get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm0_spring_b
     if bone_group_list := get_ui_vrm0_spring_prop():
         return bone_group_list[get_vrm0_active_index_prop("BONE_GROUP")]
     return None
+
+
+# ----------------------------------------------------------
+#    For Operator
+# ----------------------------------------------------------
+def vrm0_add_list_item2collider_group_list4operator():
+    """
+    オペレーターの処理対象コライダーグループを定義するためのコレクションプロパティにアイテムを登録する｡
+    """
+
+    collider_group_collection = get_ui_vrm0_operator_collider_group_prop()
+    collider_group_collection.clear()
+    group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    for n, group in enumerate(get_vrm_extension_property("COLLIDER_GROUP")):
+        new_item: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+        new_item = collider_group_collection.add()
+        new_item.name = group.name
+        new_item.bone_name = group.node.bone_name
+        new_item.name = group.name
+        new_item.group_index = n
+        new_item.is_target = True
+
+
+def vrm0_add_list_item2bone_group_list4operator():
+    """
+    オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
+    """
+
+    spring_bone_group_collection = get_ui_vrm0_operator_spring_bone_group_prop()
+    spring_bone_group_collection.clear()
+    spring_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+    for n, spring_bone_group in enumerate(get_vrm_extension_property("SPRING")):
+        new_item: VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items
+        new_item = spring_bone_group_collection.add()
+        new_item.name = spring_bone_group.comment
+        new_item.group_index = n
+        new_item.is_target = True
+
+
+def get_spring_bone_group_by_comment(
+    comment: str,
+) -> Optional[ReferenceVrm0SecondaryAnimationGroupPropertyGroup]:
+    result = None
+    spring_bone_groups = get_vrm0_extension_spring_bone_group()
+    spring_bone_group = [i for i in spring_bone_groups if i.comment == comment]
+    if spring_bone_group:
+        result = spring_bone_group[0]
+
+    return result

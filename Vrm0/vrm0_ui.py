@@ -158,6 +158,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_add_bone,
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
+    VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
 )
 
 """
@@ -623,11 +624,27 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
             text="Center",
             icon="PIVOT_MEDIAN",
         )
-        box.prop(bone_group, "stiffness", text="stiffness")
+        # TODO : Stiffnessに修正されたら対応する｡
+        box.prop(bone_group, "stiffiness", text="stiffness")
         box.prop(bone_group, "drag_force", text="Drag Force")
         box.prop(bone_group, "hit_radius", text="Hit Radius")
         box.prop(bone_group, "gravity_dir", text="Gravity Dir")
         box.prop(bone_group, "gravity_power", text="Gravity Power")
+
+    box_ope = layout.box()
+    op: VRMHELPER_OT_vrm0_spring_add_bone_group_from_source
+    op = box_ope.operator(
+        VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
+        text="Create From Selected Bones",
+        icon="BONE_DATA",
+    )
+    op.source_type = "SELECT"
+    op = box_ope.operator(
+        VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
+        text="Create From Bone Group",
+        icon="GROUP_BONE",
+    )
+    op.source_type = "BONE_GROUP"
 
 
 """---------------------------------------------------------

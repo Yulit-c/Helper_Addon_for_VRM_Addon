@@ -23,7 +23,7 @@ else:
     from . import utils_vrm0_spring
 
 
-import os, time, uuid
+import os, time, uuid, math
 import numpy as np
 from typing import (
     Literal,
@@ -31,6 +31,7 @@ from typing import (
 import bpy
 from bpy.props import (
     BoolProperty,
+    IntProperty,
     FloatProperty,
     FloatVectorProperty,
     EnumProperty,
@@ -48,6 +49,7 @@ from ..preferences import (
 )
 
 from ..addon_classes import (
+    ReferenceStringPropertyGroup,
     ReferenceBonePropertyGroup,
     ReferenceVrm0BlendShapeGroupPropertyGroup,
     ReferenceVrm0BlendShapeBindPropertyGroup,
@@ -56,25 +58,30 @@ from ..addon_classes import (
     ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceVrm0SecondaryAnimationPropertyGroup,
     ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
+    VRMHELPER_VRM_joint_operator_property,
 )
 
 from ..property_groups import (
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm0_blend_shape_settings,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_operator_spring_bone_group_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
     get_target_armature_data,
-    get_vrm0_wm_root_prop,
-    get_vrm0_scene_root_prop,
-    get_scene_vrm0_blend_shape_prop,
-    get_scene_vrm0_mtoon_stored_prop,
     # ----------------------------------------------------------
     get_ui_vrm0_first_person_prop,
     get_ui_vrm0_blend_shape_material_prop,
+    get_ui_bone_group_prop,
+    get_ui_vrm0_operator_collider_group_prop,
     # ----------------------------------------------------------
     get_vrm0_index_root_prop,
+    get_vrm0_scene_root_prop,
     get_scene_vrm0_first_person_prop,
+    get_scene_vrm0_blend_shape_prop,
+    get_scene_vrm0_mtoon_stored_prop,
+    get_vrm0_wm_root_prop,
 )
 
 from ..utils_common import (
@@ -95,6 +102,8 @@ from ..utils_vrm_base import (
     get_vrm_extension_property,
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
+    get_branch_root_bones_by_type,
+    get_bones_for_each_branch_by_type,
     get_vrm0_extension_first_person,
     get_vrm0_extension_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
@@ -105,6 +114,7 @@ from ..utils_vrm_base import (
     store_mtoon_current_values,
     set_mtoon_default_values,
     is_existing_target_armature_and_mode,
+    add_list_item2bone_group_list4operator,
 )
 
 from .utils_vrm0_first_person import (
@@ -131,6 +141,9 @@ from .utils_vrm0_spring import (
     remove_vrm0_collider_by_selected_object,
     vrm0_remove_collider_group_in_springs,
     vrm0_get_active_list_item_in_spring,
+    vrm0_add_list_item2collider_group_list4operator,
+    vrm0_add_list_item2bone_group_list4operator,
+    get_spring_bone_group_by_comment,
 )
 
 from ..operators import (
@@ -1316,6 +1329,161 @@ class VRMHELPER_OT_vrm0_spring_clear_bone(VRMHELPER_vrm0_bone_group_base):
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
+    VRMHELPER_vrm0_bone_group_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm0_spring_create_bone_group_from_selected"
+    bl_label = "Create Bone Group"
+    bl_description = "Create spring bone_groups from selected bones or bone groups"
+
+    # ----------------------------------------------------------
+    #    Property
+    # ----------------------------------------------------------
+    source_type: EnumProperty(
+        name="Source Type",
+        description="Description",
+        items=(
+            ("SELECT", "Selected Bone", "Get source from selected bones"),
+            ("BONE_GROUP", "Bone Group", "Get source from bone groups"),
+        ),
+        default="SELECT",
+    )
+
+    rows_property: IntProperty(
+        name="Rows Property",
+        description="Number of properties displayed per column",
+        default=10,
+    )
+
+    # -----------------------------------------------------
+    def invoke(self, context, event):
+        width = 300
+        match self.source_type:
+            case "SELECT":
+                logger.debug(self.source_type)
+                vrm0_add_list_item2collider_group_list4operator()
+                return context.window_manager.invoke_props_dialog(self, width=width * 4)
+
+            case "BONE_GROUP":
+                logger.debug(self.source_type)
+                add_list_item2bone_group_list4operator()
+                vrm0_add_list_item2collider_group_list4operator()
+                # Target Armatureにボーングループが存在しなければキャンセル｡
+                length_bg = 0
+                if not (bone_groups := get_ui_bone_group_prop()):
+                    self.report({"INFO"}, "Bone group does not exist in Target Armature")
+                    return {"CANCELLED"}
+                length_bg = len(bone_groups)
+                # Collider Groupが存在していればその数を取得する｡
+                length_cg = 0
+                if collider_groups := get_vrm0_extension_collider_group():
+                    length_cg = len(collider_groups)
+
+                length = max(length_bg, length_cg)
+                width_popup = math.ceil(length / self.rows_property) * width
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
+            case _:
+                return {"CANCELLED"}
+
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        row_root = box.row(align=False)
+
+        # 処理対象のボーングループを選択するエリア｡
+        if self.source_type == "BONE_GROUP":
+            bone_group_collection = get_ui_bone_group_prop()
+            anchor_layout = row_root.column(align=True)
+            box_sub = anchor_layout.box()
+            box_sub.label(text="Target Bone Group")
+            row_bg_root = box_sub.row()
+            bone_group: VRMHELPER_WM_operator_spring_bone_group_list_items
+            for n, bone_group in enumerate(bone_group_collection):
+                if n % self.rows_property == 0:
+                    col = row_bg_root.column()
+                row_sub_bg = col.row(align=True)
+                row_sub_bg.prop(bone_group, "is_target", text=bone_group.name)
+
+        # 処理対象のコライダーグループを選択するエリア｡
+        collider_group_collection = get_ui_vrm0_operator_collider_group_prop()
+        anchor_layout = row_root.column(align=True)
+        if self.source_type == "BONE_GROUP":
+            anchor_layout = anchor_layout.box()
+        anchor_layout.label(text="Target Collider Group")
+        row_cg_root = anchor_layout.row()
+        collider_group: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+        for n, collider_group in enumerate(collider_group_collection):
+            if n % self.rows_property == 0:
+                col = row_cg_root.column()
+            row_sub_cg = col.row(align=True)
+            row_sub_cg.prop(collider_group, "is_target", text=collider_group.bone_name)
+
+    def execute(self, context):
+        match self.source_type:
+            case "SELECT":
+                if not context.mode in {"POSE", "EDIT_ARMATURE"}:
+                    self.report({"ERROR"}, "The current mode must be Pose or Edit Armature.")
+                    return {"CANCELLED"}
+
+        if not (branch_root_bones := get_branch_root_bones_by_type(self.source_type, get_target_armature())):
+            self.report({"INFO"}, "No rootbone was detected")
+            return {"CANCELLED"}
+
+        # ポーズボーンに割り当てられているBone Group Index毎にボーンをグループ分けする｡
+        collider_group_list = get_ui_vrm0_operator_collider_group_prop()
+        target_armature = get_target_armature()
+        pose = target_armature.pose
+        target_bones_dict: dict[str, list[bpy.types.Bone]] = {}
+        for root_bone in branch_root_bones:
+            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
+            bone_group_index = -1
+            if pose_bone.bone_group:
+                bone_group_index = pose_bone.bone_group_index
+            target_bones_dict.setdefault(bone_group_index, []).append(root_bone)
+
+        # グループ分けされたボーンリストとボーンをSpring Bone GroupとBoneに登録する｡
+        for group_index, root_bones in target_bones_dict.items():
+            bone_group_name = "Bone Group"
+            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
+            if pose_bone.bone_group:
+                source_bone_group = pose.bone_groups[group_index]
+                bone_group_name = source_bone_group.name
+            spring_bone_groups = get_vrm0_extension_spring_bone_group()
+            registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
+
+            # group_name毎にスプリングボーングループを作成する｡
+            target_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+            if target_group := get_spring_bone_group_by_comment(bone_group_name):
+                logger.debug(f"Already Registered Group : {bone_group_name}")
+
+            else:
+                target_group = spring_bone_groups.add()
+                target_group.comment = bone_group_name
+
+            # カテゴリーに属するルートボーンをスプリングボーンに登録する｡
+            for bone in root_bones:
+                # 既にいずれかのスプリングボーングループに登録されているボーンの場合はスキップする｡
+                if bone.name in registered_bones:
+                    logger.debug(f"Already Registered Bone : {bone.name}")
+                    continue
+                new_bone: ReferenceBonePropertyGroup = target_group.bones.add()
+                new_bone.bone_name = bone.name
+
+            collider_groups = target_group.collider_groups
+            candidate_collider_group: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+            for candidate_collider_group in collider_group_list:
+                if not candidate_collider_group.is_target:
+                    continue
+
+                # TODO : 既に登録され当ているコライダーグループはスキップする｡
+                new_collider_group: ReferenceStringPropertyGroup = collider_groups.add()
+                new_collider_group.value = candidate_collider_group.name
+
+            print("\n")
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -1369,4 +1537,5 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_add_bone,
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
+    VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
 )
