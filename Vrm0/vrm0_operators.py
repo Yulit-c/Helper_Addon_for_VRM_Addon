@@ -1450,6 +1450,9 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 bone_group_name = source_bone_group.name
             spring_bone_groups = get_vrm0_extension_spring_bone_group()
             registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
+            registered_collider_groups = [
+                cg.name for group in spring_bone_groups for cg in group.collider_groups
+            ]
 
             # group_name毎にスプリングボーングループを作成する｡
             target_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
@@ -1469,13 +1472,17 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 new_bone: ReferenceBonePropertyGroup = target_group.bones.add()
                 new_bone.bone_name = bone.name
 
+            # 対象に設定したコライダーグループをスプリングボーングループに登録する｡
             collider_groups = target_group.collider_groups
             candidate_collider_group: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
             for candidate_collider_group in collider_group_list:
                 if not candidate_collider_group.is_target:
                     continue
 
-                # TODO : 既に登録され当ているコライダーグループはスキップする｡
+                # 既に登録され当ているコライダーグループはスキップする｡
+                if candidate_collider_group.name in registered_collider_groups:
+                    logger.debug(f"Already Registered Collider Group : {candidate_collider_group.bone_name}")
+                    continue
                 new_collider_group: ReferenceStringPropertyGroup = collider_groups.add()
                 new_collider_group.value = candidate_collider_group.name
 
