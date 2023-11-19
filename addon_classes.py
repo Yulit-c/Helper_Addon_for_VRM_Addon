@@ -149,7 +149,7 @@ class ReferencerVrm0SecondaryAnimationColliderPropertyGroup:
 
 class ReferenceVrm0SecondaryAnimationGroupPropertyGroup:
     comment: bpy.types.StringProperty
-    stiffiness: bpy.types.FloatProperty
+    stiffness: bpy.types.FloatProperty
     gravity_power: bpy.types.FloatProperty
     gravity_dir: list[bpy.types.FloatProperty]
     drag_force: bpy.types.FloatProperty
@@ -390,7 +390,7 @@ class ReferenceSpringBone1SpringAnimationStatePropertyGroup:
 class ReferenceSpringBone1JointPropertyGroup:
     node: ReferenceBonePropertyGroup
     hit_radius: bpy.types.FloatProperty
-    stiffiness: bpy.types.FloatProperty
+    stiffness: bpy.types.FloatProperty
     gravity_power: bpy.types.FloatProperty
     gravity_dir: list[bpy.types.FloatProperty]
     drag_force: bpy.types.FloatProperty
@@ -511,7 +511,7 @@ class VRMHELPER_UL_base:
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_VRM1_joint_property:
+class VRMHELPER_VRM_joint_operator_property:
     """
     ジョイント用オペレータープロパティーをフィールドとする基底クラス｡
     """
@@ -525,9 +525,9 @@ class VRMHELPER_VRM1_joint_property:
         options={"HIDDEN"},
     )
 
-    stiffiness: bpy.props.FloatProperty(
-        name="stiffiness",
-        description="stiffiness value of joint set by operator",
+    stiffness: bpy.props.FloatProperty(
+        name="stiffness",
+        description="stiffness value of joint set by operator",
         default=1.0,
         min=0.0,
         soft_max=4.0,

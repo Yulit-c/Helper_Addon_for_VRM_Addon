@@ -623,7 +623,7 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
             text="Center",
             icon="PIVOT_MEDIAN",
         )
-        box.prop(bone_group, "stiffiness", text="Stiffiness")
+        box.prop(bone_group, "stiffness", text="stiffness")
         box.prop(bone_group, "drag_force", text="Drag Force")
         box.prop(bone_group, "hit_radius", text="Hit Radius")
         box.prop(bone_group, "gravity_dir", text="Gravity Dir")

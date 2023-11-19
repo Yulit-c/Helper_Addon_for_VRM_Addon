@@ -1074,7 +1074,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                         text="Selected Joint",
                     )
                     box_sub.prop(joint, "hit_radius", slider=True)
-                    box_sub.prop(joint, "stiffiness", slider=True)
+                    box_sub.prop(joint, "stiffness", slider=True)
                     box_sub.prop(joint, "drag_force", slider=True)
                     box_sub.prop(joint, "gravity_power", slider=True)
                     box_sub.prop(joint, "gravity_dir")
@@ -1125,7 +1125,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         row.label(text="Operator Settings")
         if spring_settings.is_expand_operator_parameters:
             box_sub.prop(spring_settings, "hit_radius", slider=True)
-            box_sub.prop(spring_settings, "stiffiness", slider=True)
+            box_sub.prop(spring_settings, "stiffness", slider=True)
             box_sub.prop(spring_settings, "drag_force", slider=True)
             box_sub.prop(spring_settings, "gravity_power", slider=True)
             box_sub.prop(spring_settings, "gravity_dir")

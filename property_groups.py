@@ -789,9 +789,9 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         precision=3,
     )
 
-    stiffiness: FloatProperty(
-        name="stiffiness",
-        description="stiffiness value of joint set by operator",
+    stiffness: FloatProperty(
+        name="stiffness",
+        description="stiffness value of joint set by operator",
         default=1.0,
         min=0.0,
         soft_max=4.0,

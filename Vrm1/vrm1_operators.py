@@ -54,7 +54,7 @@ from mathutils import (
 from ..addon_classes import (
     ReferenceVrm1TextureTransformBindPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
-    VRMHELPER_VRM1_joint_property,
+    VRMHELPER_VRM_joint_operator_property,
 )
 
 from ..preferences import (
@@ -1548,7 +1548,7 @@ class VRMHELPER_OT_vrm1_spring_clear_spring(VRMHELPER_vrm1_spring_base):
 # -----------------------------------------------------
 
 
-class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property):
+class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_VRM_joint_operator_property):
     bl_idname = "vrmhelper.vrm1_spring_add_joint"
     bl_label = "Add Joint"
     bl_description = "Add a new joint to the active spring"
@@ -1590,7 +1590,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_V
             # 'assign_from_parent_joint'がTrueであれば親ボーンのジョイントからパラメーターを引き継ぐ｡
             if self.use_auto_joint_parametter:
                 new_joint.hit_radius = previous_joint.hit_radius
-                new_joint.stiffiness = previous_joint.stiffiness
+                new_joint.stiffness = previous_joint.stiffness
                 new_joint.drag_force = previous_joint.drag_force
                 new_joint.gravity_power = previous_joint.gravity_power
                 new_joint.gravity_dir = previous_joint.gravity_dir
@@ -1602,7 +1602,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_V
 
         except:
             new_joint.hit_radius = self.hit_radius
-            new_joint.stiffiness = self.stiffiness
+            new_joint.stiffness = self.stiffness
             new_joint.drag_force = self.drag_force
             new_joint.gravity_power = self.gravity_power
             new_joint.gravity_dir = self.gravity_dir
@@ -1652,11 +1652,11 @@ class VRMHELPER_OT_vrm1_spring_clear_joint(VRMHELPER_vrm1_spring_base):
 
 
 class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
-    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM_joint_operator_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_create_joint_from_selected"
     bl_label = "Create Joint"
-    bl_description = "Create spring joints from selected bones"
+    bl_description = "Create spring joints from selected bones or bone groups"
 
     # ----------------------------------------------------------
     #    Property
@@ -1764,7 +1764,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
                 target_item.node.bone_name = bone.name
                 target_item.hit_radius = self.hit_radius
-                target_item.stiffiness = self.stiffiness * damping
+                target_item.stiffness = self.stiffness * damping
                 target_item.drag_force = self.drag_force * damping
                 target_item.gravity_power = self.gravity_power
                 target_item.gravity_dir[0] = self.gravity_dir[0]
@@ -1791,7 +1791,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
 
 class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
-    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM1_joint_property
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM_joint_operator_property
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
     bl_label = "Assign Joints Parameters"
@@ -1881,7 +1881,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
             damping = 1.0
             for joint in spring.joints:
                 joint.hit_radius = self.hit_radius
-                joint.stiffiness = self.stiffiness * damping
+                joint.stiffness = self.stiffness * damping
                 joint.drag_force = self.drag_force * damping
                 joint.gravity_power = self.gravity_power
                 joint.gravity_dir[0] = self.gravity_dir[0]
