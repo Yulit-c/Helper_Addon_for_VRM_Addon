@@ -426,6 +426,45 @@ def vrm0_add_items2linked_collider_group_ui_list() -> int:
     return len(items)
 
 
+def get_active_linked_collider_groups() -> Optional[bpy.types.bpy_prop_collection]:
+    """
+    UIリストでアクティブになっているSpring Bone GroupまたはBoneに対応するCollider Groupsを取得する｡
+
+    Returns
+    -------
+    Optional[bpy.types.bpy_prop_collection]
+        取得されたCollider Groups｡アクティブアイテムがラベルの場合はNoneを返す｡
+
+    """
+    active_list_item = vrm0_get_active_list_item_in_spring()
+    if active_list_item.item_indexes[0]:
+        return
+
+    bone_groups = get_vrm0_extension_spring_bone_group()
+    source_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+    source_bone_group = bone_groups[active_list_item.item_indexes[0]]
+    source_collider_group = source_bone_group.collider_groups[active_list_item.item_indexes[1]]
+
+    return source_collider_group
+
+
+def vrm0_get_active_list_item_in_linked_collider_group() -> (
+    Optional[VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items]
+):
+    """
+    UIリストのアクティブインデックスに対応する､Spring Bone Group内Collider Groupを取得する｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm0_spring_bone_list_items]
+        取得されたCollider Group｡取得できなければNone｡
+
+    """
+    if linked_cg_list := get_ui_vrm0_linked_collider_group_prop():
+        return linked_cg_list[get_vrm0_active_index_prop("LINKED_CG")]
+    return None
+
+
 # ----------------------------------------------------------
 #    For Operator
 # ----------------------------------------------------------

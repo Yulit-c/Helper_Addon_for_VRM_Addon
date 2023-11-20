@@ -2496,6 +2496,10 @@ def get_vrm0_active_index_prop(component_type: VRM0_COMPONENT_TYPES) -> int:
             list_items = get_ui_vrm0_spring_prop()
             index = vrm0_index_prop.bone_group
 
+        case "LINKED_CG":
+            list_items = get_ui_vrm0_linked_collider_group_prop()
+            index = vrm0_index_prop.linked_collider_group
+
     active_index = evaluation_active_index_prop(list_items, index)
     return active_index
 

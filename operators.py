@@ -57,6 +57,7 @@ from .property_groups import (
     get_ui_vrm0_blend_shape_material_prop,
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
+    get_ui_vrm0_linked_collider_group_prop,
     # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
@@ -92,6 +93,7 @@ from .Vrm0.utils_vrm0_blend_shape import (
 from .Vrm0.utils_vrm0_spring import (
     vrm0_add_items2collider_group_ui_list,
     vrm0_add_items2spring_ui_list,
+    vrm0_add_items2linked_collider_group_ui_list,
 )
 
 from .Vrm1.utils_vrm1_first_person import (
@@ -202,6 +204,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "COLLIDER",
             "COLLIDER_GROUP",
             "SPRING",
+            "LINKED_CG",
             "CONSTRAINT",
         ],
     ):
@@ -221,6 +224,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "COLLIDER",
             "COLLIDER_GROUP",
             "SPRING",
+            "LINKED_CG",
             "CONSTRAINT",
         ],
             対象となるUIリストの種類
@@ -248,6 +252,9 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
             case (0, "BONE_GROUP"):
                 vrm0_add_items2spring_ui_list()
+
+            case (0, "LINKED_CG"):
+                vrm0_add_items2linked_collider_group_ui_list()
             # ---------------------------------------------------------------------------------
             case (1, "EXPRESSION"):
                 vrm1_add_items2expression_ui_list()
@@ -287,6 +294,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "COLLIDER",
             "COLLIDER_GROUP",
             "BONE_GROUP",
+            "LINKED_CG",
             "SPRING",
             "CONSTRAINT",
         ],
@@ -308,6 +316,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             "COLLIDER",
             "COLLIDER_GROUP",
             "BONE_GROUP",
+            "LINKED_CG",
             "SPRING",
             'CONSTRAINT',
         ]
@@ -350,6 +359,10 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (0, "BONE_GROUP"):
                 list_items = get_ui_vrm0_spring_prop()
                 attr_name = "bone_group"
+
+            case (0, "BONE_GROUP"):
+                list_items = get_ui_vrm0_linked_collider_group_prop()
+                attr_name = "linked_collider_group"
             # ---------------------------------------------------------------------------------
             case (1, "FIRST_PERSON"):
                 list_items = get_ui_vrm1_first_person_prop()
@@ -466,6 +479,11 @@ class VRMHELPER_vrm0_collider_group_base(VRMHELPER_operator_base):
 class VRMHELPER_vrm0_bone_group_base(VRMHELPER_operator_base):
     vrm_mode: int = 0
     component_type: str = "BONE_GROUP"
+
+
+class VRMHELPER_vrm0_linked_collider_group_base(VRMHELPER_operator_base):
+    vrm_mode: int = 0
+    component_type: str = "LINKED_COLLIDER_GROUP"
 
 
 # ----------------------------------------------------------

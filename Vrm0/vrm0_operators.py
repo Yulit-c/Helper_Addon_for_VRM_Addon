@@ -143,6 +143,7 @@ from .utils_vrm0_spring import (
     vrm0_get_active_list_item_in_spring,
     vrm0_add_list_item2collider_group_list4operator,
     vrm0_add_list_item2bone_group_list4operator,
+    get_active_linked_collider_groups,
     get_spring_bone_group_by_comment,
 )
 
@@ -153,6 +154,7 @@ from ..operators import (
     VRMHELPER_vrm0_blend_shape_sub,
     VRMHELPER_vrm0_collider_group_base,
     VRMHELPER_vrm0_bone_group_base,
+    VRMHELPER_vrm0_linked_collider_group_base,
 )
 
 """---------------------------------------------------------
@@ -1490,45 +1492,53 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
     bl_idname = "vrmhelper.vrm_spring_add_linked_collider_group"
     bl_label = "Add Linked Collider Group"
     bl_description = "Add a new VRM0 Spring Bone's Collider Group"
 
     def execute(self, context):
         self.report({"INFO"}, "Create Lined Collider Group")
+        target_collider_groups = get_active_linked_collider_groups()
+
+
 
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
     bl_idname = "vrmhelper.vrm0_spring_remove_linked_collider_group"
     bl_label = "Remove Linked Collider Group"
     bl_description = "Remove the linked collider group that is active in the list"
 
     @classmethod
     def poll(self, context):
-        #
-        return True
+        # リンクされたCollider Groupが1つ以上存在する｡
+        return get_active_linked_collider_groups()
 
     def execute(self, context):
         self.report({"INFO"}, "Remove the Active Lined Collider Group")
+        target_collider_groups = get_active_linked_collider_groups()
 
         return {"FINISHED"}
 
 
-class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
     bl_idname = "vrmhelper.vrm0_spring_clear_linked_collider_group"
     bl_label = "Clear Linked Collider Group"
     bl_description = "Clear all linked collider groups."
 
     @classmethod
     def poll(self, context):
-        #
-        return True
+        # リンクされたCollider Groupが1つ以上存在する｡
+        return get_active_linked_collider_groups()
 
     def execute(self, context):
         self.report({"INFO"}, "Clear the Active Lined Collider Group")
+        target_collider_groups = get_active_linked_collider_groups()
+        target_collider_groups.clear()
+
+        self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
 
