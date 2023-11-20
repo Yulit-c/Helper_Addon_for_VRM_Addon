@@ -107,6 +107,7 @@ from .utils_vrm0_spring import (
     vrm0_add_items2collider_group_ui_list,
     vrm0_add_items2spring_ui_list,
     vrm0_get_active_list_item_in_spring,
+    vrm0_add_items2linked_collider_group_ui_list,
 )
 
 
@@ -648,7 +649,7 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     op.source_type = "BONE_GROUP"
 
     # Bone GroupにリンクされたCollider Groupのリストを描画｡
-    rows = 5
+    rows = vrm0_add_items2linked_collider_group_ui_list()
 
     row = layout.row()
     row.template_list(
@@ -933,10 +934,23 @@ class VRMHELPER_UL_vrm0_linked_collider_grouplist(bpy.types.UIList, VRMHELPER_UL
         index,
     ):
         row = layout.row(align=True)
-        bone_groups = get_vrm0_extension_spring_bone_group()
         target_armature_data = get_target_armature_data()
 
         # ラベルの描画
+        match tuple(item.item_type):
+            case (0, 0, 1):
+                row.separator()
+
+            case (1, 0, 0):
+                row.label(text=item.item_name)
+
+            case (0, 1, 0):
+                bone_groups = get_vrm0_extension_spring_bone_group()
+                corresponding_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+                corresponding_bone_group = bone_groups[item.item_indexes[0]]
+                linked_collider_groups = corresponding_bone_group.collider_groups
+                corresponding_collider_group = linked_collider_groups[item.item_indexes[0]]
+                row.prop(corresponding_collider_group, "value", icon="DOT")
 
 
 """---------------------------------------------------------
@@ -954,4 +968,5 @@ CLASSES = (
     VRMHELPER_UL_vrm0_blend_shape_material_list,
     VRMHELPER_UL_vrm0_collider_group_list,
     VRMHELPER_UL_vrm0_spring_list,
+    VRMHELPER_UL_vrm0_linked_collider_grouplist,
 )

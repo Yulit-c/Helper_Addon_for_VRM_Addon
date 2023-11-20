@@ -47,6 +47,7 @@ from ..property_groups import (
     VRMHELPER_WM_vrm0_spring_bone_list_items,
     VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
     VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
+    VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items,
     get_target_armature,
     get_target_armature_data,
     get_ui_vrm0_collider_group_prop,
@@ -64,6 +65,7 @@ from ..utils_common import (
 
 from ..utils_vrm_base import (
     get_vrm_extension_property,
+    get_vrm0_extension_collider_group,
     get_vrm0_extension_spring_bone_group,
 )
 
@@ -99,14 +101,14 @@ def get_source_vrm0_collider_groups() -> (
     """
 
     # VRM ExtensionのCollidersを取得する
-    cojllider_groups = get_vrm_extension_property("COLLIDER_GROUP")
+    collider_groups = get_vrm_extension_property("COLLIDER_GROUP")
 
     # VRM1のSpring Bone Colliderをリストに格納して返す｡
     collider_groups_dict = {}
     collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
-    for n, collider_group in enumerate(cojllider_groups):
+    for n, collider_group in enumerate(collider_groups):
         collider_groups_dict.setdefault(collider_group.node.bone_name, [])
-        # n : vrm extension cojllider_groups内でのインデックス｡
+        # n : vrm extension collider_groups内でのインデックス｡
         collider_groups_dict[collider_group.node.bone_name].append((n, collider_group))
 
     sort_order = [i.name for i in get_target_armature_data().bones if i.name in collider_groups_dict.keys()]
@@ -315,13 +317,6 @@ def vrm0_add_items2spring_ui_list() -> int:
     # コレクションプロパティの初期化処理｡
     items.clear()
 
-    # # コレクションプロパティに先頭ラベル(Armature名表示用)とColliderの各情報を追加する｡
-    # label: VRMHELPER_WM_vrm0_collider_group_list_items = items.add()
-    # label.item_type[0] = True
-    # label.name = target_armature_data.name
-
-    # for k, v in source_collider_dict.items():
-
     for n, bone_group in enumerate(bone_groups):
         comment = bone_group.comment
         if n > 0:
@@ -364,6 +359,83 @@ def vrm0_get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm0_spring_b
     if bone_group_list := get_ui_vrm0_spring_prop():
         return bone_group_list[get_vrm0_active_index_prop("BONE_GROUP")]
     return None
+
+
+def get_source_vrm0_linked_collider_groups() -> (
+    dict[
+        ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
+        list[str],
+    ]
+):
+    """
+    Target ArmatureのVRM Extension内のVRM0Spring Bone Groupに登録されたCollider Groupを取得する｡
+
+    Returns
+    -------
+    dict[ReferenceVrm0SecondaryAnimationGroupPropertyGroup, str]
+        取得されたリンクコライダーグループ｡
+
+    """
+
+    # VRM ExtensionのSpring Bone Groupに登録されたCollider Groupsを取得する
+    spring_bone_groups = get_vrm0_extension_spring_bone_group()
+
+    # Spring Bone Groupと登録されたCollider Groupのペアを辞書に追加する｡｡
+    linked_collider_group_dict = {}
+    bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+    for bone_group in spring_bone_groups:
+        cg_list = linked_collider_group_dict.setdefault(bone_group, [])
+        registered_collider_groups = bone_group.collider_groups
+        for cg in registered_collider_groups:
+            cg_list.append(cg.value)
+
+    return linked_collider_group_dict
+
+
+def vrm0_add_items2linked_collider_group_ui_list() -> int:
+    """
+    VRM0のSpring Bone_Groupの確認/設定を行なうUI Listの描画候補アイテムをコレクションプロパティに追加する｡
+    UI Listのrows入力用にアイテム数を返す｡
+
+    Returns
+    -------
+    int
+        リストに表示するアイテム数｡
+    """
+    linked_collider_group = get_source_vrm0_linked_collider_groups()
+    items = get_ui_vrm0_linked_collider_group_prop()
+
+    # コレクションプロパティの初期化処理｡
+    items.clear()
+
+    # 各Spring Bone Groupをラベルとして追加する｡
+    new_blank: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
+    new_label: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
+    new_cg: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
+    for n, obtained_info in enumerate(linked_collider_group.items()):
+        bone_group, cg_name_list = obtained_info
+        # 2つ目以降のアイテムの場合はブランクを追加する｡
+        if n > 0:
+            new_blank = items.add()
+            new_blank.item_type[2] = True
+            new_blank.name = comment
+            new_blank.item_name = comment
+
+        comment = bone_group.comment
+        new_label = items.add()
+        new_label.item_type[0] = True
+        new_label.name = comment
+        new_label.item_indexes[0] = n
+
+        for m, cg_name in enumerate(cg_name_list):
+            new_cg = items.add()
+            new_cg.item_type[1] = True
+            new_cg.name = comment
+            new_cg.item_name = cg_name
+            new_label.item_indexes[0] = n
+            new_label.item_indexes[1] = m
+
+    return len(items)
 
 
 # ----------------------------------------------------------
