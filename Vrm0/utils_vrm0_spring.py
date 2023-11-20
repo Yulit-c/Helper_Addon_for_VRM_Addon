@@ -332,6 +332,7 @@ def vrm0_add_items2spring_ui_list() -> int:
         new_group.item_type[1] = True
         new_group.name = comment
         new_group.item_name = comment
+        new_group.bone_group_name = comment
         new_group.item_indexes = (n, 0)
 
         # 登録されているBoneをアイテムに追加する｡
@@ -341,6 +342,7 @@ def vrm0_add_items2spring_ui_list() -> int:
             new_bone.item_type[2] = True
             new_bone.name = f"{comment} {bone.bone_name}"
             new_bone.item_name = bone.bone_name
+            new_bone.bone_group_name = comment
             new_bone.item_indexes = (n, m)
 
     return len(items)
@@ -361,35 +363,34 @@ def vrm0_get_active_list_item_in_spring() -> Optional[VRMHELPER_WM_vrm0_spring_b
     return None
 
 
-def get_source_vrm0_linked_collider_groups() -> (
-    dict[
-        ReferenceVrm0SecondaryAnimationGroupPropertyGroup,
-        list[str],
-    ]
-):
+def get_source_vrm0_linked_collider_groups() -> tuple[int, bpy.types.bpy_prop_collection]:
     """
     Target ArmatureのVRM Extension内のVRM0Spring Bone Groupに登録されたCollider Groupを取得する｡
 
     Returns
     -------
-    dict[ReferenceVrm0SecondaryAnimationGroupPropertyGroup, str]
-        取得されたリンクコライダーグループ｡
+    tuple[int, bpy.types.bpy_prop_collection]
+        UIリストでアクティブになSporing Bone GroupのインデックスとSpring Bone Groupにリンクされた
+        Collider Groupのコレクションを格納したタプル｡
 
     """
 
-    # VRM ExtensionのSpring Bone Groupに登録されたCollider Groupsを取得する
+    # UIリスト上のアクティブアイテムを取得する｡
+    if not (active_item := vrm0_get_active_list_item_in_spring()):
+        return
+
+    # アクティブアイテムがラベルである場合はNoneを返す｡
+    if active_item.item_type[0]:
+        return
+
+    # アクティブアイテムがBone Group/Boneである場合はリンクされたCollider Groupsを取得する｡
+    source_index = active_item.item_indexes[0]
     spring_bone_groups = get_vrm0_extension_spring_bone_group()
+    source_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+    source_bone_group = spring_bone_groups[source_index]
+    linked_collider_groups = source_bone_group.collider_groups
 
-    # Spring Bone Groupと登録されたCollider Groupのペアを辞書に追加する｡｡
-    linked_collider_group_dict = {}
-    bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
-    for bone_group in spring_bone_groups:
-        cg_list = linked_collider_group_dict.setdefault(bone_group, [])
-        registered_collider_groups = bone_group.collider_groups
-        for cg in registered_collider_groups:
-            cg_list.append(cg.value)
-
-    return linked_collider_group_dict
+    return (source_index, linked_collider_groups)
 
 
 def vrm0_add_items2linked_collider_group_ui_list() -> int:
@@ -402,38 +403,25 @@ def vrm0_add_items2linked_collider_group_ui_list() -> int:
     int
         リストに表示するアイテム数｡
     """
-    linked_collider_group = get_source_vrm0_linked_collider_groups()
-    items = get_ui_vrm0_linked_collider_group_prop()
 
+    # UIリストに登録する候補のデータを取得して展開する｡
+    if not (linked_collider_groups := get_source_vrm0_linked_collider_groups()):
+        return
+    source_index, collider_groups = linked_collider_groups
+
+    items = get_ui_vrm0_linked_collider_group_prop()
     # コレクションプロパティの初期化処理｡
     items.clear()
 
-    # 各Spring Bone Groupをラベルとして追加する｡
-    new_blank: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
-    new_label: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
+    # 全てのCollider Groupをアイテムとして追加する｡
     new_cg: VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items
-    for n, obtained_info in enumerate(linked_collider_group.items()):
-        bone_group, cg_name_list = obtained_info
-        # 2つ目以降のアイテムの場合はブランクを追加する｡
-        if n > 0:
-            new_blank = items.add()
-            new_blank.item_type[2] = True
-            new_blank.name = comment
-            new_blank.item_name = comment
-
-        comment = bone_group.comment
-        new_label = items.add()
-        new_label.item_type[0] = True
-        new_label.name = comment
-        new_label.item_indexes[0] = n
-
-        for m, cg_name in enumerate(cg_name_list):
-            new_cg = items.add()
-            new_cg.item_type[1] = True
-            new_cg.name = comment
-            new_cg.item_name = cg_name
-            new_label.item_indexes[0] = n
-            new_label.item_indexes[1] = m
+    cg: ReferenceStringPropertyGroup
+    for n, cg in enumerate(collider_groups):
+        new_cg = items.add()
+        new_cg.item_type[1] = True
+        new_cg.name = cg.value
+        new_cg.item_indexes[0] = source_index
+        new_cg.item_indexes[1] = n
 
     return len(items)
 

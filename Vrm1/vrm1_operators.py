@@ -1337,7 +1337,7 @@ class VRMHELPER_OT_vrm1_collider_group_add_group(VRMHELPER_vrm1_collider_group_b
 class VRMHELPER_OT_vrm1_collider_group_remove_active_group(VRMHELPER_vrm1_collider_group_base):
     bl_idname = "vrmhelper.vrm1_collider_group_remove_active_group"
     bl_label = "Remove Collider Group"
-    bl_description = "Deletes the collider group that is active in the list."
+    bl_description = "Remove the collider group that is active in the list."
 
     @classmethod
     def poll(self, context):

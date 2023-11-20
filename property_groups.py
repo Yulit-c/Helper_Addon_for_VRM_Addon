@@ -1652,6 +1652,11 @@ class VRMHELPER_WM_vrm0_spring_bone_list_items(bpy.types.PropertyGroup):
         description="Name of the springs component registered in the VRM extension",
         default="",
     )
+    bone_group_name: StringProperty(
+        name="Bone Group Name",
+        description="Name of the Spring Bone Comment registered in the VRM extension",
+        default="",
+    )
 
     item_indexes: IntVectorProperty(
         name="Item Indexes",
@@ -1669,20 +1674,14 @@ class VRMHELPER_WM_vrm0_spring_linked_collider_group_list_items(bpy.types.Proper
 
     item_type: BoolVectorProperty(
         name="Item Type",
-        description="[0]: is_label, [1]: is_Bone, [2]: is Blank",
-        size=3,
-        default=(0, 0, 0),
-    )
-
-    item_name: StringProperty(
-        name="Item Name",
-        description="Name of the springs component registered in the VRM extension",
-        default="",
+        description="[0]: is_label, [1]: is_Collider_Group",
+        size=2,
+        default=(0, 0),
     )
 
     item_indexes: IntVectorProperty(
         name="Item Indexes",
-        description="Indexes of item in VRM extension compornent.[0]:Spring Bone Group, [1]:LinkedCollider Group",
+        description="Indexes of item in VRM extension compornent.[0]:Spring Bone Group, [1]:Linked Collider Group",
         size=2,
         default=(0, 0),
         min=0,

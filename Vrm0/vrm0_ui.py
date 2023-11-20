@@ -161,6 +161,9 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_add_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_remove_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_clear_linked_collider_group,
 )
 
 """
@@ -649,18 +652,38 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     op.source_type = "BONE_GROUP"
 
     # Bone GroupにリンクされたCollider Groupのリストを描画｡
-    rows = vrm0_add_items2linked_collider_group_ui_list()
+    if rows := vrm0_add_items2linked_collider_group_ui_list():
+        # UIリストでアクティブなBone Groupを取得する｡
+        active_bone_group = vrm0_get_active_list_item_in_spring()
+        bone_group_name = active_bone_group.bone_group_name
+        layout.separator(factor=1.0)
+        box_cg = layout.box()
+        # リンクされているSpring Bone GroupのCommentを表示する｡
+        row = box_cg.row()
+        row.scale_y = 1.4
+        row.label(text=f"Selected Bone Group : {bone_group_name}", icon="BOOKMARKS")
 
-    row = layout.row()
-    row.template_list(
-        VRMHELPER_UL_vrm0_linked_collider_grouplist.__name__,
-        "",
-        wm_vrm0_prop,
-        "linked_collider_group_list_items4custom_filter",
-        scene_vrm0_prop.active_indexes,
-        "linked_collider_group",
-        rows=define_ui_list_rows(rows),
-    )
+        # Linked Collider Groupのリストを表示する｡
+        row = box_cg.row()
+        row.template_list(
+            VRMHELPER_UL_vrm0_linked_collider_grouplist.__name__,
+            "",
+            wm_vrm0_prop,
+            "linked_collider_group_list_items4custom_filter",
+            scene_vrm0_prop.active_indexes,
+            "linked_collider_group",
+            rows=define_ui_list_rows(rows),
+        )
+        # Linked Collider Groupの作成/削除用オペレーター
+        col_list = row.column(align=True)
+        col_list.label(text="", icon="OVERLAY")
+        col_list.operator(VRMHELPER_OT_vrm0_spring_add_linked_collider_group.bl_idname, text="", icon="ADD")
+        col_list.operator(
+            VRMHELPER_OT_vrm0_spring_remove_linked_collider_group.bl_idname, text="", icon="REMOVE"
+        )
+        col_list.operator(
+            VRMHELPER_OT_vrm0_spring_clear_linked_collider_group.bl_idname, text="", icon="PANEL_CLOSE"
+        )
 
 
 """---------------------------------------------------------
@@ -936,21 +959,21 @@ class VRMHELPER_UL_vrm0_linked_collider_grouplist(bpy.types.UIList, VRMHELPER_UL
         row = layout.row(align=True)
         target_armature_data = get_target_armature_data()
 
-        # ラベルの描画
-        match tuple(item.item_type):
-            case (0, 0, 1):
-                row.separator()
-
-            case (1, 0, 0):
-                row.label(text=item.item_name)
-
-            case (0, 1, 0):
-                bone_groups = get_vrm0_extension_spring_bone_group()
-                corresponding_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
-                corresponding_bone_group = bone_groups[item.item_indexes[0]]
-                linked_collider_groups = corresponding_bone_group.collider_groups
-                corresponding_collider_group = linked_collider_groups[item.item_indexes[0]]
-                row.prop(corresponding_collider_group, "value", icon="DOT")
+        # ソースのSpring Bone GroupとリンクされたCollider Groupsを取得する｡
+        secondary_animation = get_vrm0_extension_secondary_animation()
+        bone_groups = secondary_animation.bone_groups
+        source_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+        source_bone_group = bone_groups[item.item_indexes[0]]
+        source_collider_group = source_bone_group.collider_groups[item.item_indexes[1]]
+        self.add_blank_labels(row, 2)
+        row.prop_search(
+            source_collider_group,
+            "value",
+            secondary_animation,
+            "collider_groups",
+            text="",
+            icon="MESH_UVSPHERE",
+        )
 
 
 """---------------------------------------------------------

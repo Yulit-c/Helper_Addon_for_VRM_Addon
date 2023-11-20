@@ -930,7 +930,7 @@ class VRMHELPER_OT_vrm0_collider_group_add_group(VRMHELPER_vrm0_collider_group_b
 class VRMHELPER_OT_vrm0_collider_group_remove_active_group(VRMHELPER_vrm0_collider_group_base):
     bl_idname = "vrmhelper.vrm0_collider_group_remove_active_group"
     bl_label = "Remove Collider Group"
-    bl_description = "Deletes the collider group that is active in the list."
+    bl_description = "Remove the collider group that is active in the list."
 
     @classmethod
     def poll(self, context):
@@ -1450,9 +1450,6 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 bone_group_name = source_bone_group.name
             spring_bone_groups = get_vrm0_extension_spring_bone_group()
             registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
-            registered_collider_groups = [
-                cg.name for group in spring_bone_groups for cg in group.collider_groups
-            ]
 
             # group_name毎にスプリングボーングループを作成する｡
             target_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
@@ -1475,6 +1472,8 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
             # 対象に設定したコライダーグループをスプリングボーングループに登録する｡
             collider_groups = target_group.collider_groups
             candidate_collider_group: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+
+            registered_collider_groups = [cg.name for cg in target_group.collider_groups]
             for candidate_collider_group in collider_group_list:
                 if not candidate_collider_group.is_target:
                     continue
@@ -1487,6 +1486,49 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 new_collider_group.value = candidate_collider_group.name
 
             print("\n")
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm_spring_add_linked_collider_group"
+    bl_label = "Add Linked Collider Group"
+    bl_description = "Add a new VRM0 Spring Bone's Collider Group"
+
+    def execute(self, context):
+        self.report({"INFO"}, "Create Lined Collider Group")
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_remove_linked_collider_group"
+    bl_label = "Remove Linked Collider Group"
+    bl_description = "Remove the linked collider group that is active in the list"
+
+    @classmethod
+    def poll(self, context):
+        #
+        return True
+
+    def execute(self, context):
+        self.report({"INFO"}, "Remove the Active Lined Collider Group")
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_clear_linked_collider_group"
+    bl_label = "Clear Linked Collider Group"
+    bl_description = "Clear all linked collider groups."
+
+    @classmethod
+    def poll(self, context):
+        #
+        return True
+
+    def execute(self, context):
+        self.report({"INFO"}, "Clear the Active Lined Collider Group")
 
         return {"FINISHED"}
 
@@ -1545,4 +1587,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_add_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_remove_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_clear_linked_collider_group,
 )
