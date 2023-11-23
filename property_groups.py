@@ -2725,7 +2725,8 @@ def get_ui_vrm1_expression_material_prop() -> (
     return expression_material_filter
 
 
-def get_ui_vrm1_collider_prop() -> bpy.types.bpy_prop_collection:  # VRMHELPER_WM_vrm1_collider_list_items
+def get_ui_vrm1_collider_prop() -> bpy.types.bpy_prop_collection:
+    """VRMHELPER_WM_vrm1_collider_list_items"""
     wm_vrm1_root_prop = get_vrm1_wm_root_prop()
     collider_filter = wm_vrm1_root_prop.collider_list_items4custom_filter
     return collider_filter

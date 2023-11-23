@@ -245,6 +245,20 @@ def remove_vrm1_collider_by_selected_object(source_object: Object):
         bpy.data.objects.remove(source_object, do_unlink=True)
 
 
+def get_ui_list_index_from_collider_component(
+    source_collider: ReferenceVrm1ColliderPropertyGroup,
+) -> Optional[int]:
+    vrm1_add_items2collider_ui_list()
+    collider_list = get_ui_vrm1_collider_prop()
+    collider: VRMHELPER_WM_vrm1_collider_list_items
+    for n, collider in enumerate(collider_list):
+        if collider.collider_object != source_collider.bpy_object:
+            continue
+
+        collider_index = n
+        return collider_index
+
+
 # -----------------------------------------------------
 
 

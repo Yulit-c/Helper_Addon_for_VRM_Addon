@@ -134,7 +134,11 @@ from .utils_vrm1_expression import (
 )
 
 from .utils_vrm1_spring import (
+    # ----------------------------------------------------------
+    #    Collidaer
+    # ----------------------------------------------------------
     remove_vrm1_collider_by_selected_object,
+    get_ui_list_index_from_collider_component,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
@@ -1224,6 +1228,10 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         addon_collection_dict = setting_vrm_helper_collection()
         dest_collection = addon_collection_dict["VRM1_COLLIDER"]
 
+        # 処理中はプロパティのアップデートのコールバック関数をロックする｡
+        index_prop = get_vrm1_index_root_prop()
+        index_prop.is_locked_update = True
+
         # 選択ボーン全てに対してコライダーを作成してパラメーターをセットする｡
         # Target Armature.dataの'use_mirror_x'が有効の場合は処理の間は無効化する｡
         is_changed_use_mirror = False
@@ -1280,7 +1288,10 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
         bpy.ops.object.mode_set(mode="OBJECT")
         target_armature.select_set(False)
 
-        # TODO : 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
+        # 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
+        if updated_active_index := get_ui_list_index_from_collider_component(new_item):
+            index_prop.collider = updated_active_index
+        index_prop.is_locked_update = False
 
         logger.debug(f"Processing Time : {time.perf_counter() - time_start:.3f} s")
         return {"FINISHED"}
