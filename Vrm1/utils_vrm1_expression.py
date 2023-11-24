@@ -25,6 +25,7 @@ from operator import (
 )
 
 from typing import (
+    Mapping,
     Optional,
     Any,
 )
@@ -50,6 +51,8 @@ from ..addon_classes import (
     ExpressionCandidateUIList,
 )
 
+
+from ..addon_constants import PRESET_EXPRESSION_NAME_DICT
 
 from ..preferences import (
     get_addon_collection_name,
@@ -144,6 +147,8 @@ def get_source_vrm1_expression4ui_list() -> (
     # UI Listに表示する対象オブジェクトをリストに格納する｡
     # プリセットエクスプレッションのプロパティグループのフィールドから対応するエクスプレッションを取得する｡
     for name in preset_expressions.__annotations__.keys():
+        if not name in PRESET_EXPRESSION_NAME_DICT:
+            continue
         preset_expression: ReferenceVrm1ExpressionPropertyGroup = getattr(preset_expressions, name)
 
         # Morph/Materialいずれかのバインドを持っていればフラグをOnにする｡
