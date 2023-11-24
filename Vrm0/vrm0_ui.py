@@ -652,7 +652,7 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     op.source_type = "BONE_GROUP"
 
     # Bone GroupにリンクされたCollider Groupのリストを描画｡
-    if rows := vrm0_add_items2linked_collider_group_ui_list():
+    if (rows := vrm0_add_items2linked_collider_group_ui_list()) != None:
         # UIリストでアクティブなBone Groupを取得する｡
         active_bone_group = vrm0_get_active_list_item_in_spring()
         bone_group_name = active_bone_group.bone_group_name

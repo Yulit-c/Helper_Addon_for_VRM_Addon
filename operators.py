@@ -360,7 +360,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
                 list_items = get_ui_vrm0_spring_prop()
                 attr_name = "bone_group"
 
-            case (0, "BONE_GROUP"):
+            case (0, "LINKED_CG"):
                 list_items = get_ui_vrm0_linked_collider_group_prop()
                 attr_name = "linked_collider_group"
             # ---------------------------------------------------------------------------------
@@ -483,7 +483,7 @@ class VRMHELPER_vrm0_bone_group_base(VRMHELPER_operator_base):
 
 class VRMHELPER_vrm0_linked_collider_group_base(VRMHELPER_operator_base):
     vrm_mode: int = 0
-    component_type: str = "LINKED_COLLIDER_GROUP"
+    component_type: str = "LINKED_CG"
 
 
 # ----------------------------------------------------------

@@ -436,16 +436,15 @@ def get_active_linked_collider_groups() -> Optional[bpy.types.bpy_prop_collectio
         取得されたCollider Groups｡アクティブアイテムがラベルの場合はNoneを返す｡
 
     """
-    active_list_item = vrm0_get_active_list_item_in_spring()
-    if active_list_item.item_indexes[0]:
+    if (active_list_item := vrm0_get_active_list_item_in_spring()) == None:
         return
 
     bone_groups = get_vrm0_extension_spring_bone_group()
     source_bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
     source_bone_group = bone_groups[active_list_item.item_indexes[0]]
-    source_collider_group = source_bone_group.collider_groups[active_list_item.item_indexes[1]]
+    source_collider_groups = source_bone_group.collider_groups
 
-    return source_collider_group
+    return source_collider_groups
 
 
 def vrm0_get_active_list_item_in_linked_collider_group() -> (

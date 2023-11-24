@@ -145,6 +145,7 @@ from .utils_vrm0_spring import (
     vrm0_add_list_item2bone_group_list4operator,
     get_active_linked_collider_groups,
     get_spring_bone_group_by_comment,
+    vrm0_get_active_list_item_in_linked_collider_group,
 )
 
 from ..operators import (
@@ -1097,6 +1098,7 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             else:
                 target_group = collider_group.add()
                 target_group.uuid = uuid.uuid4().hex
+                target_group.node.bone_name = bone.name
                 target_group.refresh(target_armature)
 
             # 新規コライダーの作成｡
@@ -1500,8 +1502,7 @@ class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_linked_c
     def execute(self, context):
         self.report({"INFO"}, "Create Lined Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
-
-
+        target_collider_groups.add()
 
         return {"FINISHED"}
 
@@ -1519,6 +1520,11 @@ class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_linke
     def execute(self, context):
         self.report({"INFO"}, "Remove the Active Lined Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
+        active_list_item = vrm0_get_active_list_item_in_linked_collider_group()
+        target_index = active_list_item.item_indexes[1]
+        target_collider_groups.remove(target_index)
+
+        self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
 
