@@ -87,6 +87,7 @@ from ..property_groups import (
 from ..utils_common import (
     filtering_mesh_type,
     link_object2collection,
+    get_active_bone,
     get_selected_bone,
     get_pose_bone_by_name,
     generate_head_collider_position,
@@ -1086,7 +1087,7 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
         bpy.ops.object.select_all(action="DESELECT")
         bpy.ops.object.mode_set(mode=current_mode.replace("EDIT_ARMATURE", "EDIT"))
 
-        bones = get_selected_bone(target_armature.data)
+        bones = get_selected_bone()
         for bone in bones:
             if not (pose_bone := get_pose_bone_by_name(target_armature, bone.name)):
                 continue
@@ -1131,6 +1132,8 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
 
         bpy.ops.object.mode_set(mode="OBJECT")
         # TODO : 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
+
+        logger.debug(f"Processing Time : {time.perf_counter() - time_start:.3f} s")
 
         return {"FINISHED"}
 
@@ -1500,9 +1503,30 @@ class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_linked_c
     bl_description = "Add a new VRM0 Spring Bone's Collider Group"
 
     def execute(self, context):
-        self.report({"INFO"}, "Create Lined Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
-        target_collider_groups.add()
+        new_cg: ReferenceStringPropertyGroup = target_collider_groups.add()
+
+        # Active Boneが存在する場合はそのボーンに関連したコライダーを自動登録する｡
+        if not (active_bone := get_active_bone()):
+            return {"FINISHED"}
+
+        collider_groups = get_vrm0_extension_collider_group()
+        if not (l := [i for i in collider_groups if i.node.bone_name == active_bone.name]):
+            return {"FINISHED"}
+
+        registerd_colliders = [i.value for i in target_collider_groups]
+        corresponding_collider: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = l[0]
+        if corresponding_collider.name in registerd_colliders:
+            self.report(
+                {"INFO"},
+                f"The Collider Group corresponding to Active Bone has already been registered : {active_bone.name}.",
+            )
+
+        else:
+            self.report(
+                {"INFO"}, f"Registered the Collider Group corresponding to Active Bone : {active_bone.name}"
+            )
+            new_cg.value = corresponding_collider.name
 
         return {"FINISHED"}
 
@@ -1518,7 +1542,7 @@ class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_linke
         return get_active_linked_collider_groups()
 
     def execute(self, context):
-        self.report({"INFO"}, "Remove the Active Lined Collider Group")
+        self.report({"INFO"}, "Remove the Active Linked Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
         active_list_item = vrm0_get_active_list_item_in_linked_collider_group()
         target_index = active_list_item.item_indexes[1]
@@ -1532,7 +1556,7 @@ class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_linke
 class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
     bl_idname = "vrmhelper.vrm0_spring_clear_linked_collider_group"
     bl_label = "Clear Linked Collider Group"
-    bl_description = "Clear all linked collider groups."
+    bl_description = "Clear all linked collider groups"
 
     @classmethod
     def poll(self, context):
@@ -1540,11 +1564,27 @@ class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_linked
         return get_active_linked_collider_groups()
 
     def execute(self, context):
-        self.report({"INFO"}, "Clear the Active Lined Collider Group")
+        self.report({"INFO"}, "Registered Linked Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
-        target_collider_groups.clear()
 
         self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_register_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_spring_register_linked_collider_group"
+    bl_label = "Register Linked Collider Group"
+    bl_description = "Register linked collider groups from Selected Bone"
+
+    def execute(self, context):
+        if not (selected_bones := get_selected_bone()):
+            self.report({"ERROR"}, "Selected bone does not exist")
+            return {"CANCELLED"}
+
+        os.system("cls")
+        [logger.debug(i.name) for i in selected_bones]
+        self.report({"INFO"}, "RegisteredLinked Collider Group from Selected Bone")
 
         return {"FINISHED"}
 
@@ -1603,7 +1643,11 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    # ----------------------------------------------------------
+    #    Spring Bone Group's Collider Group
+    # ----------------------------------------------------------
     VRMHELPER_OT_vrm0_spring_add_linked_collider_group,
     VRMHELPER_OT_vrm0_spring_remove_linked_collider_group,
     VRMHELPER_OT_vrm0_spring_clear_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_register_linked_collider_group,
 )

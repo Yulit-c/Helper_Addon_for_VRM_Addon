@@ -1240,7 +1240,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
             is_changed_use_mirror = True
 
         # bones = context.selected_bones if context.selected_bones else context.selected_pose_bones
-        bones = get_selected_bone(armature_data)
+        bones = get_selected_bone()
         for bone in bones:
             pose_bone = get_pose_bone_by_name(target_armature, bone.name)
             new_item: ReferenceVrm1ColliderPropertyGroup = colliders.add()
@@ -1485,7 +1485,7 @@ class VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone(VRMHELPER_ope
         existing_collider_names = [i.name for i in target_group_colliders]
 
         # 選択されたボーンの名前を'node.bone_name'とする全てのコライダーを取得する｡
-        bone_names = [i.name for i in get_selected_bone(get_target_armature_data())]
+        bone_names = [i.name for i in get_selected_bone()]
         if context.mode == "EDIT_ARMATURE":
             bpy.ops.object.posemode_toggle()
 

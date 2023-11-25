@@ -161,9 +161,13 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    # ----------------------------------------------------------
+    #    Spring Bone Group's Collider Group
+    # ----------------------------------------------------------
     VRMHELPER_OT_vrm0_spring_add_linked_collider_group,
     VRMHELPER_OT_vrm0_spring_remove_linked_collider_group,
     VRMHELPER_OT_vrm0_spring_clear_linked_collider_group,
+    VRMHELPER_OT_vrm0_spring_register_linked_collider_group,
 )
 
 """
@@ -683,6 +687,11 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
         )
         col_list.operator(
             VRMHELPER_OT_vrm0_spring_clear_linked_collider_group.bl_idname, text="", icon="PANEL_CLOSE"
+        )
+        box_cg.separator(factor=2.0)
+        box_cg.operator(
+            VRMHELPER_OT_vrm0_spring_register_linked_collider_group.bl_idname,
+            text="Register from Selected Bone",
         )
 
 

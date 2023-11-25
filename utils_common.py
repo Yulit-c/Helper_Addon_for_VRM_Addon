@@ -153,29 +153,59 @@ def set_properties_to_from_dict(target: object, source_dict: dict[str, Any]):
 ---------------------------------------------------------"""
 
 
-def get_selected_bone(
-    target_armature: bpy.types.Armature,
-) -> list[bpy.types.Bone]:
+def get_active_bone() -> Optional[bpy.types.Bone]:
     """
-    Edit/Pose Modeで選択されたボーンの名前と一致するボーンをtarget_armatureのbonesから取得する｡
+    Edit/Pose Modeでアクティブになっているボーンを取得する｡
 
     Parameters
     ----------
-    target_armature : bpy.types.Armature
-        対象のArmatureデータ
 
     Returns
     -------
-    list[bpy.types.Bone]
-        target_armatureのbonesから取得した､選択中ボーンのリスト
+    bpy.types.Bone
+        取得されたボーン
+
+    """
+
+    active_object = bpy.context.active_object
+    if active_object.type != "ARMATURE":
+        return
+
+    match bpy.context.mode:
+        case "EDIT_ARMATURE":
+            active_bone = bpy.context.active_bone
+
+        case "POSE":
+            active_bone = bpy.context.active_pose_bone
+
+        case _:
+            return
+
+    obtained_bone = active_object.data.bones.get(active_bone.name)
+    return obtained_bone
+
+
+def get_selected_bone() -> Optional[list[bpy.types.Bone]]:
+    """
+    Edit/Pose Modeで選択されたボーンの名前と一致するボーンをアクティブオブジェクトデータのbonesから取得する｡
+
+    Returns
+    -------
+    Optional[list[bpy.types.Bone]]
+        のbonesから取得した､選択中ボーンのリスト
 
     """
 
     context = bpy.context
+    active_object = context.active_object
+    if active_object.type != "ARMATURE":
+        return
+
     bones = []
+    bone_names = []
     # 選択ボーンが存在しない場合は空のリストを返す｡
-    if not (context.selected_bones or context.selected_pose_bones):
-        return bones
+    # if not (context.selected_bones or context.selected_pose_bones):
+    # return bones
 
     match context.mode:
         case "EDIT_ARMATURE":
@@ -185,7 +215,7 @@ def get_selected_bone(
             bone_names = [i.name for i in context.selected_pose_bones]
 
     if bone_names:
-        bones = [i for i in target_armature.bones if i.name in bone_names]
+        bones = [i for i in active_object.data.bones if i.name in bone_names]
 
     return bones
 
