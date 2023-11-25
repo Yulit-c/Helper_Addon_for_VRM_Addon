@@ -203,9 +203,6 @@ def get_selected_bone() -> Optional[list[bpy.types.Bone]]:
 
     bones = []
     bone_names = []
-    # 選択ボーンが存在しない場合は空のリストを返す｡
-    # if not (context.selected_bones or context.selected_pose_bones):
-    # return bones
 
     match context.mode:
         case "EDIT_ARMATURE":
@@ -218,6 +215,32 @@ def get_selected_bone() -> Optional[list[bpy.types.Bone]]:
         bones = [i for i in active_object.data.bones if i.name in bone_names]
 
     return bones
+
+
+def get_selected_bone_names() -> Optional[list[str]]:
+    """
+    Edit/Pose Modeで選択されたボーンの名前と一致するボーンをアクティブオブジェクトデータのbonesから取得する｡
+
+    Returns
+    -------
+    Optional[list[bpy.types.Bone]]
+        のbonesから取得した､選択中ボーンのリスト
+
+    """
+
+    context = bpy.context
+    active_object = context.active_object
+    if active_object.type != "ARMATURE":
+        return
+
+    match context.mode:
+        case "EDIT_ARMATURE":
+            bone_names = [i.name for i in context.selected_bones]
+
+        case "POSE":
+            bone_names = [i.name for i in context.selected_pose_bones]
+
+    return bone_names
 
 
 def get_pose_bone_by_name(source: bpy.types.Object, bone_name: str) -> Optional[bpy.types.PoseBone]:

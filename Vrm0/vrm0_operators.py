@@ -89,6 +89,7 @@ from ..utils_common import (
     link_object2collection,
     get_active_bone,
     get_selected_bone,
+    get_selected_bone_names,
     get_pose_bone_by_name,
     generate_head_collider_position,
     generate_tail_collider_position,
@@ -147,6 +148,9 @@ from .utils_vrm0_spring import (
     get_active_linked_collider_groups,
     get_spring_bone_group_by_comment,
     vrm0_get_active_list_item_in_linked_collider_group,
+    get_empty_linked_collider_group_slot,
+    gen_corresponding_collider_group_dict,
+    get_corresponding_collider_group_to_bone,
 )
 
 from ..operators import (
@@ -1504,29 +1508,41 @@ class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_linked_c
 
     def execute(self, context):
         target_collider_groups = get_active_linked_collider_groups()
-        new_cg: ReferenceStringPropertyGroup = target_collider_groups.add()
+        target_cg: ReferenceStringPropertyGroup
 
-        # Active Boneが存在する場合はそのボーンに関連したコライダーを自動登録する｡
-        if not (active_bone := get_active_bone()):
+        active_bone = get_active_bone()
+        # 現在のモードに応じて選択ボーンを取得する｡
+        selected_bone_names = get_selected_bone_names()
+
+        # アクティブボーンが存在しない又は選択ボーンになっていない場合は空のスロットを追加する｡
+        if not (active_bone and active_bone.name in selected_bone_names):
+            target_collider_groups.add()
             return {"FINISHED"}
 
+        # アクティブボーンに対応するCollider Groupが存在しない場合は空のスロットを追加する｡
         collider_groups = get_vrm0_extension_collider_group()
-        if not (l := [i for i in collider_groups if i.node.bone_name == active_bone.name]):
+        corresponding_cg_dict = gen_corresponding_collider_group_dict(collider_groups, selected_bone_names)
+        if not (corresponding_cg_list := corresponding_cg_dict.get(active_bone.name)):
+            target_collider_groups.add()
             return {"FINISHED"}
 
+        # 既に登録済みのCollider Groupである場合はスキップする｡
         registerd_colliders = [i.value for i in target_collider_groups]
-        corresponding_collider: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = l[0]
+        corresponding_collider = corresponding_cg_list[0]
         if corresponding_collider.name in registerd_colliders:
             self.report(
                 {"INFO"},
                 f"The Collider Group corresponding to Active Bone has already been registered : {active_bone.name}.",
             )
-
+            target_collider_groups.add()
         else:
             self.report(
                 {"INFO"}, f"Registered the Collider Group corresponding to Active Bone : {active_bone.name}"
             )
-            new_cg.value = corresponding_collider.name
+            # Collider Groupを参照していないスロットがあればそちらを優先してターゲットとする｡
+            if not (target_cg := get_empty_linked_collider_group_slot(target_collider_groups)):
+                target_cg = target_collider_groups.add()
+            target_cg.value = corresponding_collider.name
 
         return {"FINISHED"}
 
@@ -1566,6 +1582,7 @@ class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_linked
     def execute(self, context):
         self.report({"INFO"}, "Registered Linked Collider Group")
         target_collider_groups = get_active_linked_collider_groups()
+        target_collider_groups.clear()
 
         self.offset_active_item_index(self.component_type)
 
@@ -1578,13 +1595,33 @@ class VRMHELPER_OT_vrm0_spring_register_linked_collider_group(VRMHELPER_vrm0_lin
     bl_description = "Register linked collider groups from Selected Bone"
 
     def execute(self, context):
-        if not (selected_bones := get_selected_bone()):
+        if not (selected_bone_names := get_selected_bone_names()):
             self.report({"ERROR"}, "Selected bone does not exist")
             return {"CANCELLED"}
 
-        os.system("cls")
-        [logger.debug(i.name) for i in selected_bones]
         self.report({"INFO"}, "RegisteredLinked Collider Group from Selected Bone")
+        target_collider_groups = get_active_linked_collider_groups()
+        registerd_colliders = [i.value for i in target_collider_groups]
+        collider_groups = get_vrm0_extension_collider_group()
+        corresponding_cg_dict = gen_corresponding_collider_group_dict(collider_groups, selected_bone_names)
+
+        for bone_name in selected_bone_names:
+            # ボーン名に対応するCollider Groupが存在しなければスキップする｡
+            if not (corresponding_cg_list := corresponding_cg_dict.get(bone_name)):
+                logger.debug(f"Bone with no corresponding Collider Group : {bone_name}")
+                continue
+
+            # ボーン名に対応するCollider GroupをSpring Bone Groupに登録する｡
+            for cg in corresponding_cg_list:
+                # 既に登録済みのCollider Groupである場合はスキップする｡
+                if cg.name in registerd_colliders:
+                    logger.debug(f"The Collider Group corresponding already been registered : {cg.name}.")
+                    continue
+
+                # Collider Groupを参照していないスロットがあればそちらを優先してターゲットとする｡
+                if not (target_cg := get_empty_linked_collider_group_slot(target_collider_groups)):
+                    target_cg = target_collider_groups.add()
+                target_cg.value = cg.name
 
         return {"FINISHED"}
 

@@ -26,11 +26,6 @@ from bpy.types import (
     PropertyGroup,
 )
 
-
-# from ..addon_constants import (
-#     VRM0_FIRST_PERSON_ANNOTATION_TYPES,
-# )
-
 from ..addon_classes import (
     ReferenceStringPropertyGroup,
     ReferenceBonePropertyGroup,
@@ -462,6 +457,91 @@ def vrm0_get_active_list_item_in_linked_collider_group() -> (
     if linked_cg_list := get_ui_vrm0_linked_collider_group_prop():
         return linked_cg_list[get_vrm0_active_index_prop("LINKED_CG")]
     return None
+
+
+def get_empty_linked_collider_group_slot(
+    source_linked_collider_group: bpy.types.bpy_prop_collection,
+) -> Optional[ReferenceStringPropertyGroup]:
+    """
+    'source_linked_collider_group'の中から'value'が"None"または空になっているデータの内､先頭のものを取得する｡
+
+    Parameters
+    ----------
+    source_linked_collider_group : bpy.types.CollectionProperty(StringPropertyGroup)
+        処理対象となる､Spring Bone Group内のCollider Groups
+
+    Returns
+    -------
+    Optional[ReferenceStringPropertyGroup]
+        取得されたCollider Group名のスロット｡該当するデータが存在しなければNone｡
+
+    """
+
+    if not (l := [i for i in source_linked_collider_group if i.value == "None" or ""]):
+        return
+
+    return l[0]
+
+
+def gen_corresponding_collider_group_dict(
+    source_collider_groups: bpy.types.bpy_prop_collection, source_bone_name: list[str]
+) -> dict[str, list[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]]:
+    """
+    選択ボーンに対応するCollider GroupをVRM Extension内のデータから取得する｡
+
+    Parameters
+    ----------
+    source_collider_groups : bpy.types.bpy_prop_collection
+        データ取得元となるCollider Groups
+
+    source_bone_name : list[str]
+        対応するCollider Groupを検索したいボーンの名前｡
+
+    Returns
+    -------
+    dict[str, list[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]]
+        取得されたCollider Groupsを格納したリストを値､ボーン名をキーとした辞書｡
+
+    """
+
+    if not (source_bone_name or source_collider_groups):
+        return
+
+    corresponding_cg_dict = {}
+    cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+    for cg in source_collider_groups:
+        bone_name = cg.node.bone_name
+        if bone_name in source_bone_name:
+            corresponding_cg_dict.setdefault(bone_name, []).append(cg)
+
+    return corresponding_cg_dict
+
+
+def get_corresponding_collider_group_to_bone(
+    source_collider_groups: bpy.types.bpy_prop_collection, source_bone: bpy.types.Bone
+) -> Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]:
+    """
+    'source_bone'に対応するCollider Groupを'source_collider_groups'の中から取得する｡
+
+    Parameters
+    ----------
+    source_collider_groups : bpy.types.bpy_prop_collection
+        Collider Groupの取得元となるCollider Groups
+
+    source_bone : bpy.types.Bone
+        Collider Groupを取得する際に使用されるBone
+
+    Returns
+    -------
+    Optional[ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup]
+        取得されたCollider Group
+
+    """
+
+    if not (l := [i for i in source_collider_groups if i.node.bone_name == source_bone.name]):
+        return
+
+    return l[0]
 
 
 # ----------------------------------------------------------
