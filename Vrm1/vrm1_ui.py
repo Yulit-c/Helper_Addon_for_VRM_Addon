@@ -1027,27 +1027,13 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         col_side.operator(VRMHELPER_OT_vrm1_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
         col_side.separator(factor=2.0)
 
-        # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する｡
+        # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する
         if (active_item := get_active_list_item_in_spring()) and active_item.name:
             spring = get_vrm_extension_property("SPRING")[active_item.item_indexes[0]]
-            box = layout.box()
 
-            # スプリング全体の設定用プロパティ
-            target_armature_data = get_target_armature_data()
-            box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
-            box.prop_search(
-                spring.center,
-                "bone_name",
-                target_armature_data,
-                "bones",
-                text="Center",
-            )
-
-            # アクティブアイテムがJointの場合｡
+            # アクティブアイテムがJointの場合の場合の追加オペレーター
             if active_item.item_type[2] or active_item.name == "Joint":
                 col_side.label(icon="BONE_DATA")
-
-                # ジョイント作成/削除に関するオペレーター
                 op = col_side.operator(VRMHELPER_OT_vrm1_spring_add_joint.bl_idname, text="", icon="ADD")
                 set_properties_to_from_dict(op, joint_properties)
                 op.use_auto_joint_parametter = spring_settings.use_auto_joint_parametter
@@ -1062,24 +1048,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 row.alignment = "CENTER"
                 row.prop(spring_settings, "use_auto_joint_parametter", text="")
 
-                box_sub = box.box()
-                # アクティブアイテムの調整用プロパティ
-                if active_item.item_type[2]:
-                    joint = spring.joints[active_item.item_indexes[1]]
-                    box_sub.prop_search(
-                        joint.node,
-                        "bone_name",
-                        target_armature_data,
-                        "bones",
-                        text="Selected Joint",
-                    )
-                    box_sub.prop(joint, "hit_radius", slider=True)
-                    box_sub.prop(joint, "stiffness", slider=True)
-                    box_sub.prop(joint, "drag_force", slider=True)
-                    box_sub.prop(joint, "gravity_power", slider=True)
-                    box_sub.prop(joint, "gravity_dir")
-
-            # アクティブアイテムがCollider Groupの場合｡
+            # アクティブアイテムがCollider Groupの場合の追加オペレーター
             if active_item.item_type[3] or active_item.name == "Collider Group":
                 col_side.label(icon="OVERLAY")
                 col_side.operator(
@@ -1097,81 +1066,139 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                     text="",
                     icon="PANEL_CLOSE",
                 )
-
-                # TODO : コライダーグループの設定用オペレーター
-                # box_sub = box.box()
-                # box_sub.operator(
-                #     VRMHELPER_OT_empty_operator.bl_idname, text="Set Collider Group"
-                # )
+        # ----------------------------------------------------------
+        #    アクティブアイテム調整用UI
+        # ----------------------------------------------------------
+        # UIの表示/非表示を切り替えるプロパティ
+        expand_active_joint_icon = (
+            "TRIA_DOWN" if spring_settings.is_expand_active_joint_parameters else "TRIA_RIGHT"
+        )
+        box = layout.box()
+        row = box.row()
+        row.prop(
+            spring_settings,
+            "is_expand_active_joint_parameters",
+            icon=expand_active_joint_icon,
+            icon_only=True,
+        )
+        row.label(text="Active Item Parameters")
+        if spring_settings.is_expand_active_joint_parameters:
+            # スプリング全体の設定用プロパティ
+            target_armature_data = get_target_armature_data()
+            box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
+            box.prop_search(
+                spring.center,
+                "bone_name",
+                target_armature_data,
+                "bones",
+                text="Center",
+            )
+            box_sub = box.box()
+            # アクティブアイテムの調整用プロパティ
+            if active_item.item_type[2]:
+                joint = spring.joints[active_item.item_indexes[1]]
+                box_sub.prop_search(
+                    joint.node,
+                    "bone_name",
+                    target_armature_data,
+                    "bones",
+                    text="Selected Joint",
+                )
+                box_sub.prop(joint, "hit_radius", slider=True)
+                box_sub.prop(joint, "stiffness", slider=True)
+                box_sub.prop(joint, "drag_force", slider=True)
+                box_sub.prop(joint, "gravity_power", slider=True)
+                box_sub.prop(joint, "gravity_dir")
 
         # ----------------------------------------------------------
-        #    ジョイントの自動作成｡
+        #    選択ボーン対応のジョイントを調整するUI
         # ----------------------------------------------------------
+        layout.separator(factor=0.5)
+        # UIの表示/非表示を切り替えるプロパティ
+        expand_selected_bone_icon = (
+            "TRIA_DOWN" if spring_settings.is_expand_selected_bone_parameters else "TRIA_RIGHT"
+        )
+        box = layout.box()
+        row = box.row()
+        row.prop(
+            spring_settings,
+            "is_expand_selected_bone_parameters",
+            icon=expand_selected_bone_icon,
+            icon_only=True,
+        )
+        row.label(text="Selected Bone's Joint")
+        if spring_settings.is_expand_selected_bone_parameters:
+            box.prop(spring_settings, "active_bone_hit_radius", slider=True)
+
+        # ----------------------------------------------------------
+        #    ジョイント作成/調整オペレーター
+        # ----------------------------------------------------------
+        layout.separator(factor=0.5)
         box = layout.box()
         # オペレーター用ジョイントパラメーターの描画
-        box_sub = box.box()
+        # UIの表示/非表示を切り替えるプロパティ｡
         if spring_settings.is_expand_operator_parameters:
-            expand_icon = "TRIA_DOWN"
+            expand_operator_icon = "TRIA_DOWN"
         else:
-            expand_icon = "TRIA_RIGHT"
+            expand_operator_icon = "TRIA_RIGHT"
 
-        row = box_sub.row(align=False)
+        row = box.row(align=False)
         row.prop(
             spring_settings,
             "is_expand_operator_parameters",
-            icon=expand_icon,
+            icon=expand_operator_icon,
             icon_only=True,
         )
-        row.label(text="Operator Settings")
+        row.label(text="Operators")
         if spring_settings.is_expand_operator_parameters:
-            box_sub.prop(spring_settings, "hit_radius", slider=True)
-            box_sub.prop(spring_settings, "stiffness", slider=True)
-            box_sub.prop(spring_settings, "drag_force", slider=True)
-            box_sub.prop(spring_settings, "gravity_power", slider=True)
-            box_sub.prop(spring_settings, "gravity_dir")
-            box_sub.separator(factor=0.5)
-            box_sub.prop(spring_settings, "damping_ratio", slider=True)
+            box.prop(spring_settings, "hit_radius", slider=True)
+            box.prop(spring_settings, "stiffness", slider=True)
+            box.prop(spring_settings, "drag_force", slider=True)
+            box.prop(spring_settings, "gravity_power", slider=True)
+            box.prop(spring_settings, "gravity_dir")
+            box.separator(factor=0.5)
+            box.prop(spring_settings, "damping_ratio", slider=True)
 
-        # ジョイント作成オペレーターの描画
-        col = box.column()
-        col.scale_y = 1.2
-        op = col.operator(
-            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
-            text="Create from Selected",
-        )
-        op.source_type = "SELECT"
-        set_properties_to_from_dict(op, joint_properties)
+            # ジョイント作成オペレーターの描画
+            col = box.column()
+            col.scale_y = 1.2
+            op = col.operator(
+                VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
+                text="Create from Selected",
+            )
+            op.source_type = "SELECT"
+            set_properties_to_from_dict(op, joint_properties)
 
-        op = col.operator(
-            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
-            text="Create from Bone Group",
-        )
-        set_properties_to_from_dict(op, joint_properties)
-        op.source_type = "BONE_GROUP"
+            op = col.operator(
+                VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
+                text="Create from Bone Group",
+            )
+            set_properties_to_from_dict(op, joint_properties)
+            op.source_type = "BONE_GROUP"
 
-        # ----------------------------------------------------------
-        #    既存ジョイントのパラメーター調整
-        # ----------------------------------------------------------
-        col.separator(factor=2.0)
-        op = col.operator(
-            VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
-            text="Adust Joints from Active",
-        )
-        op.source_type = "SINGLE"
-        set_properties_to_from_dict(op, joint_properties)
+            # ----------------------------------------------------------
+            #    既存ジョイントのパラメーター調整
+            # ----------------------------------------------------------
+            col.separator(factor=2.0)
+            op = col.operator(
+                VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
+                text="Adust Joints from Active",
+            )
+            op.source_type = "SINGLE"
+            set_properties_to_from_dict(op, joint_properties)
 
-        box = col.box()
-        box.prop(
-            spring_settings,
-            "filter_of_adjusting_target_filter",
-            text="Filtering Strings",
-        )
-        op = box.operator(
-            VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
-            text="Adjust Joints from Selected Spring",
-        )
-        set_properties_to_from_dict(op, joint_properties)
-        op.source_type = "MULTIPLE"
+            box = col.box()
+            box.prop(
+                spring_settings,
+                "filter_of_adjusting_target_filter",
+                text="Filtering Strings",
+            )
+            op = box.operator(
+                VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
+                text="Adjust Joints from Selected Spring",
+            )
+            set_properties_to_from_dict(op, joint_properties)
+            op.source_type = "MULTIPLE"
 
 
 # TODO : ジョイント調整パラメーターの表示条件変更｡

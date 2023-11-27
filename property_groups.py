@@ -44,6 +44,8 @@ from .addon_classes import (
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
+    ReferenceSpringBone1JointPropertyGroup,
+    ReferenceVrmAddonArmatureExtensionPropertyGroup,
 )
 
 from .addon_constants import (
@@ -52,6 +54,7 @@ from .addon_constants import (
 )
 
 from .utils_common import (
+    get_selected_bone_names,
     setting_vrm_helper_collection,
 )
 
@@ -670,7 +673,9 @@ class VRMHELPER_SCENE_vrm1_collider_settings(bpy.types.PropertyGroup):
             return
 
         target_armature_data = get_target_armature_data()
-        vrm_extension = target_armature_data.vrm_addon_extension
+        vrm_extension: ReferenceVrmAddonArmatureExtensionPropertyGroup = (
+            target_armature_data.vrm_addon_extension
+        )
         colliders = vrm_extension.spring_bone1.colliders
 
         collider_list = get_ui_vrm1_collider_prop()
@@ -787,6 +792,29 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
     Springの設定に関するプロパティ
     """
 
+    def update_hit_raduis_of_selected_bones(self, context):
+        """
+        パラメーターを変更した際に､選択ボーンに対応するSpring Bone Jointが存在すればそのJointのHit Radiusの値を更新する｡
+        """
+        target_armature_data = get_target_armature_data()
+        vrm_extension: ReferenceVrmAddonArmatureExtensionPropertyGroup = (
+            target_armature_data.vrm_addon_extension
+        )
+        springs = vrm_extension.spring_bone1.springs
+        selected_bone_names = get_selected_bone_names()
+        corresponding_joint_list = [
+            j for i in springs for j in i.joints if j.node.bone_name in selected_bone_names
+        ]
+
+        i: ReferenceSpringBone1JointPropertyGroup
+        for i in corresponding_joint_list:
+            i.hit_radius = self.active_bone_hit_radius
+
+        return
+
+    # ----------------------------------------------------------
+    #    VRM Joint Spring Parameters
+    # ----------------------------------------------------------
     hit_radius: FloatProperty(
         name="Hit Radius",
         description="radius value of joint set by operator",
@@ -827,7 +855,9 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         size=3,
         subtype="XYZ",
     )
-    # -----------------------------------------------------
+    # ----------------------------------------------------------
+    #    This Addon's Parameters
+    # ----------------------------------------------------------
 
     damping_ratio: FloatProperty(
         name="Damping Ratio",
@@ -843,16 +873,39 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         default=False,
     )
 
-    is_expand_operator_parameters: BoolProperty(
-        name="Is Expand Operator Parameters",
-        description="Select whether to display operator parameters.",
-        default=True,
+    active_bone_hit_radius: FloatProperty(
+        name="Active Bone's Hit Radius",
+        description="hit radius value of active bone",
+        default=0.01,
+        min=0.0,
+        soft_max=0.5,
+        precision=3,
+        update=update_hit_raduis_of_selected_bones,
     )
 
     filter_of_adjusting_target_filter: StringProperty(
         name="Filter of Adjusting Target",
         description="Filter springs adjusting parameters",
         default="",
+    )
+
+    # For UI
+    is_expand_active_joint_parameters: BoolProperty(
+        name="Is Expand Active Joint Parameters",
+        description="Select whether to display active joint parameters.",
+        default=True,
+    )
+
+    is_expand_selected_bone_parameters: BoolProperty(
+        name="Is Expand Selected Bone Parameters",
+        description="Select whether to display selected bone parameters.",
+        default=True,
+    )
+
+    is_expand_operator_parameters: BoolProperty(
+        name="Is Expand Operator Parameters",
+        description="Select whether to display operator parameters.",
+        default=True,
     )
 
 

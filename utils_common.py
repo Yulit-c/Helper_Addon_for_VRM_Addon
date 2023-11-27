@@ -240,6 +240,9 @@ def get_selected_bone_names() -> Optional[list[str]]:
         case "POSE":
             bone_names = [i.name for i in context.selected_pose_bones]
 
+        case _:
+            bone_names = []
+
     return bone_names
 
 
