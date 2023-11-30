@@ -379,6 +379,12 @@ class ReferenceVrm1ColliderGroupPropertyGroup:
     search_one_time_uuid: bpy.types.StringProperty
 
 
+class ReferenceSpringBone1ColliderReferencePropertyGroup:
+    collider_name: bpy.types.StringProperty
+    collider_uuid: bpy.types.StringProperty
+    search_one_time_uuid: bpy.types.StringProperty
+
+
 # ----------------------------------------------------------
 #    Spring
 # ----------------------------------------------------------
