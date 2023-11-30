@@ -54,6 +54,7 @@ from mathutils import (
 from ..addon_classes import (
     ReferenceVrm1TextureTransformBindPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm1ColliderGroupPropertyGroup,
     ReferenceSpringBone1SpringPropertyGroup,
     ReferenceSpringBone1JointPropertyGroup,
     VRMHELPER_VRM_joint_operator_property,
@@ -1467,25 +1468,30 @@ class VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone(VRMHELPER_ope
     bl_label = "Create from Bone"
     bl_description = "Registers the colliders linked to the selected bone to the active collider group"
 
-    # TODO : Collider Groupが1つも存在しない場合は新たにグループを作成してそれを対象にする｡
-
     @classmethod
     def poll(cls, context):
-        # Target Armatureのボーンが1つ以上選択されており､リストのアクティブアイテムがCollider Groupである｡
-        return (
-            is_existing_target_armature_and_mode()
-            and (active_item := get_active_list_item_in_collider_group())
-            and active_item.item_type[1]
-        )
+        # Target Armatureのボーンが1つ以上選択されている｡
+        return is_existing_target_armature_and_mode()
 
     def execute(self, context):
-        # アクティブなコライダーグループを取得する｡
         active_group = get_active_list_item_in_collider_group()
         collider_group = get_vrm_extension_property("COLLIDER_GROUP")
-        target_group_colliders = collider_group[active_group.item_indexes[0]].colliders
-        existing_collider_names = [i.name for i in target_group_colliders]
+        if collider_group:
+            # アクティブなコライダーグループを取得する｡
+            target_group: ReferenceVrm1ColliderGroupPropertyGroup = collider_group[
+                active_group.item_indexes[0]
+            ]
+            target_group_colliders = target_group.colliders
+        else:
+            # Collider Groupが1つも存在しない場合は新たにグループを作成する｡
+            new_group: ReferenceVrm1ColliderGroupPropertyGroup = collider_group.add().name
+            new_group.vrm_name = "New Collider Group"
+            new_group.uuid = uuid.uuid4().hex
+            target_group_colliders = new_group.colliders
 
-        # 選択されたボーンの名前を'node.bone_name'とする全てのコライダーを取得する｡
+        # TODO : 1つのボーンにつき1つのColliderのみを登録する｡
+        # 選択されたボーンの名前を'node.bone_name'で参照している､全てのコライダーを取得する｡
+        existing_collider_names = [i.name for i in target_group_colliders]
         bone_names = [i.name for i in get_selected_bone()]
         if context.mode == "EDIT_ARMATURE":
             bpy.ops.object.posemode_toggle()
@@ -1497,14 +1503,15 @@ class VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone(VRMHELPER_ope
         )
 
         # 取得したコライダーをアクティブなコライダーグループに登録する｡
-        # 値が空のグループが存在する場合､そちらに値を代入する｡
+        # 空のグループが存在する場合､そちらに値を代入する｡
         for collider_name in source_colliders:
             if empty_item := [i for i in target_group_colliders if not i.collider_name]:
                 empty_item[0].collider_name = collider_name
 
             else:
-                new_item = target_group_colliders.add()
-                new_item.collider_name = collider_name
+                target_group_colliders.add().collider_name = collider_name
+                # new_item = target_group_colliders.add().collider_name
+                # new_item.collider_name = collider_name
 
         return {"FINISHED"}
 
