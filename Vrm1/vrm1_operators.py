@@ -89,6 +89,7 @@ from ..property_groups import (
 from ..utils_common import (
     filtering_mesh_type,
     link_object2collection,
+    get_active_bone,
     get_selected_bone,
     get_pose_bone_by_name,
     generate_head_collider_position,
@@ -1911,6 +1912,40 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone(
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm1_spring_pick_radius_from_active_bone"
+    bl_label = "Pick Radius from Active Bone"
+    bl_description = "Get the hit radius of the spring bone joint corresponding to the active bone and reflect it in the parameters on the UI"
+
+    def execute(self, context):
+        spring_prop = get_scene_vrm1_spring_prop()
+        spring_prop.is_updated_hit_radius = True  # コールバック無効化
+
+        # アクティブボーンni対応するスプリングボーンジョイントを取得する
+        if not (active_bone := get_active_bone()):
+            self.report({"ERROR"}, f"Active bone does not exist")
+            return {"CANCELLED"}
+
+        springs = get_vrm_extension_property("SPRING")
+        if not (
+            corresponding_joint := [
+                j for i in springs for j in i.joints if j.node.bone_name == active_bone.name
+            ]
+        ):
+            self.report({"INFO"}, f"No corresponding Spring Bone Joint exists")
+            return {"CANCELLED"}
+
+        corresponding_joint: ReferenceSpringBone1JointPropertyGroup = corresponding_joint[0]
+        active_bone_radius = corresponding_joint.hit_radius
+        spring_prop.active_bone_hit_radius = active_bone_radius
+
+        self.report({"INFO"}, f"Obtained Hit Radius : ;{active_bone_radius}")
+        spring_prop.is_updated_hit_radius = False  # コールバック無効化を解除
+        return {"FINISHED"}
+
+
 # -----------------------------------------------------
 
 
@@ -2175,6 +2210,7 @@ CLASSES = (
     VRMHELPER_OT_vrm1_spring_clear_joint,
     VRMHELPER_OT_vrm1_spring_add_joint_from_source,
     VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
+    VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone,
     VRMHELPER_OT_vrm1_spring_add_collider_group,
     VRMHELPER_OT_vrm1_spring_remove_collider_group,
     VRMHELPER_OT_vrm1_spring_clear_collider_group,

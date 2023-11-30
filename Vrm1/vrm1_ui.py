@@ -177,6 +177,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_spring_clear_joint,
     VRMHELPER_OT_vrm1_spring_add_joint_from_source,
     VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
+    VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone,
     VRMHELPER_OT_vrm1_spring_add_collider_group,
     VRMHELPER_OT_vrm1_spring_remove_collider_group,
     VRMHELPER_OT_vrm1_spring_clear_collider_group,
@@ -1128,7 +1129,9 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         )
         row.label(text="Selected Bone's Joint")
         if spring_settings.is_expand_selected_bone_parameters:
-            box.prop(spring_settings, "active_bone_hit_radius", slider=True)
+            row = box.row(align=True)
+            row.prop(spring_settings, "active_bone_hit_radius", slider=True)
+            row.operator(VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER")
 
         # ----------------------------------------------------------
         #    ジョイント作成/調整オペレーター

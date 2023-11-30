@@ -796,6 +796,10 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
         """
         パラメーターを変更した際に､選択ボーンに対応するSpring Bone Jointが存在すればそのJointのHit Radiusの値を更新する｡
         """
+        if self.is_updated_hit_radius:
+            self.is_updated_hit_radius = False
+            return
+
         target_armature_data = get_target_armature_data()
         vrm_extension: ReferenceVrmAddonArmatureExtensionPropertyGroup = (
             target_armature_data.vrm_addon_extension
@@ -811,6 +815,13 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
             i.hit_radius = self.active_bone_hit_radius
 
         return
+
+
+    is_updated_hit_radius: BoolProperty(
+    name="Is UPdated Hit Radius",
+    description="Update callback functions are locked while this flag is on",
+    default=False,
+    )
 
     # ----------------------------------------------------------
     #    VRM Joint Spring Parameters
