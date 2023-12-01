@@ -1366,14 +1366,19 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         default=10,
     )
 
+    width: IntProperty(
+        name="Width",
+        description="Width per element displayed in popup UI",
+        default=300,
+    )
+
     # -----------------------------------------------------
     def invoke(self, context, event):
-        width = 300
         match self.source_type:
             case "SELECT":
                 logger.debug(self.source_type)
                 vrm0_add_list_item2collider_group_list4operator()
-                return context.window_manager.invoke_props_dialog(self, width=width * 4)
+                return context.window_manager.invoke_props_dialog(self, width=self.width * 4)
 
             case "BONE_GROUP":
                 logger.debug(self.source_type)
@@ -1391,7 +1396,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                     length_cg = len(collider_groups)
 
                 length = max(length_bg, length_cg)
-                width_popup = math.ceil(length / self.rows_property) * width
+                width_popup = math.ceil(length / self.rows_property) * self.width
                 return context.window_manager.invoke_props_dialog(self, width=width_popup)
             case _:
                 return {"CANCELLED"}

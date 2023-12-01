@@ -1839,10 +1839,22 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         default="SINGLE",
     )
 
+    set_parameters: BoolProperty(
+        name="Set Parameters",
+        description="Select whether to apply joint parameters",
+        default=False,
+    )
+
     rows_property: IntProperty(
         name="Rows Property",
         description="Number of properties displayed per column",
         default=12,
+    )
+
+    width: IntProperty(
+        name="Width",
+        description="Width per element displayed in popup UI",
+        default=300,
     )
 
     # -----------------------------------------------------
@@ -1850,46 +1862,74 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
     def invoke(self, context, event):
         os.system("cls")
 
+        self.set_parameters = True
         vrm1_add_list_item2joint_list4operator()
-        if self.source_type == "MULTIPLE":
-            spring_collection = get_ui_vrm1_operator_spring_prop()
-            # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
-            spring_settings = get_scene_vrm1_spring_prop()
-            if filter_strings := spring_settings.filter_of_adjusting_target_filter:
-                spring_collection = [i for i in spring_collection if filter_strings in i.name]
-            width_popup = math.ceil(len(spring_collection) / self.rows_property) * 240
-            return context.window_manager.invoke_props_dialog(self, width=width_popup)
+        vrm1_add_list_item2collider_group_list4operator()
+        match self.source_type:
+            case "SINGLE":
+                # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
+                active_indexes = get_active_list_item_in_spring().item_indexes
+                for spring in get_ui_vrm1_operator_spring_prop():
+                    if spring.spring_index != active_indexes[0]:
+                        spring.is_target = False
+                return self.execute(context)
 
-        # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
-        active_indexes = get_active_list_item_in_spring().item_indexes
-        for spring in get_ui_vrm1_operator_spring_prop():
-            if spring.spring_index != active_indexes[0]:
-                spring.is_target = False
-
-        return self.execute(context)
+            case "MULTIPLE":
+                spring_collection = get_ui_vrm1_operator_spring_prop()
+                # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+                spring_settings = get_scene_vrm1_spring_prop()
+                if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+                    spring_collection = [i for i in spring_collection if filter_strings in i.name]
+                width_popup = math.ceil(len(spring_collection) / self.rows_property) * self.width
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
     def draw(self, context):
         spring_collection = get_ui_vrm1_operator_spring_prop()
+        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
+
+        if not (spring_collection and collider_group_collection):
+            self.report({"ERROR"}, "Neither Spring nor Collider Group is selected")
+            return {"CANCELLED"}
+
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()
         if filter_strings := spring_settings.filter_of_adjusting_target_filter:
             spring_collection = [i for i in spring_collection if filter_strings in i.name]
-        # UIの描画
+        # ----------------------------------------------------------
+        #    UIの描画
+        # ----------------------------------------------------------
         layout = self.layout
         box = layout.box()
-        box.label(text="Target Spring")
-        box.separator(factor=0.1)
-        row = box.row()
-        row_root = box.row()
+        # パラメーター変更の可否を選択するプロパティ
+        box.prop(self, "set_parameters")
+        # 処理対象のSpringを選択するエリア
+        row = box.row(align=True)
+        anchor_layout = row.column(align=True)
+        anchor_layout.label(text="Target Spring")
+        box_sub = anchor_layout.box()
+        row_root = box_sub.row()
         for n, spring in enumerate(spring_collection):
             if n % self.rows_property == 0:
                 col = row_root.column()
-            row = col.row(align=True)
-            row.prop(spring, "is_target", text=spring.name)
+            row_sub = col.row(align=True)
+            row_sub.prop(spring, "is_target", text=spring.name)
+
+        # 処理対象のCollider Groupを選択するエリア｡
+        anchor_layout = row.column(align=True)
+        anchor_layout.label(text="Target Collider Group")
+        box_sub = anchor_layout.box()
+        row_root = box_sub.row()
+        for n, group in enumerate(collider_group_collection):
+            if n % self.rows_property == 0:
+                col = row_root.column()
+            row_sub = col.row(align=True)
+            row_sub.prop(group, "is_target", text=group.vrm_name)
 
     def execute(self, context):
+        # TODO : 処理内でターゲットのCollider Groupを追加する｡
         springs = get_vrm_extension_property("SPRING")
         springs_collection = get_ui_vrm1_operator_spring_prop()
+        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
 
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()
@@ -1900,26 +1940,38 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
         spring: ReferenceSpringBone1SpringPropertyGroup
         for spring, filter in zip(springs, springs_collection):
+            # 除外ワードを持つグループはスキップする｡
             if springs_filter_list and not spring.vrm_name in springs_filter_list:
-                logger.debug(f"Skip 0 : {spring.vrm_name}")
+                logger.debug(f"Skip : Filtering Word -- {spring.vrm_name}")
                 continue
 
+            # ポップアップUIで指定しなかったグループはスキップする｡
             if not filter.is_target:
-                logger.debug(f"Skip 1 : {spring.vrm_name}")
+                logger.debug(f"Skip : is not Target -- {spring.vrm_name}")
                 continue
 
-            damping = 1.0
-            joint: ReferenceSpringBone1JointPropertyGroup
-            for joint in spring.joints:
-                joint.hit_radius = self.hit_radius
-                joint.stiffness = self.stiffness * damping
-                joint.drag_force = self.drag_force * damping
-                joint.gravity_power = self.gravity_power
-                joint.gravity_dir[0] = self.gravity_dir[0]
-                joint.gravity_dir[1] = self.gravity_dir[1]
-                joint.gravity_dir[2] = self.gravity_dir[2]
+            # パラメーターを変更する場合はUI上のプロパティの値を適用する｡
+            if self.set_parameters:
+                damping = 1.0
+                joint: ReferenceSpringBone1JointPropertyGroup
+                for joint in spring.joints:
+                    joint.hit_radius = self.hit_radius
+                    joint.stiffness = self.stiffness * damping
+                    joint.drag_force = self.drag_force * damping
+                    joint.gravity_power = self.gravity_power
+                    joint.gravity_dir[0] = self.gravity_dir[0]
+                    joint.gravity_dir[1] = self.gravity_dir[1]
+                    joint.gravity_dir[2] = self.gravity_dir[2]
 
-                damping *= self.damping_ratio
+                    damping *= self.damping_ratio
+
+            # ポップアップUIで指定したCollider Groupがあれば登録する｡
+            registered_cg = [i.collider_group_name for i in spring.collider_groups]
+            for cg in collider_group_collection:
+                if cg.name in registered_cg:
+                    logger.debug(f"This Collider Group is already registered : {cg.vrm_name}")
+                    continue
+                spring.collider_groups.add().collider_group_name = cg.name
 
         return {"FINISHED"}
 

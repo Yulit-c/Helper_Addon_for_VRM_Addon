@@ -1029,6 +1029,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         col_side.separator(factor=2.0)
 
         # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する
+        spring = None
         if (active_item := get_active_list_item_in_spring()) and active_item.name:
             spring = get_vrm_extension_property("SPRING")[active_item.item_indexes[0]]
 
@@ -1084,33 +1085,35 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         )
         row.label(text="Active Item Parameters")
         if spring_settings.is_expand_active_joint_parameters:
-            # スプリング全体の設定用プロパティ
-            target_armature_data = get_target_armature_data()
-            box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
-            box.prop_search(
-                spring.center,
-                "bone_name",
-                target_armature_data,
-                "bones",
-                text="Center",
-            )
-            box_sub = box.box()
-            # アクティブアイテムの調整用プロパティ
-            if active_item.item_type[2]:
-                joint = spring.joints[active_item.item_indexes[1]]
-                box_sub.prop_search(
-                    joint.node,
+            if spring:
+                # スプリング全体の設定用プロパティ
+                target_armature_data = get_target_armature_data()
+                box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
+                box.prop_search(
+                    spring.center,
                     "bone_name",
                     target_armature_data,
                     "bones",
-                    text="Selected Joint",
+                    text="Center",
                 )
-                box_sub.prop(joint, "hit_radius", slider=True)
-                box_sub.prop(joint, "stiffness", slider=True)
-                box_sub.prop(joint, "drag_force", slider=True)
-                box_sub.prop(joint, "gravity_power", slider=True)
-                box_sub.prop(joint, "gravity_dir")
-
+                box_sub = box.box()
+                # アクティブアイテムの調整用プロパティ
+                if active_item.item_type[2]:
+                    joint = spring.joints[active_item.item_indexes[1]]
+                    box_sub.prop_search(
+                        joint.node,
+                        "bone_name",
+                        target_armature_data,
+                        "bones",
+                        text="Selected Joint",
+                    )
+                    box_sub.prop(joint, "hit_radius", slider=True)
+                    box_sub.prop(joint, "stiffness", slider=True)
+                    box_sub.prop(joint, "drag_force", slider=True)
+                    box_sub.prop(joint, "gravity_power", slider=True)
+                    box_sub.prop(joint, "gravity_dir")
+            else:
+                box.label(text="Spring does not exist")
         # ----------------------------------------------------------
         #    選択ボーン対応のジョイントを調整するUI
         # ----------------------------------------------------------
@@ -1131,7 +1134,9 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         if spring_settings.is_expand_selected_bone_parameters:
             row = box.row(align=True)
             row.prop(spring_settings, "active_bone_hit_radius", slider=True)
-            row.operator(VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER")
+            row.operator(
+                VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER"
+            )
 
         # ----------------------------------------------------------
         #    ジョイント作成/調整オペレーター
