@@ -1492,28 +1492,22 @@ class VRMHELPER_OT_vrm1_collider_group_register_collider_from_bone(VRMHELPER_ope
             new_group.uuid = uuid.uuid4().hex
             target_group_colliders = new_group.colliders
 
-        # 選択されたボーンの名前を'node.bone_name'で参照している､全てのコライダーを取得する｡
         # 選択ボーンの名前を取得する
-        bone_names_of_selected_bone: set[str] = set(get_selected_bone_names())
-
+        bone_names = get_selected_bone_names()
         # 登録済みコライダーグループからボーン名のセットを取得する｡
         registered_colliders = {i.collider_uuid for i in target_group_colliders}
-        bone_names_of_existing_colliders: set[str] = {
-            i.node.bone_name for i in colliders if i.uuid in registered_colliders
-        }
 
-        registrable_names = bone_names_of_selected_bone - bone_names_of_existing_colliders
         if context.mode == "EDIT_ARMATURE":
             bpy.ops.object.posemode_toggle()
 
-        # 1つのボーンにつき1つのコライダーのみを登録する｡登録済みのコライダーは登録しない｡
-        exist_names = set()
-        source_collider_names = set()
-        for i in colliders:
-            if i.node.bone_name in exist_names or not i.node.bone_name in registrable_names:
-                continue
-            exist_names.add(i.node.bone_name)
-            source_collider_names.add(i.name)
+        # 登録済みのコライダーは登録しない｡
+        source_collider_names = (
+            i.name for i in colliders if i.node.bone_name in bone_names and not i.uuid in registered_colliders
+        )
+        # for i in colliders:
+        #     if not i.node.bone_name in registrable_names:
+        #         continue
+        #     source_collider_names.add(i.name)
 
         # 取得したコライダーをアクティブなコライダーグループに登録する｡
         # 空のグループが存在する場合､そちらに値を代入する｡
