@@ -81,6 +81,7 @@ from ..property_groups import (
     get_scene_vrm0_first_person_prop,
     get_scene_vrm0_blend_shape_prop,
     get_scene_vrm0_mtoon_stored_prop,
+    get_scene_vrm0_collider_group_prop,
     get_vrm0_wm_root_prop,
 )
 
@@ -150,7 +151,6 @@ from .utils_vrm0_spring import (
     vrm0_get_active_list_item_in_linked_collider_group,
     get_empty_linked_collider_group_slot,
     gen_corresponding_collider_group_dict,
-    get_corresponding_collider_group_to_bone,
 )
 
 from ..operators import (
@@ -990,6 +990,62 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
 ---------------------------------------------------------"""
 
 
+class VRMHELPER_OT_vrm0_collider_group_create_active_collider(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_create_active_collider"
+    bl_label = "Create a Collider"
+    bl_description = "Create a new collider from selected bone"
+
+    @classmethod
+    def poll(self, context):
+        # UI ListのアクティブアイテムがCollidaer GroupまたはColliderである｡
+        if active_item := get_active_list_item_in_collider_group():
+            return active_item.item_type[2] or active_item.item_type[3]
+
+    def execute(self, context):
+        active_item = get_active_list_item_in_collider_group()
+        target_armature = get_target_armature()
+        parent_bone: bpy.types.Bones = target_armature.data.bones.get(active_item.bone_name)
+        if not parent_bone:
+            self.report({"ERROR"}, "Appropriate parent bone name is not set for the Collidaer Group")
+            return {"CANCELLED"}
+
+        # アクティブアイテムに対応するCollider GroupをVRM Extensionから取得する｡
+        ext_collider_group = get_vrm0_extension_collider_group()
+        target_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+        target_collider_group = ext_collider_group[active_item.group_index]
+        colliders = target_collider_group.colliders
+
+        # オブジェクトの選択を操作するためにObject Modeに移行する｡
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+
+        # アクティブなColliderまたはCollidaer Groupに対応したボーンに対応するColliderを作成する｡
+        # https://github.com/saturday06/VRM-Addon-for-Blender
+        # CollidaerとなるEmptyオブジェクトを作成する｡
+        collider_object = bpy.data.objects.new(
+            name=f"{target_armature.name}_{parent_bone.name}_collider", object_data=None
+        )
+        # Empty Objectのパラメーター
+        collider_object.parent = target_armature
+        collider_object.parent_type = "BONE"
+        collider_object.parent_bone = parent_bone.name
+        collider_object.empty_display_type = "SPHERE"
+        scene_cg_settings = get_scene_vrm0_collider_group_prop()
+        collider_object.empty_display_size = scene_cg_settings.collider_radius
+        pose_bone: bpy.types.PoseBone = target_armature.pose.bones.get(active_item.bone_name)
+        mid_point = (pose_bone.tail + pose_bone.head) / 2
+        collider_object.matrix_world = generate_head_collider_position(mid_point)
+        # オブジェクトをコレクションにリンク
+        addon_collection_dict = setting_vrm_helper_collection()
+        dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+        link_object2collection(collider_object, dest_collection)
+        # VRM Extensionのパラメーター
+        colliders.add().bpy_object = collider_object
+        collider_object.select_set(True)
+
+        return {"FINISHED"}
+
+
 class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_collider_group_base):
     bl_idname = "vrmhelper.vrm0_collider_group_remove_active_collider"
     bl_label = "Remove Active Collider"
@@ -997,7 +1053,7 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_col
 
     @classmethod
     def poll(self, context):
-        # UI Listのアクティブアイテムがコライダーである｡
+        # UI ListのアクティブアイテムがColliderである｡
         if active_item := get_active_list_item_in_collider_group():
             return active_item.item_type[3]
 
@@ -1057,14 +1113,6 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
     bl_label = "Create Collider"
     bl_description = "Create spring bone collider from selected bone"
 
-    collider_radius: FloatProperty(
-        name="Collider Radius",
-        description="Radius of the collider to be created",
-        default=0.05,
-        unit="LENGTH",
-        options={"HIDDEN"},
-    )
-
     @classmethod
     def poll(cls, context):
         # Target Armatureの1ボーンを1つ以上選択していなければ使用不可｡
@@ -1117,7 +1165,8 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             collider_object.parent_type = "BONE"
             collider_object.parent_bone = bone.name
             collider_object.empty_display_type = "SPHERE"
-            collider_object.empty_display_size = self.collider_radius
+            scene_cg_settings = get_scene_vrm0_collider_group_prop()
+            collider_object.empty_display_size = scene_cg_settings.collider_radius
             mid_point = (pose_bone.tail + pose_bone.head) / 2
             collider_object.matrix_world = generate_head_collider_position(mid_point)
             # オブジェクトをコレクションにリンク
@@ -1671,6 +1720,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_create_active_collider,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,

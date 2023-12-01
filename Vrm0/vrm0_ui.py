@@ -62,6 +62,7 @@ from ..property_groups import (
     get_target_armature,
     get_target_armature_data,
     get_vrm0_scene_root_prop,
+    get_scene_vrm0_collider_group_prop,
     get_wm_vrm0_material_value_prop,
     initialize_material_value_prop,
     get_vrm0_wm_root_prop,
@@ -147,6 +148,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_create_active_collider,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
@@ -503,6 +505,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # Property Groupの取得｡
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
+    cg_settings = scene_vrm0_prop.collider_group_settings
     active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
@@ -532,6 +535,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # コライダーの削除を行うオペレーター
     col_list.separator(factor=2.0)
     col_list.label(text="", icon="MESH_UVSPHERE")
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_create_active_collider.bl_idname, text="", icon="ADD")
     col_list.operator(
         VRMHELPER_OT_vrm0_collider_group_remove_active_collider.bl_idname, text="", icon="REMOVE"
     )
@@ -569,8 +573,8 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                 box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
 
         box_op = box.box()
-        op = box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
-        op.collider_radius = 0.08
+        box_op.prop(cg_settings, "collider_radius", text="Creating Collider Radius")
+        box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
         box_op.operator(VRMHELPER_OT_vrm0_collider_remove_from_empty.bl_idname)
 
 

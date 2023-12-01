@@ -212,7 +212,7 @@ def get_branch_root_bones_by_type(
 ) -> list[Bone]:
     target_armature = get_target_armature()
     if source_type == "SELECT":
-        source_bones = get_selected_bone(target_armature.data)
+        source_bones = get_selected_bone()
 
     if source_type == "BONE_GROUP":
         source_bones = get_bones_from_bone_groups(target_armature)

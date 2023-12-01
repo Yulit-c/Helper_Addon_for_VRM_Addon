@@ -337,6 +337,13 @@ class VRMHELPER_SCENE_vrm0_collider_group_settings(bpy.types.PropertyGroup):
     Collider Groupの設定に関するプロパティ
     """
 
+    collider_radius: FloatProperty(
+        name="Collider Radius",
+        description="Radius of the collider to be created",
+        default=0.05,
+        unit="LENGTH",
+    )
+
 
 # ----------------------------------------------------------
 #    Spring Bone Groups
@@ -816,11 +823,10 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
 
         return
 
-
     is_updated_hit_radius: BoolProperty(
-    name="Is UPdated Hit Radius",
-    description="Update callback functions are locked while this flag is on",
-    default=False,
+        name="Is UPdated Hit Radius",
+        description="Update callback functions are locked while this flag is on",
+        default=False,
     )
 
     # ----------------------------------------------------------
@@ -2427,6 +2433,12 @@ def get_scene_vrm0_mtoon_stored_prop() -> VRMHELPER_SCENE_vrm0_mtoon0_stored_par
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     mtoon_prop = scene_vrm0_prop.mtoon0_stored_parameters
     return mtoon_prop
+
+
+def get_scene_vrm0_collider_group_prop() -> VRMHELPER_SCENE_vrm0_collider_group_settings:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    collider_group_prop = scene_vrm0_prop.collider_group_settings
+    return collider_group_prop
 
 
 # ----------------------------------------------------------
