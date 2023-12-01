@@ -1085,6 +1085,8 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         row.label(text="Active Item Parameters")
         if spring_settings.is_expand_active_joint_parameters:
             # スプリング全体の設定用プロパティ
+            # TODO : Springが0の場合は定義されていないことになる?
+
             target_armature_data = get_target_armature_data()
             box.prop(spring, "vrm_name", text="Selected Spring", icon="DOT")
             box.prop_search(
@@ -1131,7 +1133,9 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         if spring_settings.is_expand_selected_bone_parameters:
             row = box.row(align=True)
             row.prop(spring_settings, "active_bone_hit_radius", slider=True)
-            row.operator(VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER")
+            row.operator(
+                VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER"
+            )
 
         # ----------------------------------------------------------
         #    ジョイント作成/調整オペレーター
