@@ -1897,15 +1897,16 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         spring_settings = get_scene_vrm1_spring_prop()
         if filter_strings := spring_settings.filter_of_adjusting_target_filter:
             spring_collection = [i for i in spring_collection if filter_strings in i.name]
-        # UIの描画
+        # ----------------------------------------------------------
+        #    UIの描画
+        # ----------------------------------------------------------
+        # 処理対象のSpringを選択するエリア
         layout = self.layout
         box = layout.box()
         row = box.row(align=True)
         anchor_layout = row.column(align=True)
         anchor_layout.label(text="Target Spring")
         box_sub = anchor_layout.box()
-        box_sub.separator(factor=0.1)
-        row = box_sub.row()
         row_root = box_sub.row()
         for n, spring in enumerate(spring_collection):
             if n % self.rows_property == 0:
@@ -1913,17 +1914,22 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
             row_sub = col.row(align=True)
             row_sub.prop(spring, "is_target", text=spring.name)
 
-        # 処理対象のコライダーグループを選択するエリア｡
+        # 処理対象のCollider Groupを選択するエリア｡
         anchor_layout = row.column(align=True)
         anchor_layout.label(text="Target Collider Group")
-        for group in collider_group_collection:
-            row_sub = anchor_layout.row(align=True)
+        box_sub = anchor_layout.box()
+        row_root = box_sub.row()
+        for n, group in enumerate(collider_group_collection):
+            if n % self.rows_property == 0:
+                col = row_root.column()
+            row_sub = col.row(align=True)
             row_sub.prop(group, "is_target", text=group.vrm_name)
 
     def execute(self, context):
         # TODO : 処理内でターゲットのCollider Groupを追加する｡
         springs = get_vrm_extension_property("SPRING")
         springs_collection = get_ui_vrm1_operator_spring_prop()
+        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
 
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()
@@ -1934,12 +1940,14 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
         spring: ReferenceSpringBone1SpringPropertyGroup
         for spring, filter in zip(springs, springs_collection):
+            # 除外ワードを持つグループはスキップする｡
             if springs_filter_list and not spring.vrm_name in springs_filter_list:
-                logger.debug(f"Skip 0 : {spring.vrm_name}")
+                logger.debug(f"Skip : Filtering Word -- {spring.vrm_name}")
                 continue
 
+            # ポップアップUIで指定しなかったグループはスキップする｡
             if not filter.is_target:
-                logger.debug(f"Skip 1 : {spring.vrm_name}")
+                logger.debug(f"Skip : is not Target -- {spring.vrm_name}")
                 continue
 
             damping = 1.0
@@ -1954,6 +1962,14 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
                 joint.gravity_dir[2] = self.gravity_dir[2]
 
                 damping *= self.damping_ratio
+
+            # ポップアップUIで指定したCollider Groupがあれば登録する｡
+            registered_cg = [i.collider_group_name for i in spring.collider_groups]
+            for cg in collider_group_collection:
+                if cg.name in registered_cg:
+                    logger.debug(f"This Collider Group is already registered : {cg.vrm_name}")
+                    continue
+                spring.collider_groups.add().collider_group_name = cg.name
 
         return {"FINISHED"}
 
