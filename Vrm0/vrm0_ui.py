@@ -619,7 +619,9 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone.bl_idname, text="", icon="PANEL_CLOSE")
 
+    # ----------------------------------------------------------
     # アクティブSpring Bone Groupのパラメーターを描画する｡
+    # ----------------------------------------------------------
     box_prop = layout.box()
     row = box_prop.row()
     expand_icon = "TRIA_DOWN" if spring_prop.is_expand_active_group_parameters else "TRIA_RIGHT"
@@ -649,7 +651,9 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
             box_prop.prop(bone_group, "gravity_power", text="Gravity Power", slider=True)
             box_prop.prop(bone_group, "gravity_dir", text="Gravity Dir")
 
+    # ----------------------------------------------------------
     # Spring Bone Group用オペレーターとそのパラメーターの描画する｡
+    # ----------------------------------------------------------
     box_ope = layout.box()
     expand_icon = "TRIA_DOWN" if spring_prop.is_expand_operator_parameters else "TRIA_RIGHT"
     row = box_ope.row()
@@ -662,6 +666,8 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
         box_ope.prop(spring_prop, "gravity_power", text="Gravity Power", slider=True)
         box_ope.prop(spring_prop, "gravity_dir", text="Gravity Dir")
 
+        # 新規登録用オペレーター
+        box_ope.label(text="Create New Spring Bone Group")
         op: VRMHELPER_OT_vrm0_spring_add_bone_group_from_source
         op = box_ope.operator(
             VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
@@ -675,19 +681,26 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
             icon="GROUP_BONE",
         )
         op.source_type = "BONE_GROUP"
-        box_ope.separator(factor=0.5)
+
+        # 既存Spring Bone Groupの調整用オペレーター
+        box_ope.separator()
+        box_ope.label(text="Adjust Existing Spring Bone Groups")
         op = box_ope.operator(
             VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group.bl_idname,
             text="Assign Prams to Active Group",
         )
         op.source_type = "SINGLE"
-        op = box_ope.operator(
+        row_ope = box_ope.row(align=True)
+        row_ope.prop(spring_prop, "filter_of_adjusting_target_filter", text="Filtering Word")
+        op = row_ope.operator(
             VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group.bl_idname,
             text="Assign Prams to Selected Group",
         )
         op.source_type = "MULTIPLE"
 
+    # ----------------------------------------------------------
     # Bone GroupにリンクされたCollider Groupのリストを描画する｡
+    # ----------------------------------------------------------
     box_cg = layout.box()
     expand_icon = "TRIA_DOWN" if spring_prop.is_expand_collider_groups else "TRIA_RIGHT"
     row = box_cg.row()

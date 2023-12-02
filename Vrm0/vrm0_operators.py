@@ -1476,7 +1476,22 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         anchor_layout = row_root.column(align=True)
         if self.source_type == "BONE_GROUP":
             anchor_layout = anchor_layout.box()
-        anchor_layout.label(text="Target Collider Group")
+
+        row_label = anchor_layout.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Collider Group")
+        row_label.separator()
+        # Collidaer Groupのターゲット設定を変更するオペレーター
+        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_ON")
+        op.operator_type = "INCLUDE"
+        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_OFF")
+        op.operator_type = "EXCLUDE"
+        op = row_label.operator(
+            VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+        )
+        op.operator_type = "INVERT"
+
+        # 登録候補のCollider Groupを描画する
         row_cg_root = anchor_layout.row()
         collider_group: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
         for n, collider_group in enumerate(collider_group_collection):
@@ -1677,7 +1692,20 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
 
         # 処理対象のCollider Groupを選択するエリア
         anchor_layout = row.column(align=True)
-        anchor_layout.label(text="Target Collider Group")
+        row_label = anchor_layout.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Collider Group")
+        row_label.separator()
+        # Collidaer Groupのターゲット設定を変更するオペレーター
+        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_ON")
+        op.operator_type = "INCLUDE"
+        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_OFF")
+        op.operator_type = "EXCLUDE"
+        op = row_label.operator(
+            VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+        )
+        op.operator_type = "INVERT"
+
         box_sub = anchor_layout.box()
         row_root = box_sub.row()
         for n, cg in enumerate(self.cg_collection):
@@ -1717,8 +1745,15 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
                 spg.gravity_dir[1] = spring_settings.gravity_dir[1]
                 spg.gravity_dir[2] = spring_settings.gravity_dir[2]
 
+            # 登録前に空のスロットを削除する｡
+            while True:
+                if l := [n for n, i in enumerate(spg.collider_groups) if i.value in {"None", ""}]:
+                    index = l[0]
+                    spg.collider_groups.remove(index)
+                    continue
+                break
+
             # ポップアップUIでターゲットに指定したCollider Groupoがあれば登録する｡
-            # TODO : 登録前に空のスロットを削除する｡
             registered_cg = [i.value for i in spg.collider_groups]
             for cg in self.cg_collection:
                 if not cg.is_target:
@@ -1726,6 +1761,38 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
                 if cg.name in registered_cg:
                     continue
                 spg.collider_groups.add().value = cg.name
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_set_target(
+    VRMHELPER_vrm0_bone_group_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm0_spring_set_target"
+    bl_label = "Set Target Group"
+    bl_description = "Change the target to be registered according to the three modes"
+
+    operator_type: EnumProperty(
+        name="Operator Type",
+        description="Determine the mode for changing the registration target",
+        items=(
+            ("INCLUDE", "Include", "Include all groups in the registration"),
+            ("EXCLUDE", "`Exclude`", "Exclude all groups in the registration"),
+            ("INVERT", "Invert", "Inverts the target settings for all groups"),
+        ),
+        default="INCLUDE",
+    )
+
+    def execute(self, context):
+        cg: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+        for cg in get_ui_vrm0_operator_collider_group_prop():
+            match self.operator_type:
+                case "INCLUDE":
+                    cg.is_target = True
+                case "EXCLUDE":
+                    cg.is_target = False
+                case "INVERT":
+                    cg.is_target = not (cg.is_target)
 
         return {"FINISHED"}
 
@@ -1855,8 +1922,6 @@ class VRMHELPER_OT_vrm0_spring_register_linked_collider_group(VRMHELPER_vrm0_lin
         return {"FINISHED"}
 
 
-# TODO : Collider Groupを登録するポップアップUIで全選択/全解除/反転のオペレーターが欲しい｡
-
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -1913,6 +1978,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
     VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group,
+    VRMHELPER_OT_vrm0_spring_set_target,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------

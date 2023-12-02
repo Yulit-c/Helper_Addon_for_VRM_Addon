@@ -1195,13 +1195,13 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             op.source_type = "SINGLE"
             set_properties_to_from_dict(op, joint_properties)
 
-            box = col.box()
-            box.prop(
+            row_ope = col.row(align=True)
+            row_ope.prop(
                 spring_settings,
                 "filter_of_adjusting_target_filter",
-                text="Filtering Strings",
+                text="Filtering Word",
             )
-            op = box.operator(
+            op = row_ope.operator(
                 VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
                 text="Adjust Joints from Selected Spring",
             )
