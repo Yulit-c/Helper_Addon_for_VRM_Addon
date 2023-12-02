@@ -1824,7 +1824,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
 ):
     bl_idname = "vrmhelper.vrm1_spring_assign_parameters_to_selected_joints"
     bl_label = "Assign Joints Parameters"
-    bl_description = "Create spring joints from selected bones"
+    bl_description = "Assign parameters to selected spring joints"
 
     # ----------------------------------------------------------
     #    Property
@@ -1868,10 +1868,15 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         match self.source_type:
             case "SINGLE":
                 # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
-                active_indexes = get_active_list_item_in_spring().item_indexes
+                if not (active_item := get_active_list_item_in_spring()):
+                    self.report({"ERROR"}, "No Existing Any Spring")
+                    return {"CANCELLED"}
+
+                active_indexes = active_item.item_indexes
                 for spring in get_ui_vrm1_operator_spring_prop():
                     if spring.spring_index != active_indexes[0]:
                         spring.is_target = False
+                # TODO : 登録対象Collider Groupを選択可能にする｡
                 return self.execute(context)
 
             case "MULTIPLE":
@@ -1882,6 +1887,10 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
                     spring_collection = [i for i in spring_collection if filter_strings in i.name]
                 width_popup = math.ceil(len(spring_collection) / self.rows_property) * self.width
                 return context.window_manager.invoke_props_dialog(self, width=width_popup)
+
+            case _:
+                self.report({"ERROR"}, f"Invalid Argument :  source_type -- {self.source_type}")
+                return {"CANCELLED"}
 
     def draw(self, context):
         spring_collection = get_ui_vrm1_operator_spring_prop()
@@ -1926,7 +1935,6 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
             row_sub.prop(group, "is_target", text=group.vrm_name)
 
     def execute(self, context):
-        # TODO : 処理内でターゲットのCollider Groupを追加する｡
         springs = get_vrm_extension_property("SPRING")
         springs_collection = get_ui_vrm1_operator_spring_prop()
         collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
@@ -1940,14 +1948,14 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         # ターゲットに設定されたスプリング毎に､登録されたジョイントに減衰率を加味しつつ値を適用する｡
         spring: ReferenceSpringBone1SpringPropertyGroup
         for spring, filter in zip(springs, springs_collection):
-            # 除外ワードを持つグループはスキップする｡
+            # フィルターワードを含まないSpringはスキップする｡
             if springs_filter_list and not spring.vrm_name in springs_filter_list:
                 logger.debug(f"Skip : Filtering Word -- {spring.vrm_name}")
                 continue
 
             # ポップアップUIで指定しなかったグループはスキップする｡
             if not filter.is_target:
-                logger.debug(f"Skip : is not Target -- {spring.vrm_name}")
+                logger.debug(f"Skip : Is not Target -- {spring.vrm_name}")
                 continue
 
             # パラメーターを変更する場合はUI上のプロパティの値を適用する｡
@@ -1965,9 +1973,13 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
 
                     damping *= self.damping_ratio
 
-            # ポップアップUIで指定したCollider Groupがあれば登録する｡
+            # ポップアップUIでターゲットに指定したCollider Groupがあれば登録する｡
             registered_cg = [i.collider_group_name for i in spring.collider_groups]
             for cg in collider_group_collection:
+                if not cg.is_target:
+                    logger.debug(f"This Collider Group is not Register Target {cg.vrm_name}")
+                    continue
+
                 if cg.name in registered_cg:
                     logger.debug(f"This Collider Group is already registered : {cg.vrm_name}")
                     continue

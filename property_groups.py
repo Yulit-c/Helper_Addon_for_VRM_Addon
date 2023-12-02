@@ -353,6 +353,77 @@ class VRMHELPER_SCENE_vrm0_spring_settings(bpy.types.PropertyGroup):
     Spring Bone Groupsの設定に関するプロパティ
     """
 
+    hit_radius: FloatProperty(
+        name="Hit Radius",
+        description="radius value of joint set by operator",
+        default=0.01,
+        min=0.0,
+        soft_max=0.5,
+        precision=3,
+    )
+
+    stiffness: FloatProperty(
+        name="stiffness",
+        description="stiffness value of joint set by operator",
+        default=1.0,
+        min=0.0,
+        soft_max=4.0,
+    )
+
+    drag_force: FloatProperty(
+        name="Drag Force",
+        description="drag force value of joint set by operator",
+        default=0.4,
+        min=0.0,
+        max=1.0,
+    )
+
+    gravity_power: FloatProperty(
+        name="Gravity Power",
+        description="gravity power value  of joint set by operator",
+        default=0.0,
+        min=0.0,
+        soft_max=2.0,
+    )
+
+    gravity_dir: FloatVectorProperty(
+        name="Gravity Direction",
+        description="gravity direction value of joint set by operator",
+        default=(0.0, 0.0, -1.0),
+        size=3,
+        subtype="XYZ",
+    )
+
+    filter_of_adjusting_target_filter: StringProperty(
+        name="Filter of Adjusting Target",
+        description="Filter Target of Spring Bone Group adjusted parameters",
+        default="",
+    )
+
+    # For UI
+    is_expand_active_group_parameters: BoolProperty(
+        name="Is Expand Active Joint Parameters",
+        description="Select whether to display active joint parameters",
+        default=True,
+    )
+
+    is_expand_selected_bone_parameters: BoolProperty(
+        name="Is Expand Selected Bone Parameters",
+        description="Select whether to display selected bone parameters",
+        default=True,
+    )
+
+    is_expand_operator_parameters: BoolProperty(
+        name="Is Expand Operator Parameters",
+        description="Select whether to display operator parameters",
+        default=True,
+    )
+
+    is_expand_collider_groups: BoolProperty(
+        name="Is Expand Collider Groups",
+        description="Select whether to display Collider Group List",
+    )
+
 
 # ----------------------------------------------------------
 #    for UI List
@@ -1782,7 +1853,7 @@ class VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items(bpy.types.Property
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
-        default=False,
+        default=True,
     )
 
     group_index: IntProperty(
@@ -2088,7 +2159,7 @@ class VRMHELPER_WM_vrm1_operator_spring_list_items(bpy.types.PropertyGroup):
     is_target: BoolProperty(
         name="Is Target",
         description="This is the target group of the operator",
-        default=False,
+        default=True,
     )
 
     spring_index: IntProperty(
@@ -2439,6 +2510,12 @@ def get_scene_vrm0_collider_group_prop() -> VRMHELPER_SCENE_vrm0_collider_group_
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     collider_group_prop = scene_vrm0_prop.collider_group_settings
     return collider_group_prop
+
+
+def get_scene_vrm0_spring_bone_group_prop() -> VRMHELPER_SCENE_vrm0_spring_settings:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    spring_bone_group_prop = scene_vrm0_prop.spring_settings
+    return spring_bone_group_prop
 
 
 # ----------------------------------------------------------

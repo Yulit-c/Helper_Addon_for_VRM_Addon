@@ -295,12 +295,13 @@ def get_branch_root_bone(source_bone: bpy.types.Bone) -> Optional[bpy.types.Bone
                 for child in source_bone.children:
                     if not child.use_connect:
                         return source_bone
-
             return source_bone
 
         source_bone = source_bone.parent
         return get_branch_root_bone(source_bone)
 
+    if source_bone:
+        logger.debug(f"Data could not be retrieved : {source_bone.name}")
     return None
 
 

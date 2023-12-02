@@ -549,7 +549,7 @@ def get_corresponding_collider_group_to_bone(
 # ----------------------------------------------------------
 def vrm0_add_list_item2collider_group_list4operator():
     """
-    オペレーターの処理対象コライダーグループを定義するためのコレクションプロパティにアイテムを登録する｡
+    オペレーターの処理対象Collider Groupを定義するためのコレクションプロパティにアイテムを登録する｡
     """
 
     collider_group_collection = get_ui_vrm0_operator_collider_group_prop()
@@ -560,12 +560,11 @@ def vrm0_add_list_item2collider_group_list4operator():
         new_item = collider_group_collection.add()
         new_item.name = group.name
         new_item.bone_name = group.node.bone_name
-        new_item.name = group.name
         new_item.group_index = n
         new_item.is_target = True
 
 
-def vrm0_add_list_item2bone_group_list4operator():
+def vrm0_add_list_item2spring_bone_group_list4operator():
     """
     オペレーターの処理対象ボーングループを定義するためのコレクションプロパティにアイテムを登録する｡
     """
@@ -578,7 +577,6 @@ def vrm0_add_list_item2bone_group_list4operator():
         new_item = spring_bone_group_collection.add()
         new_item.name = spring_bone_group.comment
         new_item.group_index = n
-        new_item.is_target = True
 
 
 def get_spring_bone_group_by_comment(

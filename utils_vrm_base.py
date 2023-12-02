@@ -211,13 +211,13 @@ def get_branch_root_bones_by_type(
     target_armature: Object,
 ) -> list[Bone]:
     target_armature = get_target_armature()
-    if source_type == "SELECT":
-        source_bones = get_selected_bone()
+    match source_type:
+        case "SELECT":
+            source_bones = get_selected_bone()
+        case "BONE_GROUP":
+            source_bones = get_bones_from_bone_groups(target_armature)
 
-    if source_type == "BONE_GROUP":
-        source_bones = get_bones_from_bone_groups(target_armature)
-
-    branch_root_bones = list({get_branch_root_bone(i) for i in source_bones})
+    branch_root_bones = list({j for i in source_bones if (j := get_branch_root_bone(i))})
     sort_order = [i.name for i in target_armature.data.bones if i in branch_root_bones]
     branch_root_bones.sort(key=lambda x: sort_order.index(x.name))
 

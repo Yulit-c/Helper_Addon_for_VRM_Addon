@@ -1119,11 +1119,11 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
         # ----------------------------------------------------------
         layout.separator(factor=0.5)
         # UIの表示/非表示を切り替えるプロパティ
+        box = layout.box()
+        row = box.row()
         expand_selected_bone_icon = (
             "TRIA_DOWN" if spring_settings.is_expand_selected_bone_parameters else "TRIA_RIGHT"
         )
-        box = layout.box()
-        row = box.row()
         row.prop(
             spring_settings,
             "is_expand_selected_bone_parameters",
@@ -1157,7 +1157,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             icon=expand_operator_icon,
             icon_only=True,
         )
-        row.label(text="Operators")
+        row.label(text="Springs Operators")
         if spring_settings.is_expand_operator_parameters:
             box.prop(spring_settings, "hit_radius", slider=True)
             box.prop(spring_settings, "stiffness", slider=True)

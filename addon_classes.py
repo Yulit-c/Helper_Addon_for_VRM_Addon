@@ -149,7 +149,7 @@ class ReferencerVrm0SecondaryAnimationColliderPropertyGroup:
 
 class ReferenceVrm0SecondaryAnimationGroupPropertyGroup:
     comment: bpy.types.StringProperty
-    stiffness: bpy.types.FloatProperty
+    stiffiness: bpy.types.FloatProperty
     gravity_power: bpy.types.FloatProperty
     gravity_dir: list[bpy.types.FloatProperty]
     drag_force: bpy.types.FloatProperty

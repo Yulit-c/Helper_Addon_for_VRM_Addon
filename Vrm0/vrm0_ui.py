@@ -163,6 +163,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------
@@ -618,85 +619,120 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone.bl_idname, text="", icon="PANEL_CLOSE")
 
-    box = layout.box()
-    if active_item := vrm0_get_active_list_item_in_spring():
-        bone_groups = get_vrm0_extension_spring_bone_group()
-        bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
-            active_item.item_indexes[0]
-        ]
+    # アクティブSpring Bone Groupのパラメーターを描画する｡
+    box_prop = layout.box()
+    row = box_prop.row()
+    expand_icon = "TRIA_DOWN" if spring_prop.is_expand_active_group_parameters else "TRIA_RIGHT"
+    row.prop(spring_prop, "is_expand_active_group_parameters", icon=expand_icon, icon_only=True)
+    row.label(text="Active Bone Group Parameters")
+    if spring_prop.is_expand_active_group_parameters:
+        if active_item := vrm0_get_active_list_item_in_spring():
+            bone_groups = get_vrm0_extension_spring_bone_group()
+            bone_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup = bone_groups[
+                active_item.item_indexes[0]
+            ]
 
-        row = box.row()
-        row.scale_y = 1.2
-        row.label(text=f"Active Bone Group Parameters")
-        box.prop(bone_group, "comment", icon="BOOKMARKS")
-        box.prop_search(
-            bone_group.center,
-            "bone_name",
-            target_armature.data,
-            "bones",
-            text="Center",
-            icon="PIVOT_MEDIAN",
-        )
-        # TODO : Stiffnessに修正されたら対応する｡
-        box.prop(bone_group, "stiffiness", text="stiffness")
-        box.prop(bone_group, "drag_force", text="Drag Force")
-        box.prop(bone_group, "hit_radius", text="Hit Radius")
-        box.prop(bone_group, "gravity_dir", text="Gravity Dir")
-        box.prop(bone_group, "gravity_power", text="Gravity Power")
+            row = box_prop.row()
+            row.scale_y = 1.2
+            box_prop.prop(bone_group, "comment", icon="BOOKMARKS")
+            box_prop.prop_search(
+                bone_group.center,
+                "bone_name",
+                target_armature.data,
+                "bones",
+                text="Center",
+                icon="PIVOT_MEDIAN",
+            )
+            box_prop.prop(bone_group, "stiffiness", text="stiffness", slider=True)
+            box_prop.prop(bone_group, "drag_force", text="Drag Force", slider=True)
+            box_prop.prop(bone_group, "hit_radius", text="Hit Radius", slider=True)
+            box_prop.prop(bone_group, "gravity_power", text="Gravity Power", slider=True)
+            box_prop.prop(bone_group, "gravity_dir", text="Gravity Dir")
 
+    # Spring Bone Group用オペレーターとそのパラメーターの描画する｡
     box_ope = layout.box()
-    op: VRMHELPER_OT_vrm0_spring_add_bone_group_from_source
-    op = box_ope.operator(
-        VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
-        text="Create From Selected Bones",
-        icon="BONE_DATA",
-    )
-    op.source_type = "SELECT"
-    op = box_ope.operator(
-        VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
-        text="Create From Bone Group",
-        icon="GROUP_BONE",
-    )
-    op.source_type = "BONE_GROUP"
+    expand_icon = "TRIA_DOWN" if spring_prop.is_expand_operator_parameters else "TRIA_RIGHT"
+    row = box_ope.row()
+    row.prop(spring_prop, "is_expand_operator_parameters", icon=expand_icon, icon_only=True)
+    row.label(text="Spring Bone Group Operators")
+    if spring_prop.is_expand_operator_parameters:
+        box_ope.prop(spring_prop, "stiffness", text="Stiffness", slider=True)
+        box_ope.prop(spring_prop, "drag_force", text="Drag Force", slider=True)
+        box_ope.prop(spring_prop, "hit_radius", text="Hit Radius", slider=True)
+        box_ope.prop(spring_prop, "gravity_power", text="Gravity Power", slider=True)
+        box_ope.prop(spring_prop, "gravity_dir", text="Gravity Dir")
 
-    # Bone GroupにリンクされたCollider Groupのリストを描画｡
-    if (rows := vrm0_add_items2linked_collider_group_ui_list()) != None:
-        # UIリストでアクティブなBone Groupを取得する｡
-        active_bone_group = vrm0_get_active_list_item_in_spring()
-        bone_group_name = active_bone_group.bone_group_name
-        layout.separator(factor=1.0)
-        box_cg = layout.box()
-        # リンクされているSpring Bone GroupのCommentを表示する｡
-        row = box_cg.row()
-        row.scale_y = 1.4
-        row.label(text=f"Selected Bone Group : {bone_group_name}", icon="BOOKMARKS")
+        op: VRMHELPER_OT_vrm0_spring_add_bone_group_from_source
+        op = box_ope.operator(
+            VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
+            text="Create From Selected Bones",
+            icon="BONE_DATA",
+        )
+        op.source_type = "SELECT"
+        op = box_ope.operator(
+            VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
+            text="Create From Bone Group",
+            icon="GROUP_BONE",
+        )
+        op.source_type = "BONE_GROUP"
+        box_ope.separator(factor=0.5)
+        op = box_ope.operator(
+            VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group.bl_idname,
+            text="Assign Prams to Active Group",
+        )
+        op.source_type = "SINGLE"
+        op = box_ope.operator(
+            VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group.bl_idname,
+            text="Assign Prams to Selected Group",
+        )
+        op.source_type = "MULTIPLE"
 
-        # Linked Collider Groupのリストを表示する｡
-        row = box_cg.row()
-        row.template_list(
-            VRMHELPER_UL_vrm0_linked_collider_grouplist.__name__,
-            "",
-            wm_vrm0_prop,
-            "linked_collider_group_list_items4custom_filter",
-            scene_vrm0_prop.active_indexes,
-            "linked_collider_group",
-            rows=define_ui_list_rows(rows),
-        )
-        # Linked Collider Groupの作成/削除用オペレーター
-        col_list = row.column(align=True)
-        col_list.label(text="", icon="OVERLAY")
-        col_list.operator(VRMHELPER_OT_vrm0_spring_add_linked_collider_group.bl_idname, text="", icon="ADD")
-        col_list.operator(
-            VRMHELPER_OT_vrm0_spring_remove_linked_collider_group.bl_idname, text="", icon="REMOVE"
-        )
-        col_list.operator(
-            VRMHELPER_OT_vrm0_spring_clear_linked_collider_group.bl_idname, text="", icon="PANEL_CLOSE"
-        )
-        box_cg.separator(factor=2.0)
-        box_cg.operator(
-            VRMHELPER_OT_vrm0_spring_register_linked_collider_group.bl_idname,
-            text="Register from Selected Bone",
-        )
+    # Bone GroupにリンクされたCollider Groupのリストを描画する｡
+    box_cg = layout.box()
+    expand_icon = "TRIA_DOWN" if spring_prop.is_expand_collider_groups else "TRIA_RIGHT"
+    row = box_cg.row()
+    row.prop(spring_prop, "is_expand_collider_groups", icon=expand_icon, icon_only=True)
+    row.label(text="Linked Collider Group")
+    if spring_prop.is_expand_collider_groups:
+        if (rows := vrm0_add_items2linked_collider_group_ui_list()) != None:
+            # UIリストでアクティブなBone Groupを取得する｡
+            active_bone_group = vrm0_get_active_list_item_in_spring()
+            bone_group_name = active_bone_group.bone_group_name
+            layout.separator(factor=1.0)
+            box_cg = layout.box()
+            # リンクされているSpring Bone GroupのCommentを表示する｡
+            row = box_cg.row()
+            row.scale_y = 1.4
+            row.label(text=f"Selected Bone Group : {bone_group_name}", icon="BOOKMARKS")
+
+            # Linked Collider Groupのリストを表示する｡
+            row = box_cg.row()
+            row.template_list(
+                VRMHELPER_UL_vrm0_linked_collider_grouplist.__name__,
+                "",
+                wm_vrm0_prop,
+                "linked_collider_group_list_items4custom_filter",
+                scene_vrm0_prop.active_indexes,
+                "linked_collider_group",
+                rows=define_ui_list_rows(rows),
+            )
+            # Linked Collider Groupの作成/削除用オペレーター
+            col_list = row.column(align=True)
+            col_list.label(text="", icon="OVERLAY")
+            col_list.operator(
+                VRMHELPER_OT_vrm0_spring_add_linked_collider_group.bl_idname, text="", icon="ADD"
+            )
+            col_list.operator(
+                VRMHELPER_OT_vrm0_spring_remove_linked_collider_group.bl_idname, text="", icon="REMOVE"
+            )
+            col_list.operator(
+                VRMHELPER_OT_vrm0_spring_clear_linked_collider_group.bl_idname, text="", icon="PANEL_CLOSE"
+            )
+            box_cg.separator(factor=2.0)
+            box_cg.operator(
+                VRMHELPER_OT_vrm0_spring_register_linked_collider_group.bl_idname,
+                text="Register from Selected Bone",
+            )
 
 
 """---------------------------------------------------------

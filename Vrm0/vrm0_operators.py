@@ -75,6 +75,7 @@ from ..property_groups import (
     get_ui_vrm0_blend_shape_material_prop,
     get_ui_bone_group_prop,
     get_ui_vrm0_operator_collider_group_prop,
+    get_ui_vrm0_operator_spring_bone_group_prop,
     # ----------------------------------------------------------
     get_vrm0_index_root_prop,
     get_vrm0_scene_root_prop,
@@ -82,6 +83,8 @@ from ..property_groups import (
     get_scene_vrm0_blend_shape_prop,
     get_scene_vrm0_mtoon_stored_prop,
     get_scene_vrm0_collider_group_prop,
+    get_scene_vrm0_spring_bone_group_prop,
+    # ---------------------------------------------------------------------------------
     get_vrm0_wm_root_prop,
 )
 
@@ -145,7 +148,7 @@ from .utils_vrm0_spring import (
     vrm0_remove_collider_group_in_springs,
     vrm0_get_active_list_item_in_spring,
     vrm0_add_list_item2collider_group_list4operator,
-    vrm0_add_list_item2bone_group_list4operator,
+    vrm0_add_list_item2spring_bone_group_list4operator,
     get_active_linked_collider_groups,
     get_spring_bone_group_by_comment,
     vrm0_get_active_list_item_in_linked_collider_group,
@@ -1423,14 +1426,13 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
 
     # -----------------------------------------------------
     def invoke(self, context, event):
+        logger.debug(f"Operator Mode : {self.source_type}")
         match self.source_type:
             case "SELECT":
-                logger.debug(self.source_type)
                 vrm0_add_list_item2collider_group_list4operator()
                 return context.window_manager.invoke_props_dialog(self, width=self.width * 4)
 
             case "BONE_GROUP":
-                logger.debug(self.source_type)
                 add_list_item2bone_group_list4operator()
                 vrm0_add_list_item2collider_group_list4operator()
                 # Target Armatureにボーングループが存在しなければキャンセル｡
@@ -1484,17 +1486,17 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
             row_sub_cg.prop(collider_group, "is_target", text=collider_group.bone_name)
 
     def execute(self, context):
-        match self.source_type:
-            case "SELECT":
-                if not context.mode in {"POSE", "EDIT_ARMATURE"}:
-                    self.report({"ERROR"}, "The current mode must be Pose or Edit Armature.")
-                    return {"CANCELLED"}
+        if self.source_type == "SELECT":
+            if not context.mode in {"POSE", "EDIT_ARMATURE"}:
+                self.report({"ERROR"}, "The current mode must be Pose or Edit Armature.")
+                return {"CANCELLED"}
 
         if not (branch_root_bones := get_branch_root_bones_by_type(self.source_type, get_target_armature())):
-            self.report({"INFO"}, "No rootbone was detected")
+            self.report({"INFO"}, "No root bone was detected")
             return {"CANCELLED"}
 
         # ポーズボーンに割り当てられているBone Group Index毎にボーンをグループ分けする｡
+        spring_settings = get_scene_vrm0_spring_bone_group_prop()
         collider_group_list = get_ui_vrm0_operator_collider_group_prop()
         target_armature = get_target_armature()
         pose = target_armature.pose
@@ -1508,8 +1510,8 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
 
         # グループ分けされたボーンリストとボーンをSpring Bone GroupとBoneに登録する｡
         for group_index, root_bones in target_bones_dict.items():
-            bone_group_name = "Bone Group"
-            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
+            bone_group_name = "Not Assighned Bone Group"
+            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bones[0].name)
             if pose_bone.bone_group:
                 source_bone_group = pose.bone_groups[group_index]
                 bone_group_name = source_bone_group.name
@@ -1521,9 +1523,14 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
             if target_group := get_spring_bone_group_by_comment(bone_group_name):
                 logger.debug(f"Already Registered Group : {bone_group_name}")
 
-            else:
+            else:  # Spring Bone Groupの作成とパラメーター適用
                 target_group = spring_bone_groups.add()
                 target_group.comment = bone_group_name
+                target_group.stiffness = spring_settings.stiffness
+                target_group.drag_force = spring_settings.drag_force
+                target_group.hit_radius = spring_settings.hit_radius
+                target_group.gravity_power = spring_settings.gravity_power
+                target_group.gravity_dir = spring_settings.gravity_dir
 
             # カテゴリーに属するルートボーンをスプリングボーンに登録する｡
             for bone in root_bones:
@@ -1551,6 +1558,174 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 new_collider_group.value = candidate_collider_group.name
 
             print("\n")
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
+    VRMHELPER_vrm0_bone_group_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm0_spring_assign_parameters_to_bone_group"
+    bl_label = "Assign Spring Bone Group Parameters"
+    bl_description = "Assing Parameters to selected Spring Bone Group"
+
+    # ----------------------------------------------------------
+    #    Property
+    # ----------------------------------------------------------
+    source_type: EnumProperty(
+        name="Source Type",
+        description="Description",
+        items=(
+            ("SINGLE", "Single", "Works only on active Spring Bone Group"),
+            ("MULTIPLE", "Multiple", "Works only on selected Spring Bone Group"),
+        ),
+        default="SINGLE",
+    )
+
+    set_parameters: BoolProperty(
+        name="Set Parameters",
+        description="Select whether to apply joint parameters",
+        default=False,
+    )
+
+    rows_property: IntProperty(
+        name="Rows Property",
+        description="Number of properties displayed per column",
+        default=12,
+    )
+
+    width: IntProperty(
+        name="Width",
+        description="Width per element displayed in popup UI",
+        default=300,
+    )
+
+    spg_collection = None
+    cg_collection = None
+
+    # -----------------------------------------------------
+
+    def invoke(self, context, event):
+        os.system("cls")
+        logger.debug(f"Operator Mode : {self.source_type}")
+        # 処理対象指定用UIリストの要素を更新する｡
+        vrm0_add_list_item2spring_bone_group_list4operator()
+        vrm0_add_list_item2collider_group_list4operator()
+        match self.source_type:
+            case "SINGLE":
+                if not (active_item := vrm0_get_active_list_item_in_spring()):
+                    self.report({"ERROR"}, "No Existing Any Spring Bone Group")
+                    return {"CANCELLED"}
+
+                active_indexes = active_item.item_indexes
+                for spg in get_ui_vrm0_operator_spring_bone_group_prop():
+                    if spg.group_index != active_indexes[0]:
+                        spg.is_target = False
+                return context.window_manager.invoke_props_dialog(self, width=self.width * 4)
+
+            case "MULTIPLE":
+                # Spring Bone Groupが1つも存在しなければキャンセル｡
+                if not (spring_bone_groups := get_ui_vrm0_operator_spring_bone_group_prop()):
+                    self.report({"ERROR"}, "No Existing Any Spring Bone Group")
+                    return {"CANCELLED"}
+
+                length_sbg = len(spring_bone_groups)
+                # Collider Groupが存在していればその数を取得する｡
+                length_cg = 0
+                if collider_groups := get_vrm_extension_property("COLLIDER_GROUP"):
+                    length_cg = len(collider_groups)
+
+                length = max(length_sbg, length_cg)
+                width_popup = math.ceil(length / self.rows_property) * self.width
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
+
+            case _:
+                self.report({"ERROR"}, f"Invalid Argument :  source_type -- {self.source_type}")
+                return {"CANCELLED"}
+
+    def draw(self, context):
+        self.spg_collection = get_ui_vrm0_operator_spring_bone_group_prop()
+        self.cg_collection = get_ui_vrm0_operator_collider_group_prop()
+
+        if not (self.spg_collection and self.cg_collection):
+            self.report({"ERROR"}, "Neither Spring Bone Group nor Collider Group is selected")
+            return
+
+        # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+        spring_settings = get_scene_vrm0_spring_bone_group_prop()
+        if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+            self.spg_collection = [i for i in self.spg_collection if filter_strings in i.name]
+        # ----------------------------------------------------------
+        #    UIの描画
+        # ----------------------------------------------------------
+        layout = self.layout
+        box = layout.box()
+        # パラメーター変更の可否を選択するプロパティ
+        box.prop(self, "set_parameters")
+        row = box.row(align=True)
+        # 処理対象のSpringを選択するエリア(Multiple Modeのみ)
+        if self.source_type == "MULTIPLE":
+            anchor_layout = row.column(align=True)
+            anchor_layout.label(text="Target Spring Bone Group")
+            box_sub = anchor_layout.box()
+            row_root = box_sub.row()
+            for n, spg in enumerate(self.spg_collection):
+                if n % self.rows_property == 0:
+                    col = row_root.column()
+                row_sub = col.row(align=True)
+                row_sub.prop(spg, "is_target", text=spg.name)
+
+        # 処理対象のCollider Groupを選択するエリア
+        anchor_layout = row.column(align=True)
+        anchor_layout.label(text="Target Collider Group")
+        box_sub = anchor_layout.box()
+        row_root = box_sub.row()
+        for n, cg in enumerate(self.cg_collection):
+            if n % self.rows_property == 0:
+                col = row_root.column()
+            row_sub = col.row(align=True)
+            row_sub.prop(cg, "is_target", text=cg.bone_name)
+
+    def execute(self, context):
+        # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
+        spring_settings = get_scene_vrm0_spring_bone_group_prop()
+        springs_filter_list = []
+        if filter_strings := spring_settings.filter_of_adjusting_target_filter:
+            springs_filter_list = [i.name for i in self.spg_collection if filter_strings in i.name]
+
+        # ターゲットに設定されたSpring Bone GroupにUI上で設定したパラメーターを適用する｡
+        spg: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
+        for spg, filter in zip(get_vrm0_extension_spring_bone_group(), self.spg_collection):
+            # フィルターワードを含まないグループはスキップする｡
+            if springs_filter_list and not spg.comment in springs_filter_list:
+                logger.debug(f"Skip : Not include filter words in the name -- {spg.comment}")
+                continue
+
+            # ポップアップUIでターゲットに指定しなかったグループはスキップする｡
+            if not filter.is_target:
+                logger.debug(f"Skip ; Is not Target -- {spg.comment}")
+                continue
+
+            logger.debug(f"Target Spring Bone Group : {spg.comment}")
+            # パラメーターを適用する場合はUI上で設定したプロパティの値を適用する｡
+            if self.set_parameters:
+                spg.stiffiness = spring_settings.stiffness
+                spg.drag_force = spring_settings.drag_force
+                spg.hit_radius = spring_settings.hit_radius
+                spg.gravity_power = spring_settings.gravity_power
+                spg.gravity_dir[0] = spring_settings.gravity_dir[0]
+                spg.gravity_dir[1] = spring_settings.gravity_dir[1]
+                spg.gravity_dir[2] = spring_settings.gravity_dir[2]
+
+            # ポップアップUIでターゲットに指定したCollider Groupoがあれば登録する｡
+            # TODO : 登録前に空のスロットを削除する｡
+            registered_cg = [i.value for i in spg.collider_groups]
+            for cg in self.cg_collection:
+                if not cg.is_target:
+                    continue
+                if cg.name in registered_cg:
+                    continue
+                spg.collider_groups.add().value = cg.name
 
         return {"FINISHED"}
 
@@ -1680,6 +1855,8 @@ class VRMHELPER_OT_vrm0_spring_register_linked_collider_group(VRMHELPER_vrm0_lin
         return {"FINISHED"}
 
 
+# TODO : Collider Groupを登録するポップアップUIで全選択/全解除/反転のオペレーターが欲しい｡
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Resiter Target
@@ -1735,6 +1912,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------

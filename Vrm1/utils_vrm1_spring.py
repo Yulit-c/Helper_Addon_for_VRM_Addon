@@ -576,5 +576,5 @@ def vrm1_add_list_item2joint_list4operator():
     for n, spring in enumerate(get_vrm_extension_property("SPRING")):
         new_item = spring_collection.add()
         new_item.name = spring.vrm_name
-        new_item.is_target = True
         new_item.spring_index = n
+        # new_item.is_target = True
