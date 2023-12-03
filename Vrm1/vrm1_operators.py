@@ -5,11 +5,11 @@ if "bpy" in locals():
         "preparation_logger",
         "utils_common",
         "utils_vrm_base",
+        "operators",
         "utils_vrm1_first_person",
         "utils_vrm1_expression",
         "utils_vrm1_spring",
         "utils_vrm1_constraint",
-        "operators",
     ]
 
     for module in reloadable_modules:
@@ -20,6 +20,7 @@ else:
     from ..Logging import preparation_logger
     from .. import utils_common
     from .. import utils_vrm_base
+    from .. import operators
     from . import utils_vrm1_first_person
     from . import utils_vrm1_expression
     from . import utils_vrm1_spring
@@ -44,6 +45,7 @@ from bpy.props import (
     IntProperty,
     FloatProperty,
     FloatVectorProperty,
+    StringProperty,
     EnumProperty,
 )
 
@@ -166,6 +168,7 @@ from .utils_vrm1_constraint import (
 )
 
 from ..operators import (
+    VRMHELPER_OT_spring_select_target_on_ui,
     VRMHELPER_operator_base,
     VRMHELPER_vrm1_first_person_base,
     VRMHELPER_vrm1_expression_base,
@@ -1702,21 +1705,32 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
         description="Number of properties displayed per column",
         default=12,
     )
+
+    width: IntProperty(
+        name="Width",
+        description="Width per element displayed in popup UI",
+        default=300,
+    )
     # -----------------------------------------------------
 
     def invoke(self, context, event):
+        # ポップアップUIの幅を定義する
+        bg_collection = get_ui_bone_group_prop()
+        cg_collection = get_ui_vrm1_operator_collider_group_prop()
+        length = max(len(bg_collection), len(cg_collection))
+        width_popup = math.ceil(length / self.rows_property) * self.width
+
         match self.source_type:
             case "SELECT":
                 vrm1_add_list_item2collider_group_list4operator()
-                return context.window_manager.invoke_props_dialog(self, width=360)
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
             case "BONE_GROUP":
                 add_list_item2bone_group_list4operator()
                 vrm1_add_list_item2collider_group_list4operator()
-                if not (bone_groups := get_ui_bone_group_prop()):
+                if not bg_collection:
                     self.report({"INFO"}, "Bone group does not exist in Target Armature")
                     return {"CANCELLED"}
-                width_popup = math.ceil(len(bone_groups) / self.rows_property) * 240
                 return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
             case _:
@@ -1732,7 +1746,23 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
             bone_group_collection = get_ui_bone_group_prop()
             anchor_layout = row.column(align=True)
             box_sub = anchor_layout.box()
-            box_sub.label(text="Target Bone Group")
+            row_label = box_sub.row(align=True)
+            row_label.alignment = "LEFT"
+            row_label.label(text="Target Bone Group")
+            row_label.separator()
+            # 処理対象のBone Groupを選択するエリア
+            op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT")
+            op.operator_type = "INCLUDE"
+            op.selection_target = "BONE_GROUP"
+            op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT")
+            op.operator_type = "EXCLUDE"
+            op.selection_target = "BONE_GROUP"
+            op = row_label.operator(
+                VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+            )
+            op.operator_type = "INVERT"
+            op.selection_target = "BONE_GROUP"
+
             row_root = box_sub.row()
             for n, group in enumerate(bone_group_collection):
                 if n % self.rows_property == 0:
@@ -1744,9 +1774,24 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
         anchor_layout = row.column(align=True)
         if self.source_type == "BONE_GROUP":
             anchor_layout = anchor_layout.box()
-        anchor_layout.label(text="Target Collider Group")
-        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
-        for group in collider_group_collection:
+        row_label = anchor_layout.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Collider Group")
+        # 処理対象のCollider Groupを選択するエリア
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT")
+        op.operator_type = "INCLUDE"
+        op.selection_target = "CG1"
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT")
+        op.operator_type = "EXCLUDE"
+        op.selection_target = "CG1"
+        op = row_label.operator(
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+        )
+        op.operator_type = "INVERT"
+        op.selection_target = "CG1"
+
+        cg_collection = get_ui_vrm1_operator_collider_group_prop()
+        for group in cg_collection:
             row_sub = anchor_layout.row(align=True)
             row_sub.prop(group, "is_target", text=group.vrm_name)
 
@@ -1857,6 +1902,12 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         default=300,
     )
 
+    target_spring_name: StringProperty(
+        name="Target Spring Name",
+        description="For Label of Single Mode",
+        default="",
+    )
+
     # -----------------------------------------------------
 
     def invoke(self, context, event):
@@ -1865,22 +1916,28 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         self.set_parameters = True
         vrm1_add_list_item2joint_list4operator()
         vrm1_add_list_item2collider_group_list4operator()
+        spring_collection = get_ui_vrm1_operator_spring_prop()
+        cg_collection = get_ui_vrm1_operator_collider_group_prop()
+        # UIの幅を定義する
+        length = max(len(spring_collection), len(cg_collection))
+        width_popup = math.ceil(length / self.rows_property) * self.width
+
         match self.source_type:
             case "SINGLE":
                 # 'source_type'が'SINGLE'の場合はアクティブなスプリングのみをターゲットに設定する｡
                 if not (active_item := get_active_list_item_in_spring()):
                     self.report({"ERROR"}, "No Existing Any Spring")
                     return {"CANCELLED"}
-
+                # UIリストのアクティブアイテム以外はターゲットから外す
                 active_indexes = active_item.item_indexes
                 for spring in get_ui_vrm1_operator_spring_prop():
                     if spring.spring_index != active_indexes[0]:
                         spring.is_target = False
-                # TODO : 登録対象Collider Groupを選択可能にする｡
-                return self.execute(context)
+                    else:
+                        self.target_spring_name = spring.name
+                return context.window_manager.invoke_props_dialog(self, width=width_popup)
 
             case "MULTIPLE":
-                spring_collection = get_ui_vrm1_operator_spring_prop()
                 # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
                 spring_settings = get_scene_vrm1_spring_prop()
                 if filter_strings := spring_settings.filter_of_adjusting_target_filter:
@@ -1894,9 +1951,9 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
 
     def draw(self, context):
         spring_collection = get_ui_vrm1_operator_spring_prop()
-        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
+        cg_collection = get_ui_vrm1_operator_collider_group_prop()
 
-        if not (spring_collection and collider_group_collection):
+        if not (spring_collection and cg_collection):
             self.report({"ERROR"}, "Neither Spring nor Collider Group is selected")
             return {"CANCELLED"}
 
@@ -1909,26 +1966,69 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         # ----------------------------------------------------------
         layout = self.layout
         box = layout.box()
-        # パラメーター変更の可否を選択するプロパティ
-        box.prop(self, "set_parameters")
-        # 処理対象のSpringを選択するエリア
         row = box.row(align=True)
         anchor_layout = row.column(align=True)
-        anchor_layout.label(text="Target Spring")
-        box_sub = anchor_layout.box()
-        row_root = box_sub.row()
-        for n, spring in enumerate(spring_collection):
-            if n % self.rows_property == 0:
-                col = row_root.column()
-            row_sub = col.row(align=True)
-            row_sub.prop(spring, "is_target", text=spring.name)
+        # 処理対象のSpringを選択するエリア
+        row_label = anchor_layout.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Spring")
+        row_label.separator()
+        row_label.prop(self, "set_parameters", icon_only=True)
 
-        # 処理対象のCollider Groupを選択するエリア｡
-        anchor_layout = row.column(align=True)
-        anchor_layout.label(text="Target Collider Group")
+        # "source_type"に応じてLabelまたはPropを表示する｡
         box_sub = anchor_layout.box()
         row_root = box_sub.row()
-        for n, group in enumerate(collider_group_collection):
+        match self.source_type:
+            case "SINGLE":
+                row_root.label(text=self.target_spring_name)
+            case "MULTIPLE":
+                # 選択状態を操作するオペレーター
+                op: VRMHELPER_OT_spring_select_target_on_ui
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT"
+                )
+                op.operator_type = "INCLUDE"
+                op.selection_target = "SPRING1"
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT"
+                )
+                op.operator_type = "EXCLUDE"
+                op.selection_target = "SPRING1"
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+                )
+                op.operator_type = "INVERT"
+                op.selection_target = "SPRING1"
+
+                # 選択候補のSpringを表示する
+                for n, spring in enumerate(spring_collection):
+                    if n % self.rows_property == 0:
+                        col = row_root.column()
+                    row_sub = col.row(align=True)
+                    row_sub.prop(spring, "is_target", text=spring.name)
+
+        # 処理対象のCollider Groupを選択するエリア
+        anchor_layout = row.column(align=True)
+        row_label = anchor_layout.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Collider Group")
+        row_label.separator()
+        # 選択状態を操作するオペレーター
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT")
+        op.operator_type = "INCLUDE"
+        op.selection_target = "CG1"
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT")
+        op.operator_type = "EXCLUDE"
+        op.selection_target = "CG1"
+        op = row_label.operator(
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+        )
+        op.operator_type = "INVERT"
+        op.selection_target = "CG1"
+
+        box_sub = anchor_layout.box()
+        row_root = box_sub.row()
+        for n, group in enumerate(cg_collection):
             if n % self.rows_property == 0:
                 col = row_root.column()
             row_sub = col.row(align=True)
@@ -1937,7 +2037,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
     def execute(self, context):
         springs = get_vrm_extension_property("SPRING")
         springs_collection = get_ui_vrm1_operator_spring_prop()
-        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
+        cg_collection = get_ui_vrm1_operator_collider_group_prop()
 
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()
@@ -1975,7 +2075,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
 
             # ポップアップUIでターゲットに指定したCollider Groupがあれば登録する｡
             registered_cg = [i.collider_group_name for i in spring.collider_groups]
-            for cg in collider_group_collection:
+            for cg in cg_collection:
                 if not cg.is_target:
                     logger.debug(f"This Collider Group is not Register Target {cg.vrm_name}")
                     continue

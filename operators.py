@@ -50,6 +50,11 @@ from .addon_classes import (
 )
 
 from .property_groups import (
+    VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items,
+    VRMHELPER_WM_vrm1_operator_spring_list_items,
+    # ---------------------------------------------------------------------------------
     get_vrm0_index_root_prop,
     get_vrm0_active_index_prop,
     get_ui_vrm0_first_person_prop,
@@ -58,6 +63,8 @@ from .property_groups import (
     get_ui_vrm0_collider_group_prop,
     get_ui_vrm0_spring_prop,
     get_ui_vrm0_linked_collider_group_prop,
+    get_ui_vrm0_operator_collider_group_prop,
+    get_ui_vrm0_operator_spring_bone_group_prop,
     # ---------------------------------------------------------------------------------
     get_vrm1_index_root_prop,
     get_vrm1_active_index_prop,
@@ -70,6 +77,9 @@ from .property_groups import (
     get_ui_vrm1_collider_group_prop,
     get_ui_vrm1_spring_prop,
     get_ui_vrm1_constraint_prop,
+    get_ui_vrm1_operator_collider_group_prop,
+    get_ui_vrm1_operator_spring_prop,
+    get_ui_bone_group_prop,
 )
 
 from .utils_common import (
@@ -443,6 +453,66 @@ class VRMHELPER_operator_base(bpy.types.Operator):
         setattr(index_root_prop, attr_name, active_index)
 
 
+class VRMHELPER_OT_spring_select_target_on_ui(bpy.types.Operator):
+    bl_idname = "vrmhelper.spring_set_target_on_ui"
+    bl_label = "Set Target Group"
+    bl_description = "Change Selections (Include, Exclude, Invert)"
+
+    operator_type: EnumProperty(
+        name="Operator Type",
+        description="Determine the mode for changing the registration target",
+        items=(
+            ("INCLUDE", "Include", "Include all groups in the registration"),
+            ("EXCLUDE", "`Exclude`", "Exclude all groups in the registration"),
+            ("INVERT", "Invert", "Inverts the target settings for all groups"),
+        ),
+        default="INCLUDE",
+    )
+
+    selection_target: EnumProperty(
+        name="Selection Target",
+        description="Defines the target of the selection",
+        items=(
+            ("CG0", "VRM0 Collider Group", "Change the selection status of VRM0 Collider Group"),
+            ("CG1", "VRM1 Collider Group", "Change the selection status of VRM1 Collider Group"),
+            ("SPRING0", "VRM0 Spring Bone", "Change the selection status of VRM0 Spring Bone Group"),
+            ("SPRING1", "VRM1 Spring Bone", "Change the selection status of VRM1 Spring"),
+            ("BONE_GROUP", "Bone Group", "Change the selection status of Bone Group"),
+        ),
+        default="SPRING0",
+    )
+
+    def execute(self, context):
+        match self.selection_target:
+            case "CG0":
+                operator_target = get_ui_vrm0_operator_collider_group_prop()
+            case "CG1":
+                operator_target = get_ui_vrm1_operator_collider_group_prop()
+            case "SPRING0":
+                operator_target = get_ui_vrm0_operator_spring_bone_group_prop()
+            case "SPRING1":
+                operator_target = get_ui_vrm1_operator_spring_prop()
+            case BONE_GROUP:
+                operator_target = get_ui_bone_group_prop()
+
+        i: (
+            VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
+            | VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items
+            | VRMHELPER_WM_vrm0_operator_spring_bone_group_list_items
+            | VRMHELPER_WM_vrm1_operator_spring_list_items
+        )
+        for i in operator_target:
+            match self.operator_type:
+                case "INCLUDE":
+                    i.is_target = True
+                case "EXCLUDE":
+                    i.is_target = False
+                case "INVERT":
+                    i.is_target = not (i.is_target)
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
     各オペレーター用サブクラス
 ---------------------------------------------------------"""
@@ -553,4 +623,5 @@ CLASSES = (
     VRMHELPER_OT_empty_operator,
     VRMHELPER_OT_evaluate_addon_collections,
     VRMHELPER_OT_reset_shape_keys_on_selected_objects,
+    VRMHELPER_OT_spring_select_target_on_ui,
 )

@@ -50,6 +50,8 @@ from ..property_groups import (
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_collider_group_list_items,
     VRMHELPER_WM_vrm1_spring_list_items,
+    VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items,
+    VRMHELPER_WM_vrm1_operator_spring_list_items,
     get_ui_vrm1_collider_prop,
     get_ui_vrm1_collider_group_prop,
     get_ui_vrm1_operator_collider_group_prop,
@@ -560,7 +562,9 @@ def vrm1_add_list_item2collider_group_list4operator():
     collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
     collider_group_collection.clear()
     for group in get_vrm_extension_property("COLLIDER_GROUP"):
-        new_item = collider_group_collection.add()
+        new_item: VRMHELPER_WM_vrm1_operator_spring_collider_group_list_items = (
+            collider_group_collection.add()
+        )
         new_item.name = group.name
         new_item.vrm_name = group.vrm_name
         new_item.is_target = True
@@ -574,7 +578,6 @@ def vrm1_add_list_item2joint_list4operator():
     spring_collection = get_ui_vrm1_operator_spring_prop()
     spring_collection.clear()
     for n, spring in enumerate(get_vrm_extension_property("SPRING")):
-        new_item = spring_collection.add()
+        new_item: VRMHELPER_WM_vrm1_operator_spring_list_items = spring_collection.add()
         new_item.name = spring.vrm_name
         new_item.spring_index = n
-        # new_item.is_target = True

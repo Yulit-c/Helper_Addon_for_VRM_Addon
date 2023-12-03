@@ -34,6 +34,7 @@ from bpy.props import (
     IntProperty,
     FloatProperty,
     FloatVectorProperty,
+    StringProperty,
     EnumProperty,
 )
 
@@ -157,6 +158,7 @@ from .utils_vrm0_spring import (
 )
 
 from ..operators import (
+    VRMHELPER_OT_spring_select_target_on_ui,
     VRMHELPER_operator_base,
     VRMHELPER_vrm0_first_person_base,
     VRMHELPER_vrm0_blend_shape_base,
@@ -1462,8 +1464,31 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
             bone_group_collection = get_ui_bone_group_prop()
             anchor_layout = row_root.column(align=True)
             box_sub = anchor_layout.box()
-            box_sub.label(text="Target Bone Group")
+
+            row_label = box_sub.row(align=True)
+            row_label.alignment = "LEFT"
+            row_label.label(text="Target Bone Group")
+            row_label.separator()
+            # 選択対象を操作するオペレーター
+            op = row_label.operator(
+                VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="RADIOBUT_ON"
+            )
+            op.operator_type = "INCLUDE"
+            op.selection_target = "BONE_GROUP"
+            op = row_label.operator(
+                VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="RADIOBUT_OFF"
+            )
+            op.operator_type = "EXCLUDE"
+            op.selection_target = "BONE_GROUP"
+            op = row_label.operator(
+                VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+            )
+            op.operator_type = "INVERT"
+            op.selection_target = "BONE_GROUP"
+
             row_bg_root = box_sub.row()
+
+            # 選択候補のBone Groupを表示する｡
             bone_group: VRMHELPER_WM_operator_spring_bone_group_list_items
             for n, bone_group in enumerate(bone_group_collection):
                 if n % self.rows_property == 0:
@@ -1482,14 +1507,21 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         row_label.label(text="Target Collider Group")
         row_label.separator()
         # Collidaer Groupのターゲット設定を変更するオペレーター
-        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_ON")
-        op.operator_type = "INCLUDE"
-        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_OFF")
-        op.operator_type = "EXCLUDE"
         op = row_label.operator(
-            VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="RADIOBUT_ON"
+        )
+        op.operator_type = "INCLUDE"
+        op.selection_target = "CG0"
+        op = row_label.operator(
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="RADIOBUT_OFF"
+        )
+        op.operator_type = "EXCLUDE"
+        op.selection_target = "CG0"
+        op = row_label.operator(
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
         )
         op.operator_type = "INVERT"
+        op.selection_target = "CG0"
 
         # 登録候補のCollider Groupを描画する
         row_cg_root = anchor_layout.row()
@@ -1603,6 +1635,12 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
         default=False,
     )
 
+    target_spring_name: StringProperty(
+        name="Target Spring Name",
+        description="Name of Targe Spring",
+        default="",
+    )
+
     rows_property: IntProperty(
         name="Rows Property",
         description="Number of properties displayed per column",
@@ -1636,6 +1674,9 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
                 for spg in get_ui_vrm0_operator_spring_bone_group_prop():
                     if spg.group_index != active_indexes[0]:
                         spg.is_target = False
+
+                    else:
+                        self.target_spring_name = spg.name
                 return context.window_manager.invoke_props_dialog(self, width=self.width * 4)
 
             case "MULTIPLE":
@@ -1675,20 +1716,42 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
         # ----------------------------------------------------------
         layout = self.layout
         box = layout.box()
-        # パラメーター変更の可否を選択するプロパティ
-        box.prop(self, "set_parameters")
         row = box.row(align=True)
-        # 処理対象のSpringを選択するエリア(Multiple Modeのみ)
-        if self.source_type == "MULTIPLE":
-            anchor_layout = row.column(align=True)
-            anchor_layout.label(text="Target Spring Bone Group")
-            box_sub = anchor_layout.box()
-            row_root = box_sub.row()
-            for n, spg in enumerate(self.spg_collection):
-                if n % self.rows_property == 0:
-                    col = row_root.column()
-                row_sub = col.row(align=True)
-                row_sub.prop(spg, "is_target", text=spg.name)
+        anchor_layout = row.column(align=True)
+        box_sub = anchor_layout.box()
+        row_label = box_sub.row(align=True)
+        row_label.alignment = "LEFT"
+        row_label.label(text="Target Spring Bone Group")
+        row_label.separator()
+        row_label.prop(self, "set_parameters", icon_only=True)
+        row_root = box_sub.row()
+        match self.source_type:
+            case "SINGLE":
+                row_root.label(text=self.target_spring_name)
+
+            case "MULTIPLE":
+                # 処理対象のSpringを選択するエリア
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT"
+                )
+                op.operator_type = "INCLUDE"
+                op.selection_target = "SPRING0"
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT"
+                )
+                op.operator_type = "EXCLUDE"
+                op.selection_target = "SPRING0"
+                op = row_label.operator(
+                    VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+                )
+                op.operator_type = "INVERT"
+                op.selection_target = "SPRING0"
+
+                for n, spg in enumerate(self.spg_collection):
+                    if n % self.rows_property == 0:
+                        col = row_root.column()
+                    row_sub = col.row(align=True)
+                    row_sub.prop(spg, "is_target", text=spg.name)
 
         # 処理対象のCollider Groupを選択するエリア
         anchor_layout = row.column(align=True)
@@ -1697,14 +1760,18 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
         row_label.label(text="Target Collider Group")
         row_label.separator()
         # Collidaer Groupのターゲット設定を変更するオペレーター
-        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_ON")
+        op: VRMHELPER_OT_spring_select_target_on_ui
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="IMPORT")
         op.operator_type = "INCLUDE"
-        op = row_label.operator(VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="RADIOBUT_OFF")
+        op.selection_target = "CG0"
+        op = row_label.operator(VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="EXPORT")
         op.operator_type = "EXCLUDE"
+        op.selection_target = "CG0"
         op = row_label.operator(
-            VRMHELPER_OT_vrm0_spring_set_target.bl_idname, text="", icon="ARROW_LEFTRIGHT"
+            VRMHELPER_OT_spring_select_target_on_ui.bl_idname, text="", icon="ARROW_LEFTRIGHT"
         )
         op.operator_type = "INVERT"
+        op.selection_target = "CG0"
 
         box_sub = anchor_layout.box()
         row_root = box_sub.row()
@@ -1761,38 +1828,6 @@ class VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group(
                 if cg.name in registered_cg:
                     continue
                 spg.collider_groups.add().value = cg.name
-
-        return {"FINISHED"}
-
-
-class VRMHELPER_OT_vrm0_spring_set_target(
-    VRMHELPER_vrm0_bone_group_base, VRMHELPER_VRM_joint_operator_property
-):
-    bl_idname = "vrmhelper.vrm0_spring_set_target"
-    bl_label = "Set Target Group"
-    bl_description = "Change the target to be registered according to the three modes"
-
-    operator_type: EnumProperty(
-        name="Operator Type",
-        description="Determine the mode for changing the registration target",
-        items=(
-            ("INCLUDE", "Include", "Include all groups in the registration"),
-            ("EXCLUDE", "`Exclude`", "Exclude all groups in the registration"),
-            ("INVERT", "Invert", "Inverts the target settings for all groups"),
-        ),
-        default="INCLUDE",
-    )
-
-    def execute(self, context):
-        cg: VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items
-        for cg in get_ui_vrm0_operator_collider_group_prop():
-            match self.operator_type:
-                case "INCLUDE":
-                    cg.is_target = True
-                case "EXCLUDE":
-                    cg.is_target = False
-                case "INVERT":
-                    cg.is_target = not (cg.is_target)
 
         return {"FINISHED"}
 
@@ -1978,7 +2013,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
     VRMHELPER_OT_vrm0_spring_assign_parameters_to_bone_group,
-    VRMHELPER_OT_vrm0_spring_set_target,
+    VRMHELPER_OT_spring_select_target_on_ui,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------

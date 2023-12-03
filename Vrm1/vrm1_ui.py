@@ -1175,6 +1175,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 text="Create from Selected",
             )
             op.source_type = "SELECT"
+            op.width = 150
             set_properties_to_from_dict(op, joint_properties)
 
             op = col.operator(
@@ -1183,6 +1184,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             )
             set_properties_to_from_dict(op, joint_properties)
             op.source_type = "BONE_GROUP"
+            op.width = 500
 
             # ----------------------------------------------------------
             #    既存ジョイントのパラメーター調整
@@ -1193,6 +1195,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 text="Adust Joints from Active",
             )
             op.source_type = "SINGLE"
+            op.width = 300
             set_properties_to_from_dict(op, joint_properties)
 
             row_ope = col.row(align=True)
@@ -1207,6 +1210,7 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
             )
             set_properties_to_from_dict(op, joint_properties)
             op.source_type = "MULTIPLE"
+            op.width = 300
 
 
 # TODO : ジョイント調整パラメーターの表示条件変更｡
