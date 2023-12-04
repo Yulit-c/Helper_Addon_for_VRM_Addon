@@ -503,6 +503,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # Property Groupの取得｡
     wm_vrm0_prop = get_vrm0_wm_root_prop()
     scene_vrm0_prop = get_vrm0_scene_root_prop()
+    cg_prop = scene_vrm0_prop.collider_group_settings
     active_indexes: VRMHELPER_SCENE_vrm0_ui_list_active_indexes = scene_vrm0_prop.active_indexes
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
@@ -558,6 +559,8 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                     "bones",
                     text="Parent Bone",
                 )
+                box.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
+
             case (0, 0, 0, 1):
                 collider_groups = get_vrm0_extension_collider_group()
                 active_collider_group = collider_groups[active_item.group_index]
@@ -566,7 +569,8 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                 )
                 box.label(text="Active Collider's Parameters")
                 box.prop(active_collider.bpy_object, "location", text="Location")
-                box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
+                # box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
+                box.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
 
         box_op = box.box()
         op = box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)

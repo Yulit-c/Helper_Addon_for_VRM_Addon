@@ -41,10 +41,13 @@ from bpy.props import (
 
 
 from .addon_classes import (
+    ReferencerVrm0SecondaryAnimationColliderPropertyGroup,
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1CustomExpressionPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
+    ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup,
     ReferenceSpringBone1JointPropertyGroup,
+    ReferenceVrmAddonArmatureExtensionPropertyGroup,
     ReferenceVrmAddonArmatureExtensionPropertyGroup,
 )
 
@@ -337,6 +340,30 @@ class VRMHELPER_SCENE_vrm0_collider_group_settings(bpy.types.PropertyGroup):
     Collider Groupの設定に関するプロパティ
     """
 
+    def update_active_and_selected_collider_radius(self, context):
+        return
+
+    is_updated_collider_raduis: BoolProperty(
+        name="Locked Active Collider Radius",
+        description="Update callback functions are locked while this flag is on",
+        default=False,
+    )
+
+    is_additive_selecting: BoolProperty(
+        name="Is Additive Selecting",
+        description="Whether to unselect the selected object when updating the active item in the list",
+        default=False,
+    )
+
+    active_collider_radius: FloatProperty(
+        name="Active Collider Radius",
+        description="Change the radius of the active collider in the listing",
+        default=0.05,
+        min=0.0001,
+        unit="LENGTH",
+        update=update_active_and_selected_collider_radius,
+    )
+
 
 # ----------------------------------------------------------
 #    Spring Bone Groups
@@ -355,37 +382,9 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
     UI Listのアクティブアイテムインデックス用のIntPropertyを登録するプロパティグループ｡
     """
 
-    # def update_active_collider_radius(
-    #     self,
-    #     collider_prop: VRMHELPER_SCENE_vrm1_collider_settings,
-    #     collider: ReferenceVrm1ColliderPropertyGroup,
-    # ):
-    #     """
-    #     'collider_prop'の'active_collider_radius'の値を'collider'のタイプに応じた
-    #     'radius'と同じ値にセットする｡
-
-    #     Parameters
-    #     ----------
-    #     collider_prop : VRMHELPER_SCENE_vrm1_collider_settings
-    #         プロパティ更新の対象となるプロパティグループ
-
-    #     collider : ReferenceVrm1ColliderPropertyGroup
-    #         'radius'の参照元となるVRM AddonのColliderプロパティ
-
-    #     """
-    #     match detect_collider_shape_type(collider.shape_type):
-    #         case -1:
-    #             return
-    #         case 0:
-    #             source_radius = collider.shape.sphere.radius
-    #         case 1:
-    #             source_radius = collider.shape.capsule.radius
-
-    #     collider_prop.active_collider_radius = source_radius
-
     def select_collider_object_by_ui_list(self, context):
         """
-        Spring Bone_ColliderのUIリストアクティブアイテムが更新された際に､
+        Collider GroupのUIリストのアクティブアイテムが更新された際に､
         アクティブアイテムインデックスに対応したシーン内オブジェクトを選択状態にする｡
         また､アクティブコライダーの半径を'Active Collider Radius'に反映する｡
         """
@@ -396,66 +395,65 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         if context.mode != "OBJECT":
             return
 
-        collider_prop = get_scene_vrm1_collider_prop()
-        collider_list = get_ui_vrm1_collider_prop()
-        active_index = get_vrm1_active_index_prop("COLLIDER")
-        active_item = collider_list[active_index]
-        vrm_extension = get_target_armature_data().vrm_addon_extension
-        colliders = vrm_extension.spring_bone1.colliders
+        cg_prop = get_scene_vrm0_collider_Group_prop()
+        collider_list = get_ui_vrm0_collider_group_prop()
+        active_index = get_vrm0_active_index_prop("COLLIDER_GROUP")
+        active_item: VRMHELPER_WM_vrm0_collider_group_list_items = collider_list[active_index]
 
-        current_object_in_loop = None
-        collider_prop.is_updated_collider_raduis = True
+        vrm_extension: ReferenceVrmAddonArmatureExtensionPropertyGroup = (
+            get_target_armature_data().vrm_addon_extension
+        )
+        collider_groups = vrm_extension.vrm0.secondary_animation.collider_groups
+
+        cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+        collider: Optional[ReferencerVrm0SecondaryAnimationColliderPropertyGroup] = None
+        cg_prop.is_updated_collider_raduis = True
 
         match tuple(active_item.item_type):
             # アクティブアイテムがラベルである
             case (1, 0, 0, 0):
                 return
 
-            # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのコライダーを選択する｡
+            # アクティブアイテムがボーン名であればそのボーンに関連付けられた全てのColliderを選択する｡
             case (0, 1, 0, 0):
-                if collider_prop.link_bone != active_item.name:
-                    collider_prop.is_updated_link_bone[0] = True
-                    collider_prop.old_bone = active_item.name
-                    collider_prop.link_bone = active_item.name
-
-                if not collider_prop.is_additive_selecting:
+                if not cg_prop.is_additive_selecting:
                     bpy.ops.object.select_all(action="DESELECT")
 
-                [
-                    (
-                        i.bpy_object.select_set(True),
-                        (current_object_in_loop := i.bpy_object),
-                    )
-                    for i in colliders
-                    if i.node.bone_name == active_item.bone_name
+                target_collider_groups = [
+                    i for i in collider_groups if i.node.bone_name == active_item.bone_name
                 ]
 
-            # アクティブアイテムがコライダーであればそれを選択する｡
+                for cg in target_collider_groups:
+                    for collider in cg.colliders:
+                        collider.bpy_object.select_set(True)
+
+            # アクティブアイテムがCollider Groupであればそれに関連した全てのColliderを選択する｡
+            # 最後に選択したColliderの半径をUI上のパラメーターに反映する｡
             case (0, 0, 1, 0):
-                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
-                    self.update_active_collider_radius(collider_prop, collider)
-
-                if collider := bpy.data.objects.get(active_item.collider_name):
-                    if not collider_prop.is_additive_selecting:
+                cg = collider_groups[active_item.group_index]
+                for collider in cg.colliders:
+                    if not cg_prop.is_additive_selecting:
                         bpy.ops.object.select_all(action="DESELECT")
-                    collider.select_set(True)
-                    current_object_in_loop = collider
 
-            # アクティブアイテムがカプセルコライダーのエンドであればそれを選択する｡
-            case (0, 0, 0, 1):
-                if collider := find_collider_from_empty_name(colliders, active_item.collider_name):
-                    self.update_active_collider_radius(collider_prop, collider)
+                    collider.bpy_object.select_set(True)
+                    cg_prop.active_collider_radius = collider.bpy_object.empty_display_size
 
-                if collider_object := bpy.data.objects.get(active_item.collider_name):
-                    if not collider_prop.is_additive_selecting:
-                        bpy.ops.object.select_all(action="DESELECT")
-                    collider_object.select_set(True)
-                    current_object_in_loop = collider_object
+            # アクティブアイテムがColliderであればそれを選択する｡
+            # 選択したColliderの半径をUI上のパラメーターに反映する｡
+            case (0, 0, 1, 0):
+                if not cg_prop.is_additive_selecting:
+                    bpy.ops.object.select_all(action="DESELECT")
 
-        collider_prop.is_updated_collider_raduis = False
+                cg = collider_groups[active_item.group_index]
+                collider = cg.colliders[active_item.collider_index]
+                collider.bpy_object.select_set(True)
+                cg_prop.active_collider_radius = collider.bpy_object.empty_display_size
+
+        cg_prop.is_updated_collider_raduis = False
 
         # 最後に取得されたコライダーオブジェクトをアクティブオブジェクトに設定する｡
-        context.view_layer.objects.active = current_object_in_loop
+        if collider:
+            context.view_layer.objects.active = collider.bpy_object
 
     # -----------------------------------------------------
 
@@ -496,6 +494,7 @@ class VRMHELPER_SCENE_vrm0_ui_list_active_indexes(bpy.types.PropertyGroup):
         description="Index of active items in Collider Group UI List",
         default=0,
         min=0,
+        update=select_collider_object_by_ui_list,
     )
 
     bone_group: IntProperty(
@@ -816,11 +815,10 @@ class VRMHELPER_SCENE_vrm1_spring_settings(bpy.types.PropertyGroup):
 
         return
 
-
     is_updated_hit_radius: BoolProperty(
-    name="Is UPdated Hit Radius",
-    description="Update callback functions are locked while this flag is on",
-    default=False,
+        name="Is UPdated Hit Radius",
+        description="Update callback functions are locked while this flag is on",
+        default=False,
     )
 
     # ----------------------------------------------------------
@@ -2427,6 +2425,12 @@ def get_scene_vrm0_mtoon_stored_prop() -> VRMHELPER_SCENE_vrm0_mtoon0_stored_par
     scene_vrm0_prop = get_vrm0_scene_root_prop()
     mtoon_prop = scene_vrm0_prop.mtoon0_stored_parameters
     return mtoon_prop
+
+
+def get_scene_vrm0_collider_Group_prop() -> VRMHELPER_SCENE_vrm0_collider_group_settings:
+    scene_vrm0_prop = get_vrm0_scene_root_prop()
+    collider_group_prop = scene_vrm0_prop.collider_group_settings
+    return collider_group_prop
 
 
 # ----------------------------------------------------------
