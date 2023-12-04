@@ -1095,11 +1095,16 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
         for bone in bones:
             if not (pose_bone := get_pose_bone_by_name(target_armature, bone.name)):
                 continue
+
             # コライダーグループ内に既に同じボーンを指定したグループがある場合はそのグループ内にコライダーを追加する｡
             groups = [i for i in collider_group if i.node.bone_name == bone.name]
             target_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
             if groups:
-                target_group = groups[0]
+                # 複数ヒットした場合にアクティブアイテムが含まれている場合はそちらを優先する｡
+                if (t := collider_group[get_active_list_item_in_collider_group().group_index]) in groups:
+                    target_group = t
+                else:
+                    target_group = groups[0]
             else:
                 target_group = collider_group.add()
                 target_group.uuid = uuid.uuid4().hex

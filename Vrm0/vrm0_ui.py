@@ -512,6 +512,7 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # ----------------------------------------------------------
     #    登録されているCollider Groupのリスト描画
     # ----------------------------------------------------------
+    layout.prop(cg_prop, "is_additive_selecting", text="Additive Select")
     row = layout.row()
     row.template_list(
         VRMHELPER_UL_vrm0_collider_group_list.__name__,
@@ -540,37 +541,41 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
 
     if items_list := get_ui_vrm0_collider_group_prop():
         box = layout.box()
+
         active_item: VRMHELPER_WM_vrm0_collider_group_list_items = items_list[active_indexes.collider_group]
         match tuple(active_item.item_type):
             case (1, 0, 0, 0):
                 pass
             case (0, 1, 0, 0):
-                pass
+                box_prop = box.box()
+                box_prop.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
             case (0, 0, 1, 0):
+                box_prop = box.box()
                 target_armature_data = get_target_armature_data()
                 collider_groups = get_vrm0_extension_collider_group()
                 active_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = (
                     collider_groups[active_item.group_index]
                 )
-                box.prop_search(
+                box_prop.prop_search(
                     active_collider_group.node,
                     "bone_name",
                     target_armature_data,
                     "bones",
                     text="Parent Bone",
                 )
-                box.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
+                box_prop.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
 
             case (0, 0, 0, 1):
+                box_prop = box.box()
                 collider_groups = get_vrm0_extension_collider_group()
                 active_collider_group = collider_groups[active_item.group_index]
                 active_collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = (
                     active_collider_group.colliders[active_item.collider_index]
                 )
-                box.label(text="Active Collider's Parameters")
-                box.prop(active_collider.bpy_object, "location", text="Location")
-                # box.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
-                box.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
+                box_prop.label(text="Active Collider's Parameters")
+                box_prop.prop(active_collider.bpy_object, "location", text="Location")
+                # box_prop.prop(active_collider.bpy_object, "empty_display_size", text="Collider Size")
+                box_prop.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
 
         box_op = box.box()
         op = box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
