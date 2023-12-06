@@ -404,6 +404,13 @@ class VRMHELPER_SCENE_vrm0_collider_group_settings(bpy.types.PropertyGroup):
         default=False,
     )
 
+    creating_collider_radius: FloatProperty(
+        name="Creating Collider Radius",
+        description="Radius of the collider to be created",
+        default=0.05,
+        unit="LENGTH",
+    )
+
     active_collider_radius: FloatProperty(
         name="Active Collider Radius",
         description="Change the radius of the active collider in the listing",

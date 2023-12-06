@@ -147,6 +147,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_add_active_collider,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
@@ -534,10 +535,14 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # コライダーの削除を行うオペレーター
     col_list.separator(factor=2.0)
     col_list.label(text="", icon="MESH_UVSPHERE")
+    col_list.operator(VRMHELPER_OT_vrm0_collider_group_add_active_collider.bl_idname, text="", icon="ADD")
     col_list.operator(
         VRMHELPER_OT_vrm0_collider_group_remove_active_collider.bl_idname, text="", icon="REMOVE"
     )
     col_list.operator(VRMHELPER_OT_vrm0_collider_group_clear_colliders.bl_idname, text="", icon="PANEL_CLOSE")
+
+    box_operator_prop = layout.box()
+    box_operator_prop.prop(cg_prop, "creating_collider_radius")
 
     if items_list := get_ui_vrm0_collider_group_prop():
         box = layout.box()

@@ -81,6 +81,7 @@ from ..property_groups import (
     get_scene_vrm0_first_person_prop,
     get_scene_vrm0_blend_shape_prop,
     get_scene_vrm0_mtoon_stored_prop,
+    get_scene_vrm0_collider_Group_prop,
     get_vrm0_wm_root_prop,
 )
 
@@ -990,6 +991,66 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
 ---------------------------------------------------------"""
 
 
+class VRMHELPER_OT_vrm0_collider_group_add_active_collider(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_add_active_collider"
+    bl_label = "Add Collider"
+    bl_description = "Add Collider to the active Collider Group in UI List"
+
+    @classmethod
+    def poll(self, context):
+        # UI ListのアクティブアイテムがCollide Groupである｡
+        if active_item := get_active_list_item_in_collider_group():
+            return active_item.item_type[2]
+        return True
+
+    def execute(self, context):
+        ext_collider_group = get_vrm0_extension_collider_group()
+        active_item = get_active_list_item_in_collider_group()
+        target_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = ext_collider_group[
+            active_item.group_index
+        ]
+
+        current_mode = context.mode
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+
+        # 新規コライダーの作成｡
+        # https://github.com/saturday06/VRM-Addon-for-Blender
+        # Collider Groupのボーンが未定義の場合は終了
+        target_armature = get_target_armature()
+        if not (bone := target_armature.data.bones.get(active_item.bone_name)):
+            self.report({"INFO"}, f"Not found Target Bone : {active_item.bone_name}")
+            return {"CANCELLED"}
+
+        collider_object = bpy.data.objects.new(
+            name=f"{target_armature.name}_{bone.name}_collider", object_data=None
+        )
+        # Empty Objectのパラメーター
+        collider_object.parent = target_armature
+        collider_object.parent_type = "BONE"
+        collider_object.parent_bone = bone.name
+        collider_object.empty_display_type = "SPHERE"
+        cg_prop = get_scene_vrm0_collider_Group_prop()
+        collider_object.empty_display_size = cg_prop.creating_collider_radius
+        pose_bone = target_armature.pose.bones.get(active_item.bone_name)
+        mid_point = (pose_bone.tail + pose_bone.head) / 2
+        collider_object.matrix_world = generate_head_collider_position(mid_point)
+        # オブジェクトをコレクションにリンク
+        addon_collection_dict = setting_vrm_helper_collection()
+        dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+        link_object2collection(collider_object, dest_collection)
+
+        # VRM Extensionのパラメーター
+        collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = (
+            target_collider_group.colliders.add()
+        )
+        collider.bpy_object = collider_object
+
+        collider_object.select_set(True)
+
+        return {"FINISHED"}
+
+
 class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_collider_group_base):
     bl_idname = "vrmhelper.vrm0_collider_group_remove_active_collider"
     bl_label = "Remove Active Collider"
@@ -997,12 +1058,12 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_col
 
     @classmethod
     def poll(self, context):
-        # UI Listのアクティブアイテムがコライダーである｡
+        # UI ListのアクティブアイテムがColliderである｡
         if active_item := get_active_list_item_in_collider_group():
             return active_item.item_type[3]
 
     def execute(self, context):
-        # UI ListのアクティブアイテムとVRM Extensionのコライダーグループを取得する｡
+        # UI ListのアクティブアイテムとVRM ExtensionのCollider Groupを取得する｡
         ext_collider_group = get_vrm0_extension_collider_group()
         active_item = get_active_list_item_in_collider_group()
         target_collider_group: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = ext_collider_group[
@@ -1112,7 +1173,6 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
                 target_group.refresh(target_armature)
 
             # 新規コライダーの作成｡
-            colliders = target_group.colliders
             # https://github.com/saturday06/VRM-Addon-for-Blender
             collider_object = bpy.data.objects.new(
                 name=f"{target_armature.name}_{bone.name}_collider", object_data=None
@@ -1128,7 +1188,7 @@ class VRMHELPER_OT_vrm0_collider_create_from_bone(VRMHELPER_vrm0_collider_group_
             # オブジェクトをコレクションにリンク
             link_object2collection(collider_object, dest_collection)
             # VRM Extensionのパラメーター
-            collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = colliders.add()
+            collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = target_group.colliders.add()
             collider.bpy_object = collider_object
 
             collider_object.select_set(True)
@@ -1676,6 +1736,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
+    VRMHELPER_OT_vrm0_collider_group_add_active_collider,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
