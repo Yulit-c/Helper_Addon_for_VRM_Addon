@@ -245,20 +245,21 @@ def remove_vrm1_collider_by_selected_object(source_object: Object):
         i
         for i in colliders
         if i.bpy_object == source_object
+        # or (i.bpy_object.children and i.bpy_object.children[0] == source_object)
         or (i.bpy_object.children and i.bpy_object.children[0] == source_object)
     ]:
         target_collider: ReferenceVrm1ColliderPropertyGroup = collider[0]
-        target_uuid = target_collider.uuid
+        empty_object: bpy.types.Object = target_collider.bpy_object
 
         # 'source_object'とそれに対応したコライダーを削除する｡
-        remove_vrm1_collider_group_collider_when_removed_collider(target_uuid)
+        remove_vrm1_collider_group_collider_when_removed_collider(target_collider.uuid)
         colliders.remove(list(colliders).index(target_collider))
 
-        # 'source_object'を削除する｡子が存在すればそれを先に削除する｡
-        if source_object.children:
-            [bpy.data.objects.remove(obj, do_unlink=True) for obj in source_object.children]
+        # 'source_object'を削除する｡親あるいは子が存在すればそれを先に削除する｡
+        if empty_object.children:
+            [bpy.data.objects.remove(obj, do_unlink=True) for obj in empty_object.children]
 
-        bpy.data.objects.remove(source_object, do_unlink=True)
+        bpy.data.objects.remove(empty_object, do_unlink=True)
 
 
 def get_ui_list_index_from_collider_component(

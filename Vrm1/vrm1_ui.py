@@ -154,14 +154,17 @@ from .vrm1_operators import (
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
+    VRMHELPER_OT_vrm1_collider_add_collider,
+    VRMHELPER_OT_vrm1_collider_group_remove_active_group,
+    VRMHELPER_OT_vrm1_collider_group_clear_group,
     VRMHELPER_OT_vrm1_collider_create_from_bone,
     VRMHELPER_OT_vrm1_collider_remove_from_empty,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
     VRMHELPER_OT_vrm1_collider_group_add_group,
-    VRMHELPER_OT_vrm1_collider_group_remove_active_group,
-    VRMHELPER_OT_vrm1_collider_group_clear_group,
+    VRMHELPER_OT_vrm1_collider_remove_active_collider,
+    VRMHELPER_OT_vrm1_collider_clear_colliders,
     VRMHELPER_OT_vrm1_collider_group_add_collider,
     VRMHELPER_OT_vrm1_collider_group_remove_collider,
     VRMHELPER_OT_vrm1_collider_group_clear_collider,
@@ -746,7 +749,8 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = vrm1_add_items2collider_ui_list()
 
-    layout.template_list(
+    row_list = layout.row(align=True)
+    row_list.template_list(
         "VRMHELPER_UL_vrm1_collider_list",
         "",
         wm_vrm1_prop,
@@ -755,6 +759,10 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
         "collider",
         rows=define_ui_list_rows(rows),
     )
+    col_op = row_list.column(align=True)
+    col_op.operator(VRMHELPER_OT_vrm1_collider_add_collider.bl_idname, text="", icon="ADD")
+    col_op.operator(VRMHELPER_OT_vrm1_collider_remove_active_collider.bl_idname, text="", icon="REMOVE")
+    col_op.operator(VRMHELPER_OT_vrm1_collider_clear_colliders.bl_idname, text="", icon="PANEL_CLOSE")
 
     layout.separator(factor=0.5)
     box = layout.box()
@@ -767,11 +775,8 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     row.prop(collider_prop, "collider_radius")
 
     row = box.row()
-    op = row.operator(VRMHELPER_OT_vrm1_collider_create_from_bone.bl_idname)
-    op.collider_type = collider_prop.collider_type
-    op.collider_radius = collider_prop.collider_radius
-
-    op = row.operator(VRMHELPER_OT_vrm1_collider_remove_from_empty.bl_idname)
+    row.operator(VRMHELPER_OT_vrm1_collider_create_from_bone.bl_idname)
+    row.operator(VRMHELPER_OT_vrm1_collider_remove_from_empty.bl_idname)
 
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
     if items_list := get_ui_vrm1_collider_prop():

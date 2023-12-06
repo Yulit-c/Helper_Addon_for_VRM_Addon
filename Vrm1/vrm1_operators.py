@@ -66,6 +66,7 @@ from ..preferences import (
 )
 
 from ..property_groups import (
+    VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
     # ---------------------------------------------------------------------------------
     get_target_armature,
@@ -75,6 +76,9 @@ from ..property_groups import (
     get_ui_vrm1_expression_prop,
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
+    get_ui_vrm1_collider_prop,
+    get_ui_vrm1_collider_group_prop,
+    get_ui_vrm1_spring_prop,
     get_ui_bone_group_prop,
     get_ui_vrm1_operator_collider_group_prop,
     get_ui_vrm1_operator_spring_prop,
@@ -86,6 +90,7 @@ from ..property_groups import (
     get_scene_vrm1_spring_prop,
     get_scene_vrm1_constraint_prop,
     get_scene_vrm1_mtoon_stored_prop,
+    get_scene_vrm1_collider_prop,
 )
 
 from ..utils_common import (
@@ -109,6 +114,9 @@ from ..utils_vrm_base import (
     evaluation_expression_material_collection,
     get_vrm_extension_property,
     get_vrm1_extension_property_expression,
+    get_vrm1_extension_collider,
+    get_vrm1_extension_collider_group,
+    get_vrm1_extension_spring,
     is_existing_target_armature_and_mode,
     get_bones_for_each_branch_by_type,
     reset_shape_keys_value_in_morph_binds,
@@ -1196,10 +1204,10 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
-class VRMHELPER_OT_vrm1_collider_group_add_collider(VRMHELPER_vrm1_collider_base):
-    bl_idname = "vrmhelper.vrm0_collider_group_add_collider"
+class VRMHELPER_OT_vrm1_collider_add_collider(VRMHELPER_vrm1_collider_base):
+    bl_idname = "vrmhelper.vrm0_collider_add_collider"
     bl_label = "Add Collider"
-    bl_description = "Add Collider to the active Collider Group in UI List"
+    bl_description = "Add Collider to the active Bone in UI List"
 
     @classmethod
     def poll(cls, context):
@@ -1207,10 +1215,154 @@ class VRMHELPER_OT_vrm1_collider_group_add_collider(VRMHELPER_vrm1_collider_base
         return True
 
     def execute(self, context):
+        time_start = time.perf_counter()
+        # ---------------------------------------------------------------------------------
         active_item = get_active_list_item_in_collider()
         colliders = get_vrm_extension_property("COLLIDER")
 
         # TODO : アクティブアイテムに対応するボーンにリンクされたColliderを作成する
+
+        target_armature = get_target_armature()
+
+        # 処理中はプロパティのアップデートのコールバック関数をロックする｡
+        index_prop = get_vrm1_index_root_prop()
+        index_prop.is_locked_update = True
+
+        bone: bpy.types.Bone
+        if not (bone := target_armature.data.bones.get(active_item.bone_name)):
+            self.report({"INFO"}, f"Not found Target Bone : {active_item.bone_name}")
+            return {"CANCELLED"}
+
+        # VRM Extensionにデータを作成
+        new_item: ReferenceVrm1ColliderPropertyGroup = colliders.add()
+        new_item.uuid = uuid.uuid4().hex
+
+        collider_prop = get_scene_vrm1_collider_prop()
+        pose_bone: bpy.types.PoseBone = target_armature.pose.bones.get(bone.name)
+        new_item.shape_type = collider_prop.collider_type
+        new_item.node.bone_name = pose_bone.name
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+
+        match collider_prop.collider_type:
+            case "Sphere":
+                new_item.shape.sphere.radius = collider_prop.collider_radius
+                collider_object = new_item.bpy_object
+                mid_point = (pose_bone.tail + pose_bone.head) / 2
+                collider_object.matrix_world = generate_head_collider_position(mid_point)
+
+                # コライダーオブジェクトを対象コレクションにリンクする｡
+                addon_collection_dict = setting_vrm_helper_collection()
+                dest_collection = addon_collection_dict["VRM1_COLLIDER"]
+                link_object2collection(collider_object, dest_collection)
+
+                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                collider_object.select_set(True)
+                bpy.context.view_layer.objects.active = collider_object
+
+            case "Capsule":
+                # コライダーオブジェクトの作成･初期化｡
+                new_item.reset_bpy_object(context, target_armature)
+                new_item.shape.capsule.radius = collider_prop.collider_radius
+
+                # コライダーオブジェクトの位置設定｡
+                collider_head: bpy.types.Object = new_item.bpy_object
+                collider_tail: bpy.types.Object = new_item.bpy_object.children[0]
+                collider_head.matrix_world = generate_head_collider_position(pose_bone.head)
+                collider_head.rotation_euler = Vector((0, 0, 0))
+                collider_tail.matrix_basis = generate_tail_collider_position(
+                    target_armature, pose_bone, pose_bone.tail
+                )
+                # コライダーオブジェクトを対象コレクションにリンクする｡
+                re_link_all_collider_object2collection()
+                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                collider_head.select_set(True)
+                context.view_layer.objects.active = collider_head
+
+        # 最後に作成したコライダーをリスト内のアクティブアイテムに設定する｡
+        if updated_active_index := get_ui_list_index_from_collider_component(new_item):
+            index_prop.collider = updated_active_index
+        index_prop.is_locked_update = False
+
+        # ---------------------------------------------------------------------------------
+        logger.debug(f"Processing Time : {time.perf_counter() - time_start:.3f} s")
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm1_collider_remove_active_collider(VRMHELPER_vrm1_collider_base):
+    bl_idname = "vrmhelper.vrm1_collider_remove_active_collider"
+    bl_label = "Remove Active Collider"
+    bl_description = "Remove the active collider in UI List"
+
+    @classmethod
+    def poll(cls, context):
+        # UI ListのアクティブアイテムがボーンまたはColliderである｡
+        if active_item := get_active_list_item_in_collider():
+            return active_item.item_type[1] or active_item.item_type[2] or active_item.item_type[3]
+
+    def execute(self, context):
+        # 処理中はプロパティのアップデートのコールバック関数をロックする｡
+        index_prop = get_vrm1_index_root_prop()
+        index_prop.is_locked_update = True
+
+        # アクティブアイテムのタイプに応じてコライダーを削除する
+        active_item = get_active_list_item_in_collider()
+        collider_list = get_ui_vrm1_collider_prop()
+        match tuple(active_item.item_type):
+            case (0, 1, 0, 0):  # Bone
+                candidate_target_set = {i for i in collider_list if i.bone_name == active_item.bone_name}
+
+            case (0, 0, 1, 0) | (0, 0, 0, 1):  # Collider or Collider End
+                candidate_target_set = {active_item}
+
+            case _:
+                return {"CANCELLED"}
+
+        logger.debug("Remove Collider & Empty Object")
+        for item in candidate_target_set:
+            if not item.collider_object:
+                continue
+            remove_vrm1_collider_by_selected_object(item.collider_object)
+
+        # アクティブインデックスをオフセットしてエラーを回避する｡
+        self.offset_active_item_index(self.component_type)
+        self.offset_active_item_index("COLLIDER_GROUP")
+        self.offset_active_item_index("SPRING")
+        index_prop.is_locked_update = False
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm1_collider_clear_colliders(VRMHELPER_vrm1_collider_base):
+    bl_idname = "vrmhelper.vrm1_collider_clear_colliders"
+    bl_label = "Clear Colliders"
+    bl_description = "Clear all Colliders"
+
+    @classmethod
+    def poll(cls, context):
+        # Colliderが1つ以上存在する｡｡
+        return get_ui_vrm1_collider_prop()
+
+    def execute(self, context):
+        # 処理中はプロパティのアップデートのコールバック関数をロックする｡
+        index_prop = get_vrm1_index_root_prop()
+        index_prop.is_locked_update = True
+
+        # VRM ExtensionのColliderプロパティを取得する｡
+        vrm_colliders = get_vrm1_extension_collider()
+        while vrm_colliders:
+            if not vrm_colliders[0].bpy_object:
+                logger.debug(vrm_colliders[0].bpy_object)
+                continue
+            remove_vrm1_collider_by_selected_object(vrm_colliders[0].bpy_object)
+
+        vrm_colliders.clear()
+
+        # アクティブインデックスをオフセットしてエラーを回避する｡
+        self.offset_active_item_index(self.component_type)
+        self.offset_active_item_index("COLLIDER_GROUP")
+        self.offset_active_item_index("SPRING")
+        index_prop.is_locked_update = False
 
         return {"FINISHED"}
 
@@ -1219,25 +1371,6 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_create_from_bone"
     bl_label = "Create Collider"
     bl_description = "Create spring bone collider from selected bone"
-
-    collider_type: EnumProperty(
-        name="Collider Type",
-        description="Type of collider to be created",
-        items=(
-            ("Sphere", "Sphere", "The type of collider created becomes a sphere"),
-            ("Capsule", "Capsule", "The type of collider created becomes a capsule"),
-        ),
-        default="Capsule",
-        options={"HIDDEN"},
-    )
-
-    collider_radius: FloatProperty(
-        name="Collider Radius",
-        description="Radius of the collider to be created",
-        default=0.05,
-        unit="LENGTH",
-        options={"HIDDEN"},
-    )
 
     @classmethod
     def poll(cls, context):
@@ -1264,7 +1397,10 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
             armature_data.use_mirror_x = False
             is_changed_use_mirror = True
 
-        # bones = context.selected_bones if context.selected_bones else context.selected_pose_bones
+        # 全ての選択ボーンに対してColliderを作成する｡
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.ops.object.mode_set(mode="EDIT")
         bones = get_selected_bone()
         for bone in bones:
             pose_bone = get_pose_bone_by_name(target_armature, bone.name)
@@ -1272,38 +1408,40 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
             new_item.uuid = uuid.uuid4().hex
 
             # コライダーのタイプ､半径､位置を設定
-            new_item.shape_type = self.collider_type
+            collider_prop = get_scene_vrm1_collider_prop()
+            new_item.shape_type = collider_prop.collider_type
             new_item.node.bone_name = pose_bone.name
 
-            if self.collider_type == "Sphere":
-                new_item.shape.sphere.radius = self.collider_radius
-                collider_object = new_item.bpy_object
-                mid_point = (pose_bone.tail + pose_bone.head) / 2
-                collider_object.matrix_world = generate_head_collider_position(mid_point)
-                # コライダーオブジェクトを対象コレクションにリンクする｡
-                link_object2collection(collider_object, dest_collection)
-                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
-                collider_object.select_set(True)
-                bpy.context.view_layer.objects.active = collider_object
+            match collider_prop.collider_type:
+                case "Sphere":
+                    new_item.shape.sphere.radius = collider_prop.collider_radius
+                    collider_object = new_item.bpy_object
+                    mid_point = (pose_bone.tail + pose_bone.head) / 2
+                    collider_object.matrix_world = generate_head_collider_position(mid_point)
+                    # コライダーオブジェクトを対象コレクションにリンクする｡
+                    link_object2collection(collider_object, dest_collection)
+                    # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                    collider_object.select_set(True)
+                    bpy.context.view_layer.objects.active = collider_object
 
-            if self.collider_type == "Capsule":
-                # コライダーオブジェクトの作成･初期化｡
-                new_item.reset_bpy_object(context, target_armature)
-                new_item.shape.capsule.radius = self.collider_radius
+                case "Capsule":
+                    # コライダーオブジェクトの作成･初期化｡
+                    new_item.reset_bpy_object(context, target_armature)
+                    new_item.shape.capsule.radius = collider_prop.collider_radius
 
-                # コライダーオブジェクトの位置設定｡
-                collider_head: bpy.types.Object = new_item.bpy_object
-                collider_tail: bpy.types.Object = new_item.bpy_object.children[0]
-                collider_head.matrix_world = generate_head_collider_position(pose_bone.head)
-                collider_head.rotation_euler = Vector((0, 0, 0))
-                collider_tail.matrix_basis = generate_tail_collider_position(
-                    target_armature, pose_bone, pose_bone.tail
-                )
-                # コライダーオブジェクトを対象コレクションにリンクする｡
-                re_link_all_collider_object2collection()
-                # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
-                collider_head.select_set(True)
-                context.view_layer.objects.active = collider_head
+                    # コライダーオブジェクトの位置設定｡
+                    collider_head: bpy.types.Object = new_item.bpy_object
+                    collider_tail: bpy.types.Object = new_item.bpy_object.children[0]
+                    collider_head.matrix_world = generate_head_collider_position(pose_bone.head)
+                    collider_head.rotation_euler = Vector((0, 0, 0))
+                    collider_tail.matrix_basis = generate_tail_collider_position(
+                        target_armature, pose_bone, pose_bone.tail
+                    )
+                    # コライダーオブジェクトを対象コレクションにリンクする｡
+                    re_link_all_collider_object2collection()
+                    # コライダーオブジェクトを選択状態およびアクティブオブジェクトに設定する｡
+                    collider_head.select_set(True)
+                    context.view_layer.objects.active = collider_head
 
         # 'use_mirror_x'の値を変更していた場合は元に戻す｡
         if is_changed_use_mirror:
@@ -2272,6 +2410,9 @@ CLASSES = (
     # ----------------------------------------------------------
     #    Collider
     # ----------------------------------------------------------
+    VRMHELPER_OT_vrm1_collider_add_collider,
+    VRMHELPER_OT_vrm1_collider_remove_active_collider,
+    VRMHELPER_OT_vrm1_collider_clear_colliders,
     VRMHELPER_OT_vrm1_collider_create_from_bone,
     VRMHELPER_OT_vrm1_collider_remove_from_empty,
     # ----------------------------------------------------------

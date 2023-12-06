@@ -421,6 +421,24 @@ def get_vrm1_extension_property_expression() -> ReferenceVrm1ExpressionsProperty
     return vrm1_expressions
 
 
+def get_vrm1_extension_collider() -> ReferenceVrm1ColliderPropertyGroup:
+    vrm_springs = get_vrm_extension_all_root_property().spring_bone1
+    collider_prop = vrm_springs.colliders
+    return collider_prop
+
+
+def get_vrm1_extension_collider_group() -> ReferenceVrm1ColliderGroupPropertyGroup:
+    vrm_springs = get_vrm_extension_all_root_property().spring_bone1
+    cg_prop = vrm_springs.collider_groups
+    return cg_prop
+
+
+def get_vrm1_extension_spring() -> ReferenceSpringBone1SpringPropertyGroup:
+    vrm_springs = get_vrm_extension_all_root_property().spring_bone1
+    spring_prop = vrm_springs.springs
+    return spring_prop
+
+
 """-------------------------------------------------------"""
 
 

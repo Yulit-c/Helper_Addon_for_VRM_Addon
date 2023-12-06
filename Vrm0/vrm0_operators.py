@@ -1000,11 +1000,7 @@ class VRMHELPER_OT_vrm0_collider_group_add_collider(VRMHELPER_vrm0_collider_grou
     def poll(cls, context):
         # UI ListのアクティブアイテムがCollide GroupまたはColliderである｡
         if active_item := get_active_list_item_in_collider_group():
-            match tuple(active_item.item_type):
-                case (0, 0, 1, 0) | (0, 0, 0, 1):
-                    return True
-                case _:
-                    return False
+            return active_item.item_type[2] or active_item.item_type[3]
 
     def execute(self, context):
         ext_collider_group = get_vrm0_extension_collider_group()
@@ -1013,7 +1009,6 @@ class VRMHELPER_OT_vrm0_collider_group_add_collider(VRMHELPER_vrm0_collider_grou
             active_item.group_index
         ]
 
-        current_mode = context.mode
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action="DESELECT")
 

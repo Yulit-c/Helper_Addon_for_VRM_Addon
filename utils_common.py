@@ -256,7 +256,7 @@ def get_pose_bone_by_name(source: bpy.types.Object, bone_name: str) -> Optional[
         処理対象のArmatureオブジェクト
 
     bone_name : str
-        取得したいボーンのなめ
+        取得したいボーンの名前
 
     Returns
     -------
