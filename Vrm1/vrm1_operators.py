@@ -141,6 +141,8 @@ from .utils_vrm1_spring import (
     # ----------------------------------------------------------
     #    Collidaer
     # ----------------------------------------------------------
+    get_active_vrm1_collider,
+    get_active_list_item_in_collider,
     remove_vrm1_collider_by_selected_object,
     get_ui_list_index_from_collider_component,
     # ----------------------------------------------------------
@@ -1194,6 +1196,25 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
 # ----------------------------------------------------------
 #    Collider
 # ----------------------------------------------------------
+class VRMHELPER_OT_vrm1_collider_group_add_collider(VRMHELPER_vrm1_collider_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_add_collider"
+    bl_label = "Add Collider"
+    bl_description = "Add Collider to the active Collider Group in UI List"
+
+    @classmethod
+    def poll(cls, context):
+        # UI ListのアクティブアイテムがボーンまたはColliderである｡
+        return True
+
+    def execute(self, context):
+        active_item = get_active_list_item_in_collider()
+        colliders = get_vrm_extension_property("COLLIDER")
+
+        # TODO : アクティブアイテムに対応するボーンにリンクされたColliderを作成する
+
+        return {"FINISHED"}
+
+
 class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
     bl_idname = "vrm_helper.vrm1_collider_create_from_bone"
     bl_label = "Create Collider"
@@ -1355,7 +1376,7 @@ class VRMHELPER_OT_vrm1_collider_group_remove_active_group(VRMHELPER_vrm1_collid
     bl_description = "Remove the collider group that is active in the list."
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # Collider Groupが存在しており､リストのアクティブアイテムがラベルではない｡
         return (ai := get_active_list_item_in_collider_group()) and (ai.item_type[1])
 
@@ -1382,7 +1403,7 @@ class VRMHELPER_OT_vrm1_collider_group_clear_group(VRMHELPER_vrm1_collider_group
     bl_description = "Clear all collider groups."
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # Collider Groupが存在する｡
         return get_vrm_extension_property("COLLIDER_GROUP")
 
@@ -1410,7 +1431,7 @@ class VRMHELPER_OT_vrm1_collider_group_add_collider(VRMHELPER_vrm1_collider_grou
     bl_description = "Add a new collider to the active group"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがラベル以外である｡
         return (ai := get_active_list_item_in_collider_group()) and not ai.item_type[0]
 
@@ -1428,7 +1449,7 @@ class VRMHELPER_OT_vrm1_collider_group_remove_collider(VRMHELPER_vrm1_collider_g
     bl_description = "Remove the active collider from group"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがColliderである｡
         return (ai := get_active_list_item_in_collider_group()) and ai.item_type[2]
 
@@ -1447,7 +1468,7 @@ class VRMHELPER_OT_vrm1_collider_group_clear_collider(VRMHELPER_vrm1_collider_gr
     bl_description = "Remove all colliders linked to the active group"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがCollider GroupかつそのグループにColliderが存在する｡
         return (
             (active_item := get_active_list_item_in_collider_group())
@@ -1542,7 +1563,7 @@ class VRMHELPER_OT_vrm1_spring_remove_spring(VRMHELPER_vrm1_spring_base):
     bl_description = "Remove the active spring from spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # UIリストのアイテムが存在し､アクティブアイテムがブランク以外である｡
         return (active_item := get_active_list_item_in_spring()) and active_item.name
 
@@ -1592,7 +1613,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint(VRMHELPER_vrm1_spring_base, VRMHELPER_V
     # -----------------------------------------------------
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがジョイントまたはジョイントのラベルである｡
         return (active_item := get_active_list_item_in_spring()) and (
             active_item.item_type[2] or active_item.name == "Joint"
@@ -1642,7 +1663,7 @@ class VRMHELPER_OT_vrm1_spring_remove_joint(VRMHELPER_vrm1_spring_base):
     bl_description = "Remove active joint from spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがジョイントである
         return (active_item := get_active_list_item_in_spring()) and active_item.item_type[2]
 
@@ -1660,7 +1681,7 @@ class VRMHELPER_OT_vrm1_spring_clear_joint(VRMHELPER_vrm1_spring_base):
     bl_description = "Remove all joints from spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがジョイント､またはジョイントのラベルでありジョイントが存在する｡
         if active_indexes := get_active_list_item_in_spring().item_indexes:
             return (
@@ -2019,7 +2040,7 @@ class VRMHELPER_OT_vrm1_spring_add_collider_group(VRMHELPER_vrm1_spring_base):
     bl_description = "Add a new collider group to the active spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがコライダーグループまたはコライダーグループのラベルである｡
         return (active_item := get_active_list_item_in_spring()) and (
             active_item.item_type[3] or active_item.name == "Collider Group"
@@ -2039,7 +2060,7 @@ class VRMHELPER_OT_vrm1_spring_remove_collider_group(VRMHELPER_vrm1_spring_base)
     bl_description = "Remove active collider group from spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがコライダーグループである｡
         return (active_item := get_active_list_item_in_spring()) and active_item.item_type[3]
 
@@ -2057,7 +2078,7 @@ class VRMHELPER_OT_vrm1_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
     bl_description = "Remove all collider groups from spring"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # アクティブアイテムがコライダーグループ､またはコライダーグループのラベルでありコライダーグループが存在する｡
         if active_indexes := get_active_list_item_in_spring().item_indexes:
             return (

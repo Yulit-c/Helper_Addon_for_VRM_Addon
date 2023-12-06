@@ -210,6 +210,22 @@ def vrm1_add_items2collider_ui_list() -> int:
     return len(list(items))
 
 
+def get_active_list_item_in_collider() -> Optional[VRMHELPER_WM_vrm1_collider_list_items]:
+    """
+    UIリストのアクティブインデックスに対応したColliderを取得する｡
+
+    Returns
+    -------
+    Optional[VRMHELPER_WM_vrm1_collider_list_items]
+        取得されたコライダーグループ｡取得できなければNone｡
+
+    """
+    if collider_group_list := get_ui_vrm1_collider_prop():
+        return collider_group_list[get_vrm1_active_index_prop("COLLIDER")]
+    else:
+        return None
+
+
 def remove_vrm1_collider_by_selected_object(source_object: Object):
     """
     VRM1 Collidersの内､引数'source_object'と同一のオブジェクトが登録されたコライダを消去する｡

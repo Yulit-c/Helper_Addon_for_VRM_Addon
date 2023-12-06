@@ -942,7 +942,7 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_group(VRMHELPER_vrm0_collid
     bl_description = "Remove the collider group that is active in the list."
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # Collider Groupが存在しており､リストのアクティブアイテムがラベルではない｡
         return (ai := get_active_list_item_in_collider_group()) and (ai.item_type[2])
 
@@ -968,7 +968,7 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
     bl_description = "Clear all collider groups."
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # Collider Groupが存在する｡
         return get_vrm_extension_property("COLLIDER_GROUP")
 
@@ -991,17 +991,20 @@ class VRMHELPER_OT_vrm0_collider_group_clear_group(VRMHELPER_vrm0_collider_group
 ---------------------------------------------------------"""
 
 
-class VRMHELPER_OT_vrm0_collider_group_add_active_collider(VRMHELPER_vrm0_collider_group_base):
-    bl_idname = "vrmhelper.vrm0_collider_group_add_active_collider"
+class VRMHELPER_OT_vrm0_collider_group_add_collider(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrmhelper.vrm0_collider_group_add_collider"
     bl_label = "Add Collider"
     bl_description = "Add Collider to the active Collider Group in UI List"
 
     @classmethod
-    def poll(self, context):
-        # UI ListのアクティブアイテムがCollide Groupである｡
+    def poll(cls, context):
+        # UI ListのアクティブアイテムがCollide GroupまたはColliderである｡
         if active_item := get_active_list_item_in_collider_group():
-            return active_item.item_type[2]
-        return True
+            match tuple(active_item.item_type):
+                case (0, 0, 1, 0) | (0, 0, 0, 1):
+                    return True
+                case _:
+                    return False
 
     def execute(self, context):
         ext_collider_group = get_vrm0_extension_collider_group()
@@ -1057,7 +1060,7 @@ class VRMHELPER_OT_vrm0_collider_group_remove_active_collider(VRMHELPER_vrm0_col
     bl_description = "Remove the active collider in UI List"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # UI ListのアクティブアイテムがColliderである｡
         if active_item := get_active_list_item_in_collider_group():
             return active_item.item_type[3]
@@ -1087,7 +1090,7 @@ class VRMHELPER_OT_vrm0_collider_group_clear_colliders(VRMHELPER_vrm0_collider_g
     bl_description = "Remove all colliders in active collider group"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # UI Listのアクティブアイテムがコライダーグループまたはコライダーである｡
         if active_item := get_active_list_item_in_collider_group():
             return active_item.item_type[2] or active_item.item_type[3]
@@ -1623,7 +1626,7 @@ class VRMHELPER_OT_vrm0_spring_remove_linked_collider_group(VRMHELPER_vrm0_linke
     bl_description = "Remove the linked collider group that is active in the list"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # リンクされたCollider Groupが1つ以上存在する｡
         return get_active_linked_collider_groups()
 
@@ -1645,7 +1648,7 @@ class VRMHELPER_OT_vrm0_spring_clear_linked_collider_group(VRMHELPER_vrm0_linked
     bl_description = "Clear all linked collider groups"
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         # リンクされたCollider Groupが1つ以上存在する｡
         return get_active_linked_collider_groups()
 
@@ -1736,7 +1739,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_add_group,
     VRMHELPER_OT_vrm0_collider_group_remove_active_group,
     VRMHELPER_OT_vrm0_collider_group_clear_group,
-    VRMHELPER_OT_vrm0_collider_group_add_active_collider,
+    VRMHELPER_OT_vrm0_collider_group_add_collider,
     VRMHELPER_OT_vrm0_collider_group_remove_active_collider,
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
