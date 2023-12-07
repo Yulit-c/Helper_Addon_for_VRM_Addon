@@ -2227,7 +2227,32 @@ class VRMHELPER_OT_vrm1_spring_clear_collider_group(VRMHELPER_vrm1_spring_base):
 
     def execute(self, context):
         active_indexes = get_active_list_item_in_spring().item_indexes
-        get_vrm_extension_property("SPRING")[active_indexes[0]].collider_groups.clear()
+        get_vrm1_extension_spring()[active_indexes[0]].collider_groups.clear()
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+class VRMHELPER_OT_vrm1_spring_remove_empty_joint_slots(
+    VRMHELPER_vrm1_spring_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm1_spring_remove_empty_joint_slots"
+    bl_label = "Remove Empty Joint Slots"
+    bl_description = "Delete all slots where no joints are defined"
+
+    @classmethod
+    def poll(cls, context):
+        # Springが1つ以上存在する
+        return get_active_list_item_in_spring()
+
+    def execute(self, context):
+        for spring in get_vrm1_extension_spring():
+            # 空のスロットを全て削除する
+            while True:
+                if not (l := [n for n, i in enumerate(spring.joints) if not i.node.bone_name]):
+                    break
+                spring.joints.remove(l[0])
+
         self.offset_active_item_index(self.component_type)
 
         return {"FINISHED"}
@@ -2431,12 +2456,15 @@ CLASSES = (
     VRMHELPER_OT_vrm1_spring_add_spring,
     VRMHELPER_OT_vrm1_spring_remove_spring,
     VRMHELPER_OT_vrm1_spring_clear_spring,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_OT_vrm1_spring_add_joint,
     VRMHELPER_OT_vrm1_spring_remove_joint,
     VRMHELPER_OT_vrm1_spring_clear_joint,
     VRMHELPER_OT_vrm1_spring_add_joint_from_source,
     VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
     VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone,
+    VRMHELPER_OT_vrm1_spring_remove_empty_joint_slots,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_OT_vrm1_spring_add_collider_group,
     VRMHELPER_OT_vrm1_spring_remove_collider_group,
     VRMHELPER_OT_vrm1_spring_clear_collider_group,

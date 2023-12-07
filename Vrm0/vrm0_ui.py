@@ -162,6 +162,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_remove_empty_joint_slots,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------
@@ -627,6 +628,8 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     col_list.operator(VRMHELPER_OT_vrm0_spring_add_bone.bl_idname, text="", icon="ADD")
     col_list.operator(VRMHELPER_OT_vrm0_spring_remove_bone.bl_idname, text="", icon="REMOVE")
     col_list.operator(VRMHELPER_OT_vrm0_spring_clear_bone.bl_idname, text="", icon="PANEL_CLOSE")
+
+    layout.operator(VRMHELPER_OT_vrm0_spring_remove_empty_joint_slots.bl_idname)
 
     box = layout.box()
     if active_item := vrm0_get_active_list_item_in_spring():

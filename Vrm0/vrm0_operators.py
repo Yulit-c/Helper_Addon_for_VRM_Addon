@@ -1569,6 +1569,34 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_spring_remove_empty_joint_slots(
+    VRMHELPER_vrm0_bone_group_base, VRMHELPER_VRM_joint_operator_property
+):
+    bl_idname = "vrmhelper.vrm0_spring_remove_empty_joint_"
+    bl_label = "Remove Empty Joint Slots"
+    bl_description = "Delete all slots where no joints are defined"
+
+    @classmethod
+    def poll(cls, context):
+        # Springが1つ以上存在する
+        return get_vrm0_extension_spring_bone_group()
+
+    def execute(self, context):
+        for spg in get_vrm0_extension_spring_bone_group():
+            # 空のスロットを全て削除する
+            while True:
+                if not (l := [n for n, i in enumerate(spg.bones) if not i.bone_name]):
+                    break
+                spg.bones.remove(l[0])
+
+        self.offset_active_item_index(self.component_type)
+
+        return {"FINISHED"}
+
+
+# ---------------------------------------------------------------------------------
+
+
 class VRMHELPER_OT_vrm0_spring_add_linked_collider_group(VRMHELPER_vrm0_linked_collider_group_base):
     bl_idname = "vrmhelper.vrm_spring_add_linked_collider_group"
     bl_label = "Add Linked Collider Group"
@@ -1749,6 +1777,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_spring_remove_bone,
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
+    VRMHELPER_OT_vrm0_spring_remove_empty_joint_slots,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------

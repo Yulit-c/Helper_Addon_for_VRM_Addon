@@ -175,12 +175,15 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_spring_add_spring,
     VRMHELPER_OT_vrm1_spring_remove_spring,
     VRMHELPER_OT_vrm1_spring_clear_spring,
+    # ---------------------------------------------------------------------------------
     VRMHELPER_OT_vrm1_spring_add_joint,
     VRMHELPER_OT_vrm1_spring_remove_joint,
     VRMHELPER_OT_vrm1_spring_clear_joint,
     VRMHELPER_OT_vrm1_spring_add_joint_from_source,
     VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints,
     VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone,
+    VRMHELPER_OT_vrm1_spring_remove_empty_joint_slots,
+    # --------------------------------------------------------------------------------
     VRMHELPER_OT_vrm1_spring_add_collider_group,
     VRMHELPER_OT_vrm1_spring_remove_collider_group,
     VRMHELPER_OT_vrm1_spring_clear_collider_group,
@@ -1007,72 +1010,71 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
     row = layout.row()
     mode = check_addon_mode()
 
-    if mode == "0":
-        row.label(text=self.selected_tool_mode(mode))
+    # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
+    rows = vrm1_add_items2spring_ui_list()
 
-    if mode == "1":
-        # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
-        rows = vrm1_add_items2spring_ui_list()
+    row.template_list(
+        "VRMHELPER_UL_vrm1_spring_list",
+        "",
+        wm_vrm1_prop,
+        "spring_list_items4custom_filter",
+        scene_vrm1_prop.active_indexes,
+        "spring",
+        rows=define_ui_list_rows(rows, max_length=20),
+    )
 
-        row.template_list(
-            "VRMHELPER_UL_vrm1_spring_list",
-            "",
-            wm_vrm1_prop,
-            "spring_list_items4custom_filter",
-            scene_vrm1_prop.active_indexes,
-            "spring",
-            rows=define_ui_list_rows(rows, max_length=20),
-        )
+    col_side = row.column(align=True)
+    col_side.label(icon="PHYSICS")
 
-        col_side = row.column(align=True)
-        col_side.label(icon="PHYSICS")
+    # スプリングの作成/削除に関するオペレーター
+    col_side.operator(VRMHELPER_OT_vrm1_spring_add_spring.bl_idname, text="", icon="ADD")
+    col_side.operator(VRMHELPER_OT_vrm1_spring_remove_spring.bl_idname, text="", icon="REMOVE")
+    col_side.operator(VRMHELPER_OT_vrm1_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
+    col_side.separator(factor=2.0)
 
-        # スプリングの作成/削除に関するオペレーター
-        col_side.operator(VRMHELPER_OT_vrm1_spring_add_spring.bl_idname, text="", icon="ADD")
-        col_side.operator(VRMHELPER_OT_vrm1_spring_remove_spring.bl_idname, text="", icon="REMOVE")
-        col_side.operator(VRMHELPER_OT_vrm1_spring_clear_spring.bl_idname, text="", icon="PANEL_CLOSE")
-        col_side.separator(factor=2.0)
+    # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する
+    spring = None
+    if (active_item := get_active_list_item_in_spring()) and active_item.name:
+        spring = get_vrm_extension_property("SPRING")[active_item.item_indexes[0]]
 
-        # UI Listのアクティブアイテムのタイプに応じて追加の項目を描画する
-        spring = None
-        if (active_item := get_active_list_item_in_spring()) and active_item.name:
-            spring = get_vrm_extension_property("SPRING")[active_item.item_indexes[0]]
+        # アクティブアイテムがJointの場合の場合の追加オペレーター
+        if active_item.item_type[2] or active_item.name == "Joint":
+            col_side.label(icon="BONE_DATA")
+            op = col_side.operator(VRMHELPER_OT_vrm1_spring_add_joint.bl_idname, text="", icon="ADD")
+            set_properties_to_from_dict(op, joint_properties)
+            op.use_auto_joint_parametter = spring_settings.use_auto_joint_parametter
 
-            # アクティブアイテムがJointの場合の場合の追加オペレーター
-            if active_item.item_type[2] or active_item.name == "Joint":
-                col_side.label(icon="BONE_DATA")
-                op = col_side.operator(VRMHELPER_OT_vrm1_spring_add_joint.bl_idname, text="", icon="ADD")
-                set_properties_to_from_dict(op, joint_properties)
-                op.use_auto_joint_parametter = spring_settings.use_auto_joint_parametter
+            col_side.operator(VRMHELPER_OT_vrm1_spring_remove_joint.bl_idname, text="", icon="REMOVE")
+            col_side.operator(
+                VRMHELPER_OT_vrm1_spring_clear_joint.bl_idname,
+                text="",
+                icon="PANEL_CLOSE",
+            )
+            row = col_side.row(align=True)
+            row.alignment = "CENTER"
+            row.prop(spring_settings, "use_auto_joint_parametter", text="")
 
-                col_side.operator(VRMHELPER_OT_vrm1_spring_remove_joint.bl_idname, text="", icon="REMOVE")
-                col_side.operator(
-                    VRMHELPER_OT_vrm1_spring_clear_joint.bl_idname,
-                    text="",
-                    icon="PANEL_CLOSE",
-                )
-                row = col_side.row(align=True)
-                row.alignment = "CENTER"
-                row.prop(spring_settings, "use_auto_joint_parametter", text="")
+        # アクティブアイテムがCollider Groupの場合の追加オペレーター
+        if active_item.item_type[3] or active_item.name == "Collider Group":
+            col_side.label(icon="OVERLAY")
+            col_side.operator(
+                VRMHELPER_OT_vrm1_spring_add_collider_group.bl_idname,
+                text="",
+                icon="ADD",
+            )
+            col_side.operator(
+                VRMHELPER_OT_vrm1_spring_remove_collider_group.bl_idname,
+                text="",
+                icon="REMOVE",
+            )
+            col_side.operator(
+                VRMHELPER_OT_vrm1_spring_clear_collider_group.bl_idname,
+                text="",
+                icon="PANEL_CLOSE",
+            )
 
-            # アクティブアイテムがCollider Groupの場合の追加オペレーター
-            if active_item.item_type[3] or active_item.name == "Collider Group":
-                col_side.label(icon="OVERLAY")
-                col_side.operator(
-                    VRMHELPER_OT_vrm1_spring_add_collider_group.bl_idname,
-                    text="",
-                    icon="ADD",
-                )
-                col_side.operator(
-                    VRMHELPER_OT_vrm1_spring_remove_collider_group.bl_idname,
-                    text="",
-                    icon="REMOVE",
-                )
-                col_side.operator(
-                    VRMHELPER_OT_vrm1_spring_clear_collider_group.bl_idname,
-                    text="",
-                    icon="PANEL_CLOSE",
-                )
+        layout.operator(VRMHELPER_OT_vrm1_spring_remove_empty_joint_slots.bl_idname)
+
         # ----------------------------------------------------------
         #    アクティブアイテム調整用UI
         # ----------------------------------------------------------
