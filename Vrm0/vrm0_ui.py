@@ -152,6 +152,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
     VRMHELPER_OT_vrm0_collider_remove_from_empty,
+    VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object,
     # ----------------------------------------------------------
     #    Spring Bone Group
     # ----------------------------------------------------------
@@ -514,7 +515,13 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
     # ----------------------------------------------------------
     #    登録されているCollider Groupのリスト描画
     # ----------------------------------------------------------
-    layout.prop(cg_prop, "is_additive_selecting", text="Additive Select")
+    row_option = layout.row(align=True)
+    row_option.alignment = "LEFT"
+    row_option.prop(cg_prop, "is_additive_selecting", text="Additive Select")
+    row_option.separator()
+    row_option.operator(
+        VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object.bl_idname, text="", icon="FILE_REFRESH"
+    )
     row = layout.row()
     row.template_list(
         VRMHELPER_UL_vrm0_collider_group_list.__name__,

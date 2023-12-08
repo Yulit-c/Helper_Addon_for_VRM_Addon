@@ -1492,6 +1492,30 @@ class VRMHELPER_OT_vrm1_collider_remove_from_empty(VRMHELPER_vrm1_collider_base)
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm1_collider_refresh_active_item_by_object(VRMHELPER_vrm1_collider_base):
+    bl_idname = "vrm_helper.vrm1_collider_refresh_active_item_by_object"
+    bl_label = "Reflesh UI Active Item"
+    bl_description = "Sets the collider corresponding to the selected empty object as the active item"
+
+    def execute(self, context):
+        if not (active_object := context.active_object):
+            self.report({"ERROR"}, "Active Object doesn't exist")
+            return {"CANCELLED"}
+
+        if active_object.type != "EMPTY":
+            self.report({"ERROR"}, "Active Object is't Empty Object")
+            return {"CANCELLED"}
+
+        i: VRMHELPER_WM_vrm1_collider_list_items
+        for n, i in enumerate(get_ui_vrm1_collider_prop()):
+            if i.collider_name == active_object.name:
+                break
+
+        get_vrm1_index_root_prop().collider = n
+
+        return {"FINISHED"}
+
+
 # ----------------------------------------------------------
 #    Collider Group
 # ----------------------------------------------------------
@@ -2440,6 +2464,7 @@ CLASSES = (
     VRMHELPER_OT_vrm1_collider_clear_colliders,
     VRMHELPER_OT_vrm1_collider_create_from_bone,
     VRMHELPER_OT_vrm1_collider_remove_from_empty,
+    VRMHELPER_OT_vrm1_collider_refresh_active_item_by_object,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------

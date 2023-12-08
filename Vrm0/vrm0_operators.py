@@ -65,6 +65,7 @@ from ..property_groups import (
     VRMHELPER_SCENE_vrm0_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm0_blend_shape_settings,
     VRMHELPER_WM_vrm0_blend_shape_material_list_items,
+    VRMHELPER_WM_vrm0_collider_group_list_items,
     VRMHELPER_WM_vrm0_operator_spring_collider_group_list_items,
     VRMHELPER_WM_operator_spring_bone_group_list_items,
     # ---------------------------------------------------------------------------------
@@ -73,6 +74,7 @@ from ..property_groups import (
     # ----------------------------------------------------------
     get_ui_vrm0_first_person_prop,
     get_ui_vrm0_blend_shape_material_prop,
+    get_ui_vrm0_collider_group_prop,
     get_ui_bone_group_prop,
     get_ui_vrm0_operator_collider_group_prop,
     # ----------------------------------------------------------
@@ -1245,6 +1247,30 @@ class VRMHELPER_OT_vrm0_collider_remove_from_empty(VRMHELPER_vrm0_collider_group
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrm_helper.vrm0_collider_refresh_active_item_by_object"
+    bl_label = "Reflesh UI Active Item"
+    bl_description = "Sets the collider corresponding to the selected empty object as the active item"
+
+    def execute(self, context):
+        if not (active_object := context.active_object):
+            self.report({"ERROR"}, "Active Object doesn't exist")
+            return {"CANCELLED"}
+
+        if active_object.type != "EMPTY":
+            self.report({"ERROR"}, "Active Object is't Empty Object")
+            return {"CANCELLED"}
+
+        i: VRMHELPER_WM_vrm0_collider_group_list_items
+        for n, i in enumerate(get_ui_vrm0_collider_group_prop()):
+            if i.collider_name == active_object.name:
+                break
+
+        get_vrm0_index_root_prop().collider_group = n
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
     Spring Bone Group
 ---------------------------------------------------------"""
@@ -1767,6 +1793,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_group_clear_colliders,
     VRMHELPER_OT_vrm0_collider_create_from_bone,
     VRMHELPER_OT_vrm0_collider_remove_from_empty,
+    VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object,
     # ----------------------------------------------------------
     #    Spring Bone Group
     # ----------------------------------------------------------

@@ -159,6 +159,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_collider_group_clear_group,
     VRMHELPER_OT_vrm1_collider_create_from_bone,
     VRMHELPER_OT_vrm1_collider_remove_from_empty,
+    VRMHELPER_OT_vrm1_collider_refresh_active_item_by_object,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
@@ -747,7 +748,12 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     collider_prop: VRMHELPER_SCENE_vrm1_collider_settings = scene_vrm1_prop.collider_settings
 
     # UI描画
-    layout.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
+    row_option = layout.row(align=True)
+    row_option.prop(collider_prop, "is_additive_selecting", text="Additive Selection")
+    row_option.alignment = "LEFT"
+    row_option.operator(
+        VRMHELPER_OT_vrm1_collider_refresh_active_item_by_object.bl_idname, text="", icon="FILE_REFRESH"
+    )
 
     # UI Listに表示するアイテムをコレクションプロパティに追加し､アイテム数を取得する｡
     rows = vrm1_add_items2collider_ui_list()
