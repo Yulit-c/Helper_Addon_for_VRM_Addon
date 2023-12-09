@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_constants",
         "property_groups",
         "utils_common",
         "operators",
@@ -18,6 +19,7 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_constants
     from .. import property_groups
     from .. import utils_common
     from .. import operators
@@ -43,8 +45,7 @@ from ..addon_classes import (
 )
 
 from ..addon_constants import (
-    PRESET_BLEND_SHAPE_NAME_DICT,
-    BLEND_SHAPE_ICON_DICT,
+    UI_TEXT_DICT,
 )
 
 from ..property_groups import (
@@ -674,10 +675,10 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
     op.source_type = "SELECT"
     op = box_ope.operator(
         VRMHELPER_OT_vrm0_spring_add_bone_group_from_source.bl_idname,
-        text="Create From Bone Group",
+        text=UI_TEXT_DICT["vrm0_create_sbg"],
         icon="GROUP_BONE",
     )
-    op.source_type = "BONE_GROUP"
+    op.source_type = "MULTIPLE"
 
     # Bone GroupにリンクされたCollider Groupのリストを描画｡
     if (rows := vrm0_add_items2linked_collider_group_ui_list()) != None:

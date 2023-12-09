@@ -1434,7 +1434,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
 ):
     bl_idname = "vrmhelper.vrm0_spring_create_bone_group_from_selected"
     bl_label = "Create Bone Group"
-    bl_description = "Create spring bone_groups from selected bones or bone groups"
+    bl_description = "Create spring bone_groups from selected source"
 
     # ----------------------------------------------------------
     #    Property
@@ -1444,7 +1444,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         description="Description",
         items=(
             ("SELECT", "Selected Bone", "Get source from selected bones"),
-            ("BONE_GROUP", "Bone Group", "Get source from bone groups"),
+            ("MULTIPLE", "Bone Group", "Get source from bone groups"),
         ),
         default="SELECT",
     )
@@ -1469,7 +1469,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
                 vrm0_add_list_item2collider_group_list4operator()
                 return context.window_manager.invoke_props_dialog(self, width=self.width * 4)
 
-            case "BONE_GROUP":
+            case "MULTIPLE":
                 logger.debug(self.source_type)
                 add_list_item2bone_group_list4operator()
                 vrm0_add_list_item2collider_group_list4operator()
@@ -1496,7 +1496,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         row_root = box.row(align=False)
 
         # 処理対象のボーングループを選択するエリア｡
-        if self.source_type == "BONE_GROUP":
+        if self.source_type == "MULTIPLE":
             bone_group_collection = get_ui_bone_group_prop()
             anchor_layout = row_root.column(align=True)
             box_sub = anchor_layout.box()
@@ -1512,7 +1512,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         # 処理対象のコライダーグループを選択するエリア｡
         collider_group_collection = get_ui_vrm0_operator_collider_group_prop()
         anchor_layout = row_root.column(align=True)
-        if self.source_type == "BONE_GROUP":
+        if self.source_type == "MULTIPLE":
             anchor_layout = anchor_layout.box()
         anchor_layout.label(text="Target Collider Group")
         row_cg_root = anchor_layout.row()
@@ -1548,7 +1548,7 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
 
         # グループ分けされたボーンリストとボーンをSpring Bone GroupとBoneに登録する｡
         for group_index, root_bones in target_bones_dict.items():
-            bone_group_name = "Bone Group"
+            bone_group_name = "Spring Bone Group"
             pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
             if pose_bone.bone_group:
                 source_bone_group = pose.bone_groups[group_index]

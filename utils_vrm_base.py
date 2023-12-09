@@ -1203,7 +1203,14 @@ def add_list_item2bone_group_list4operator():
 
     bone_group_collection = get_ui_bone_group_prop()
     bone_group_collection.clear()
-    for n, group in enumerate(get_target_armature().pose.bone_groups):
+
+    # Blender 4.0以降はBone GroupはBone Colledtionに統合されているため､データ取得元を分岐
+    if bpy.app.version < (4, 0, 0):
+        source_group = get_target_armature().pose.bone_groups
+    else:
+        source_group = get_target_armature().data.collections
+
+    for n, group in enumerate(source_group):
         new_item = bone_group_collection.add()
         new_item.name = group.name
         new_item.group_index = n

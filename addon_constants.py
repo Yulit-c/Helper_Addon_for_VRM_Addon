@@ -1,4 +1,5 @@
 from typing import Literal
+from bpy.app import version
 
 from .addon_classes import (
     MToon0ParameterNames,
@@ -11,6 +12,30 @@ from .addon_classes import (
     Documentation
 ---------------------------------------------------------"""
 DOCUMENTATION_URL = "https://drive.google.com/file/d/1cSMls4SUoOljXHp7vGKyyElrgS8vuD0F/view?usp=drive_link"
+
+
+"""--------------------------------------------------------
+    UI Text Dictionary
+---------------------------------------------------------"""
+ITEMS = (
+    ("vrm0_create_sbg", ("Create From Bone Group", "Create From Bone Collection")),
+    ("vrm1_create_spring", ("Create From Bone Group", "Create From Bone Collection")),
+)
+
+
+def gen_ui_text_dict() -> dict[str, str]:
+    dict = {}
+    for i in ITEMS:
+        key, tuple = i
+        if version < (4, 0, 0):
+            dict[key] = tuple[0]
+        else:
+            dict[key] = tuple[1]
+
+    return dict
+
+
+UI_TEXT_DICT = gen_ui_text_dict()
 
 
 """---------------------------------------------------------

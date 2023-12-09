@@ -3,6 +3,7 @@ if "bpy" in locals():
 
     reloadable_modules = [
         "preparation_logger",
+        "addon_constants",
         "property_groups",
         "utils_common",
         "utils_vrm1_first_person",
@@ -19,6 +20,7 @@ if "bpy" in locals():
 
 else:
     from ..Logging import preparation_logger
+    from .. import addon_constants
     from .. import property_groups
     from .. import utils_common
     from . import utils_vrm1_first_person
@@ -49,6 +51,7 @@ from ..addon_classes import (
 )
 
 from ..addon_constants import (
+    UI_TEXT_DICT,
     PRESET_EXPRESSION_NAME_DICT,
     EXPRESSION_ICON_DICT,
     EXPRESSION_OPTION_ICON,

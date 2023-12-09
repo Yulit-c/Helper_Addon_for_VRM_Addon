@@ -1875,7 +1875,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
         description="Description",
         items=(
             ("SELECT", "Selected Bone", "Get source from selected bones"),
-            ("BONE_GROUP", "Bone Group", "Get source from bone groups"),
+            ("MULTIPLE", "Bone Group", "Get source from bone groups"),
         ),
         default="SELECT",
     )
@@ -1893,7 +1893,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
                 vrm1_add_list_item2collider_group_list4operator()
                 return context.window_manager.invoke_props_dialog(self, width=360)
 
-            case "BONE_GROUP":
+            case "MULTIPLE":
                 add_list_item2bone_group_list4operator()
                 vrm1_add_list_item2collider_group_list4operator()
                 if not (bone_groups := get_ui_bone_group_prop()):
@@ -1911,7 +1911,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
         row = box.row(align=True)
 
         # 処理対象のボーングループを選択するエリア｡
-        if self.source_type == "BONE_GROUP":
+        if self.source_type == "MULTIPLE":
             bone_group_collection = get_ui_bone_group_prop()
             anchor_layout = row.column(align=True)
             box_sub = anchor_layout.box()
@@ -1925,7 +1925,7 @@ class VRMHELPER_OT_vrm1_spring_add_joint_from_source(
 
         # 処理対象のコライダーグループを選択するエリア｡
         anchor_layout = row.column(align=True)
-        if self.source_type == "BONE_GROUP":
+        if self.source_type == "MULTIPLE":
             anchor_layout = anchor_layout.box()
         anchor_layout.label(text="Target Collider Group")
         collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
