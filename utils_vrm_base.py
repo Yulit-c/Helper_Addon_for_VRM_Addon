@@ -75,6 +75,7 @@ from .property_groups import (
     VRMHELPER_SCENE_vrm0_mtoon0_stored_parameters,
     VRMHELPER_SCENE_vrm1_ui_list_active_indexes,
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
+    VRMHELPER_WM_operator_spring_bone_group_list_items,
     get_scene_basic_prop,
     get_target_armature,
     get_target_armature_data,
@@ -180,7 +181,7 @@ def set_new_value2index_prop(
 
 def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
     """
-    指定したBone Groupに属するボーンを'target_armature'から取得する｡
+    指定したBone GroupまたはBone Collectionに属するボーンを'target_armature'から取得する｡
 
     Parameters
     ----------
@@ -196,26 +197,55 @@ def get_bones_from_bone_groups(target_armature: Object) -> list[Bone]:
 
     bone_group_collection = get_ui_bone_group_prop()
 
-    target_group_index_list = [i.group_index for i in bone_group_collection if i.is_target]
-    target_bone_list = [
-        bone
-        for (bone, pose_bone) in zip(target_armature.data.bones, target_armature.pose.bones)
-        if pose_bone.bone_group and pose_bone.bone_group_index in target_group_index_list
-    ]
+    bl_ver = bpy.app.version
+    if bl_ver < (4, 0, 0):
+        target_group_index_list = [i.group_index for i in bone_group_collection if i.is_target]
+        target_bone_list = [
+            bone
+            for (bone, pose_bone) in zip(target_armature.data.bones, target_armature.pose.bones)
+            if pose_bone.bone_group and pose_bone.bone_group_index in target_group_index_list
+        ]
+
+    elif bl_ver >= (4, 0, 0):
+        target_coll_name_list = [i.name for i in bone_group_collection if i.is_target]
+        target_bone_list = [
+            bone
+            for coll in target_armature.data.collections
+            for bone in coll.bones
+            if coll.name in target_coll_name_list
+        ]
 
     return target_bone_list
 
 
 def get_branch_root_bones_by_type(
-    source_type: Literal["SELECT", "BONE_GROUP"],
+    source_type: Literal["SELECT", "MULTIPLE"],
     target_armature: Object,
 ) -> list[Bone]:
-    target_armature = get_target_armature()
-    if source_type == "SELECT":
-        source_bones = get_selected_bone()
+    """
+    'source_type'に応じて選択ボーンまたはBone Group(Bone Collection)内の房のルートボーンを取得する
 
-    if source_type == "BONE_GROUP":
-        source_bones = get_bones_from_bone_groups(target_armature)
+    Parameters
+    ----------
+    source_type : Literal["SELECT", "MULTIPLE"]
+        ボーン取得元となるデータ
+
+    target_armature : Object
+        処理対象のArmature Object
+
+    Returns
+    -------
+    list[Bone]
+        取得された房ルートボーンのリスト
+
+    """
+
+    target_armature = get_target_armature()
+    match source_type:
+        case "SELECT":
+            source_bones = get_selected_bone()
+        case "MULTIPLE":
+            source_bones = get_bones_from_bone_groups(target_armature)
 
     branch_root_bones = list({get_branch_root_bone(i) for i in source_bones})
     sort_order = [i.name for i in target_armature.data.bones if i in branch_root_bones]
@@ -225,7 +255,7 @@ def get_branch_root_bones_by_type(
 
 
 def get_bones_for_each_branch_by_type(
-    source_type: Literal["SELECT", "BONE_GROUP"],
+    source_type: Literal["SELECT", "MULTIPLE"],
     target_armature: Object,
 ) -> list[Bone]:
     """
@@ -233,7 +263,7 @@ def get_bones_for_each_branch_by_type(
 
     Parameters
     ----------
-    source_type : Literal["SELECT", "BONE_GROUP"]
+    source_type : Literal["SELECT", "MULTIPLE"]
         ボーンを取得する対象を指定する｡
 
     target_armature : _type_
@@ -248,9 +278,9 @@ def get_bones_for_each_branch_by_type(
 
     target_armature = get_target_armature()
     if source_type == "SELECT":
-        source_bones = get_selected_bone(target_armature.data)
+        source_bones = get_selected_bone()
 
-    if source_type == "BONE_GROUP":
+    if source_type == "MULTIPLE":
         source_bones = get_bones_from_bone_groups(target_armature)
 
     return get_bones_for_each_branch_from_source_bones(target_armature, source_bones)
@@ -1208,10 +1238,10 @@ def add_list_item2bone_group_list4operator():
     if bpy.app.version < (4, 0, 0):
         source_group = get_target_armature().pose.bone_groups
     else:
-        source_group = get_target_armature().data.collections
+        source_group = get_target_armature_data().collections
 
     for n, group in enumerate(source_group):
-        new_item = bone_group_collection.add()
+        new_item: VRMHELPER_WM_operator_spring_bone_group_list_items = bone_group_collection.add()
         new_item.name = group.name
         new_item.group_index = n
         # Bone Groupの名前に'filter_word'が含まれる場合は初期値をTrueにする｡

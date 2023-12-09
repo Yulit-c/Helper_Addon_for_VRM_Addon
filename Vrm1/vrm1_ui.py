@@ -1154,55 +1154,56 @@ def draw_panel_vrm1_spring(self, context: Context, layout: UILayout):
                 VRMHELPER_OT_vrm1_spring_pick_radius_from_active_bone.bl_idname, text="", icon="EYEDROPPER"
             )
 
-        # ----------------------------------------------------------
-        #    ジョイント作成/調整オペレーター
-        # ----------------------------------------------------------
-        layout.separator(factor=0.5)
-        box = layout.box()
-        # オペレーター用ジョイントパラメーターの描画
-        # UIの表示/非表示を切り替えるプロパティ｡
-        if spring_settings.is_expand_operator_parameters:
-            expand_operator_icon = "TRIA_DOWN"
-        else:
-            expand_operator_icon = "TRIA_RIGHT"
+    # ----------------------------------------------------------
+    #    ジョイント作成/調整オペレーター
+    # ----------------------------------------------------------
+    layout.separator(factor=0.5)
+    box = layout.box()
+    # オペレーター用ジョイントパラメーターの描画
+    # UIの表示/非表示を切り替えるプロパティ｡
+    if spring_settings.is_expand_operator_parameters:
+        expand_operator_icon = "TRIA_DOWN"
+    else:
+        expand_operator_icon = "TRIA_RIGHT"
 
-        row = box.row(align=False)
-        row.prop(
-            spring_settings,
-            "is_expand_operator_parameters",
-            icon=expand_operator_icon,
-            icon_only=True,
+    row = box.row(align=False)
+    row.prop(
+        spring_settings,
+        "is_expand_operator_parameters",
+        icon=expand_operator_icon,
+        icon_only=True,
+    )
+    row.label(text="Operators")
+    if spring_settings.is_expand_operator_parameters:
+        box.prop(spring_settings, "hit_radius", slider=True)
+        box.prop(spring_settings, "stiffness", slider=True)
+        box.prop(spring_settings, "drag_force", slider=True)
+        box.prop(spring_settings, "gravity_power", slider=True)
+        box.prop(spring_settings, "gravity_dir")
+        box.separator(factor=0.5)
+        box.prop(spring_settings, "damping_ratio", slider=True)
+
+        # ジョイント作成オペレーターの描画
+        col = box.column()
+        col.scale_y = 1.2
+        op = col.operator(
+            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
+            text="Create from Selected",
         )
-        row.label(text="Operators")
-        if spring_settings.is_expand_operator_parameters:
-            box.prop(spring_settings, "hit_radius", slider=True)
-            box.prop(spring_settings, "stiffness", slider=True)
-            box.prop(spring_settings, "drag_force", slider=True)
-            box.prop(spring_settings, "gravity_power", slider=True)
-            box.prop(spring_settings, "gravity_dir")
-            box.separator(factor=0.5)
-            box.prop(spring_settings, "damping_ratio", slider=True)
+        op.source_type = "SELECT"
+        set_properties_to_from_dict(op, joint_properties)
 
-            # ジョイント作成オペレーターの描画
-            col = box.column()
-            col.scale_y = 1.2
-            op = col.operator(
-                VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
-                text="Create from Selected",
-            )
-            op.source_type = "SELECT"
-            set_properties_to_from_dict(op, joint_properties)
+        op = col.operator(
+            VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
+            text=UI_TEXT_DICT["vrm1_create_spring"],
+        )
+        set_properties_to_from_dict(op, joint_properties)
+        op.source_type = "MULTIPLE"
 
-            op = col.operator(
-                VRMHELPER_OT_vrm1_spring_add_joint_from_source.bl_idname,
-                text="Create from Bone Group",
-            )
-            set_properties_to_from_dict(op, joint_properties)
-            op.source_type = "BONE_GROUP"
-
-            # ----------------------------------------------------------
-            #    既存ジョイントのパラメーター調整
-            # ----------------------------------------------------------
+        # ----------------------------------------------------------
+        #    既存ジョイントのパラメーター調整
+        # ----------------------------------------------------------
+        if active_item:
             col.separator(factor=2.0)
             op = col.operator(
                 VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints.bl_idname,
@@ -1234,7 +1235,9 @@ class VRMHELPER_UL_vrm1_spring_list(UIList, VRMHELPER_UL_base):
     Vrm1のSpring Bone Springを表示するUI List
     """
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+    def draw_item(
+        self, context, layout: bpy.types.UILayout, data, item, icon, active_data, active_propname, index
+    ):
         row = layout.row(align=True)
 
         # ラベルの描画
@@ -1254,7 +1257,7 @@ class VRMHELPER_UL_vrm1_spring_list(UIList, VRMHELPER_UL_base):
         # Springの描画
         if item.item_type[1]:
             row.label(text="", icon="DOT")
-            row.prop(spring[item.item_indexes[0]], "vrm_name", text="")
+            row.prop(spring[item.item_indexes[0]], "vrm_name", text="", emboss=False)
             return
 
         # Jointの描画

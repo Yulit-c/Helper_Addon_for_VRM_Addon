@@ -45,6 +45,7 @@ from mathutils import (
 # )
 
 from ..preferences import (
+    get_addon_preferences,
     get_addon_collection_name,
 )
 
@@ -1538,32 +1539,52 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
         collider_group_list = get_ui_vrm0_operator_collider_group_prop()
         target_armature = get_target_armature()
         pose = target_armature.pose
+
+        # Branch Root Boneを所属しているグループまたはコレクションによってグルーピングする｡
         target_bones_dict: dict[str, list[bpy.types.Bone]] = {}
+        filtering_word = get_addon_preferences().bone_group_filter_name
         for root_bone in branch_root_bones:
-            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
-            bone_group_index = -1
-            if pose_bone.bone_group:
-                bone_group_index = pose_bone.bone_group_index
-            target_bones_dict.setdefault(bone_group_index, []).append(root_bone)
+            grouping_name = "Spring Bone Group"
+            # Blender 4.0以降はBone GroupはBone Colledtionに統合されているため､グルーピング処理を分岐する｡
+            bl_ver = bpy.app.version
+            if bl_ver < (4, 0, 0):
+                pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
+                if pose_bone.bone_group:
+                    grouping_name = pose.bone_groups[pose_bone.bone_group_index].name
+
+            elif bl_ver >= (4, 0, 0):
+                # Boneが所属するBone Collectionを走査する(filtering_wordに合致するものを優先)｡
+                if l := [
+                    i
+                    for i in target_armature.data.collections
+                    if filtering_word in i.name and root_bone in tuple(i.bones)
+                ]:
+                    grouping_name = l[0].name
+
+            target_bones_dict.setdefault(grouping_name, []).append(root_bone)
 
         # グループ分けされたボーンリストとボーンをSpring Bone GroupとBoneに登録する｡
-        for group_index, root_bones in target_bones_dict.items():
-            bone_group_name = "Spring Bone Group"
-            pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
-            if pose_bone.bone_group:
-                source_bone_group = pose.bone_groups[group_index]
-                bone_group_name = source_bone_group.name
-            spring_bone_groups = get_vrm0_extension_spring_bone_group()
-            registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
+        for group_name, root_bones in target_bones_dict.items():
+            # bone_group_name = "Spring Bone Group"
+            # Blender 4.0以降はBone GroupはBone Colledtionに統合されているため､グルーピング処理を分岐する｡
+            # if bpy.app.version < (4, 0, 0):
+            #     pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
+            #     if pose_bone.bone_group:
+            #         source_bone_group = pose.bone_groups[group_index]
+            #         bone_group_name = source_bone_group.name
+            # else:
+            #     pass
 
             # group_name毎にスプリングボーングループを作成する｡
+            spring_bone_groups = get_vrm0_extension_spring_bone_group()
+            registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
             target_group: ReferenceVrm0SecondaryAnimationGroupPropertyGroup
-            if target_group := get_spring_bone_group_by_comment(bone_group_name):
-                logger.debug(f"Already Registered Group : {bone_group_name}")
+            if target_group := get_spring_bone_group_by_comment(group_name):
+                logger.debug(f"Already Registered Group : {group_name}")
 
             else:
                 target_group = spring_bone_groups.add()
-                target_group.comment = bone_group_name
+                target_group.comment = group_name
 
             # カテゴリーに属するルートボーンをスプリングボーンに登録する｡
             for bone in root_bones:

@@ -1,5 +1,4 @@
 # 優先度 : 高
-- 4.0でBone GroupがBone Collectionに統合されたことに対応する｡
 
 
 # 優先度 : 中
