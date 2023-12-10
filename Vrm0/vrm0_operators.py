@@ -189,7 +189,6 @@ class VRMHELPER_OT_vrm0_first_person_set_annotation(VRMHELPER_vrm0_first_person_
     bl_description = (
         "Add a new annotation to First Person Annotation and set the selected object to that bone_name"
     )
-    vrm_mode = "0"
 
     """
     選択されたオブジェクトをTarget ArmatureのVRM First Person Mesh Annotationに設定する｡
@@ -230,7 +229,6 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_list(VRMHELPER_vrm0_
     bl_idname = "vrm_helper.vrm0_remove_mesh_annotation_from_list"
     bl_label = "Remove Mesh Annotation from Active Item"
     bl_description = "Remove active annotation in the list from Target Armature's VRM Extension"
-    vrm_mode = "0"
 
     """
     Target ArmatureのVRM Extensionから､リスト内で選択されているMesh Annotationを削除する｡
@@ -259,7 +257,6 @@ class VRMHELPER_OT_vrm0_first_person_remove_annotation_from_select_objects(VRMHE
     bl_idname = "vrm_helper.vrm0_remove_mesh_annotation"
     bl_label = "Remove  Mesh Annotation by Selected Objects"
     bl_description = "Remove Mesh Annotations corresponding to selected objects from the VRM Extension"
-    vrm_mode = "0"
 
     """
     Target ArmatureのVRM Extensionから､選択オブジェクトに対応したMesh Annotationを削除する｡
@@ -286,7 +283,6 @@ class VRMHELPER_OT_vrm0_first_person_clear_annotation(VRMHELPER_vrm0_first_perso
     bl_idname = "vrm_helper.vrm0_clear_mesh_annotation"
     bl_label = "Clear Mesh Annotation"
     bl_description = "Remove all Mesh Annotations in Target Armature"
-    vrm_mode = "0"
 
     """
     Target Armature内のVRM Extensionに設定された全てのMesh Annotationを削除する｡
@@ -378,7 +374,11 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
 
     @classmethod
     def poll(cls, context):
-        # ブレンドシェイプが1つ以上存在している
+        # Blend Shape用コレクションの状態を確認
+        if not (evaluation_expression_morph_collection() and evaluation_expression_material_collection()):
+            return False
+
+        # # ブレンドシェイプが1つ以上存在している
         blend_shapes = get_vrm0_extension_blend_shape().blend_shape_groups
         return blend_shapes
 
@@ -389,6 +389,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
         target_index = blend_shape_master.active_blend_shape_group_index
         active_blend_shape: ReferenceVrm0BlendShapeGroupPropertyGroup = blend_shape_groups[target_index]
 
+        bpy.ops.vrm_helper.vrm0_blend_shape_restore_initial_values()
         # ----------------------------------------------------------
         #    Binds
         # ----------------------------------------------------------
@@ -396,7 +397,7 @@ class VRMHELPER_OT_vrm0_blend_shape_assign_blend_shape_to_scene(VRMHELPER_vrm0_b
         # メッシュ/シェイプキーに対してウェイトを反映する｡
         # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
         binds = active_blend_shape.binds
-        reset_shape_keys_value_in_morph_binds(binds)
+        # reset_shape_keys_value_in_morph_binds(binds)
 
         # Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}
@@ -695,8 +696,6 @@ class VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters(VRMHELPER_vrm0_ble
         for mat in get_all_materials_from_source_collection_objects(source_collection):
             set_mtoon_default_values(mat)
 
-        # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
-
         return {"FINISHED"}
 
 
@@ -839,6 +838,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
                 uv_offset = mtoon_uv_parameters_dict["texture_offset"]
             # value_set = mtoon_uv_parameters_dict["texture_scale"] + mtoon_uv_parameters_dict["texture_offset"]
             target_value = new_uv_value.target_value
+            logger.debug(uv_scale)
             for n, scale_value in enumerate(uv_scale):
                 target_value[n].value = scale_value
 
@@ -862,9 +862,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
 
     @classmethod
     def poll(cls, context):
-        morph_condition = evaluation_expression_morph_collection()
-        mat_condition = evaluation_expression_material_collection()
-        return morph_condition and mat_condition
+        return evaluation_expression_morph_collection() and evaluation_expression_material_collection()
 
     def execute(self, context):
         os.system("cls")
@@ -889,9 +887,7 @@ class VRMHELPER_OT_vrm0_blend_shape_restore_initial_parameters(VRMHELPER_vrm0_bl
 
     @classmethod
     def poll(cls, context):
-        morph_condition = evaluation_expression_morph_collection()
-        mat_condition = evaluation_expression_material_collection()
-        return morph_condition or mat_condition
+        return evaluation_expression_morph_collection() or evaluation_expression_material_collection()
 
     def execute(self, context):
         # ----------------------------------------------------------

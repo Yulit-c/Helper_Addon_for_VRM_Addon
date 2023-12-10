@@ -231,7 +231,8 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
         """
 
-        pattern = (int(self.vrm_mode), comopnent_type)
+        logger.debug(type(self.vrm_mode))
+        pattern = (self.vrm_mode, comopnent_type)
         logger.debug(pattern)
 
         match pattern:
@@ -265,7 +266,7 @@ class VRMHELPER_operator_base(bpy.types.Operator):
             case (1, "EXPRESSION_MATERIAL"):
                 vrm1_add_items2expression_material_ui_list()
 
-            case (0, "COLLIDER"):
+            case (1, "COLLIDER"):
                 vrm1_add_items2collider_ui_list()
 
             case (1, "COLLIDER"):
@@ -337,6 +338,10 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
             case 1:
                 index_root_prop = get_vrm1_index_root_prop()
+
+            case _:
+                self.report({"ERROR"}, "Invalid VRM Mode")
+                return {"CANCELLED"}
 
         # 'component_type'の種類に応じて操作する属性名を定義する｡
         match pattern:

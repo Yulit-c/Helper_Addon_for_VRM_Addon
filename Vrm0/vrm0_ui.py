@@ -658,7 +658,6 @@ def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):
             text="Center",
             icon="PIVOT_MEDIAN",
         )
-        # TODO : Stiffnessに修正されたら対応する｡
         box.prop(bone_group, "stiffiness", text="stiffness")
         box.prop(bone_group, "drag_force", text="Drag Force")
         box.prop(bone_group, "hit_radius", text="Hit Radius")

@@ -13,6 +13,7 @@ if "bpy" in locals():
 else:
     from .Logging import preparation_logger
 
+import re
 
 from operator import (
     attrgetter,
@@ -1071,10 +1072,7 @@ def return_default_values_of_mtoon_properties(target_material: Material):
             attr_dict = MTOON1_ATTRIBUTE_NAMES
             value_dict = MTOON1_DEFAULT_VALUES
 
-    for (
-        parameter_name,
-        attr_name,
-    ) in attr_dict.items():
+    for parameter_name, attr_name in attr_dict.items():
         default_value = value_dict.get(parameter_name)
         set_attr_from_strings(mtoon1, attr_name, default_value)
 
@@ -1107,12 +1105,19 @@ def set_mtoon_default_values(target_material: Material):
 
     mtoon_ext = target_material.vrm_addon_extension.mtoon1
     for stored_parameter_name, mtoon_attr_name in attr_dict.items():
-        if source_patameters:
-            value = source_patameters.get(stored_parameter_name)
-            logger.debug(f"Restore Stored Values : {target_material.name}")
-            set_attr_from_strings(mtoon_ext, mtoon_attr_name, value)
+        if source_patameters and (value := source_patameters.get(stored_parameter_name)):
+            # value = source_patameters.get(stored_parameter_name)
+            # logger.debug(f"Restore Stored Values : {target_material.name}")
+            if stored_parameter_name in {"texture_scale", "texture_offset"}:
+                for k, v in MTOON1_ATTRIBUTE_NAMES.items():
+                    if not (re.search(r"scale|offset", k)):
+                        continue
+                    set_attr_from_strings(mtoon_ext, v, value)
+            else:
+                set_attr_from_strings(mtoon_ext, mtoon_attr_name, value)
+
         else:
-            logger.debug(f"Return to Default Values : {target_material.name}")
+            # logger.debug(f"Return to Default Values : {target_material.name}")
             return_default_values_of_mtoon_properties(target_material)
 
 

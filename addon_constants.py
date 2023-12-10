@@ -221,6 +221,14 @@ JOINT_PROP_NAMES = (
 MTOON0_ATTRIBUTE_NAMES: MToon0ParameterNames = {
     "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
     "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
+    # ---------------------------------------------------------------------------------
+    "shade_scale": "extensions.vrmc_materials_mtoon.shade_multiply_texture.extensions.khr_texture_transform.scale",
+    "shade_offset": "extensions.vrmc_materials_mtoon.shade_multiply_texture.extensions.khr_texture_transform.offset",
+    "normal_scale": "normal_texture.extensions.khr_texture_transform.scale",
+    "normal_offset": "normal_texture.extensions.khr_texture_transform.offset",
+    "emission_scale": "emissive_texture.extensions.khr_texture_transform.scale",
+    "emission_offset": "emissive_texture.extensions.khr_texture_transform.offset",
+    # ---------------------------------------------------------------------------------
     "color": "pbr_metallic_roughness.base_color_factor",
     "shade_color": "extensions.vrmc_materials_mtoon.shade_color_factor",
     "emission_color": "emissive_factor",
@@ -231,6 +239,14 @@ MTOON0_ATTRIBUTE_NAMES: MToon0ParameterNames = {
 MTOON1_ATTRIBUTE_NAMES: MToon1ParameterNames = {
     "texture_scale": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.scale",
     "texture_offset": "pbr_metallic_roughness.base_color_texture.extensions.khr_texture_transform.offset",
+    # ---------------------------------------------------------------------------------
+    "shade_scale": "extensions.vrmc_materials_mtoon.shade_multiply_texture.extensions.khr_texture_transform.scale",
+    "shade_offset": "extensions.vrmc_materials_mtoon.shade_multiply_texture.extensions.khr_texture_transform.offset",
+    "normal_scale": "normal_texture.extensions.khr_texture_transform.scale",
+    "normal_offset": "normal_texture.extensions.khr_texture_transform.offset",
+    "emission_scale": "emissive_texture.extensions.khr_texture_transform.scale",
+    "emission_offset": "emissive_texture.extensions.khr_texture_transform.offset",
+    # ---------------------------------------------------------------------------------
     "lit_color": "pbr_metallic_roughness.base_color_factor",
     "shade_color": "extensions.vrmc_materials_mtoon.shade_color_factor",
     "emission_color": "emissive_factor",
@@ -242,6 +258,12 @@ MTOON1_ATTRIBUTE_NAMES: MToon1ParameterNames = {
 MTOON0_DEFAULT_VALUES: MToonMaterialParameters = {
     "texture_scale": [1.0, 1.0],
     "texture_offset": [0.0, 0.0],
+    "shade_scale": [1.0, 1.0],
+    "shade_offset": [0.0, 0.0],
+    "normal_scale": [1.0, 1.0],
+    "normal_offset": [0.0, 0.0],
+    "emission_scale": [1.0, 1.0],
+    "emission_offset": [0.0, 0.0],
     "color": [1.0, 1.0, 1.0, 1.0],
     "shade_color": [1.0, 1.0, 1.0],
     "emission_color": [0.0, 0.0, 0.0],
@@ -253,6 +275,12 @@ MTOON0_DEFAULT_VALUES: MToonMaterialParameters = {
 MTOON1_DEFAULT_VALUES: MToonMaterialParameters = {
     "texture_scale": [1.0, 1.0],
     "texture_offset": [0.0, 0.0],
+    "shade_scale": [1.0, 1.0],
+    "shade_offset": [0.0, 0.0],
+    "normal_scale": [1.0, 1.0],
+    "normal_offset": [0.0, 0.0],
+    "emission_scale": [1.0, 1.0],
+    "emission_offset": [0.0, 0.0],
     "lit_color": [1.0, 1.0, 1.0, 1.0],
     "shade_color": [1.0, 1.0, 1.0],
     "emission_color": [0.0, 0.0, 0.0],

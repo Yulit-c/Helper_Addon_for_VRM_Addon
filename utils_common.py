@@ -100,7 +100,7 @@ def set_attr_from_strings(object: object, attrs: str, value: Any):
             object = getattr(object, attr, None)
 
         else:
-            logger.debug(f"Set Attribute\n{object}\n{splitted_attrs[-1]}\n{value}")
+            # logger.debug(f"Set Attribute\n{object}\n{splitted_attrs[-1]}\n{value}")
             setattr(object, attr, value)
 
 

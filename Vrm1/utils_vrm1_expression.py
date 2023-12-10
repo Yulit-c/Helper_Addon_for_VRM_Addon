@@ -749,7 +749,13 @@ def set_mtoon1_texture_transform_from_bind(
         return
     mtoon1 = target_material.vrm_addon_extension.mtoon1
     # offset_value = [i * -1 for i in transform_bind.offset]
-    offset_value = transform_bind.offset
+    # offset_value = transform_bind.offset
 
-    set_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_scale"], transform_bind.scale)
-    set_attr_from_strings(mtoon1, MTOON1_ATTRIBUTE_NAMES["texture_offset"], offset_value)
+    # 全ての種類のTexture Coordinateに値をセットする｡
+
+    for k, v in MTOON1_ATTRIBUTE_NAMES.items():
+        if "scale" in k:
+            set_attr_from_strings(mtoon1, v, transform_bind.scale)
+
+        if "offset" in k:
+            set_attr_from_strings(mtoon1, v, transform_bind.offset)

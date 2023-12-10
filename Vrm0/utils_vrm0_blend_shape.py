@@ -617,7 +617,7 @@ def search_existing_material_uv_and_update(
 
 def set_mtoon0_parameters_from_material_value(material_value: ReferenceVrm0MaterialValueBindPropertyGroup):
     """
-    引数'material_value'で参照されているマテリアルのMToon0パラメーターにそのMateri alValueの値をセットする
+    引数'material_value'で参照されているマテリアルのMToon0パラメーターにそのMaterialValueの値をセットする
 
     Parameters
     ----------
@@ -631,26 +631,49 @@ def set_mtoon0_parameters_from_material_value(material_value: ReferenceVrm0Mater
     logger.debug(material_value.property_name)
 
     mtoon_ext = target_material.vrm_addon_extension.mtoon1
-    color_prop_set = {
-        "_Color",
-        "_ShadeColor",
-        "_RimColor",
-        "_EmissionColor",
-        "_OutlineColor",
-    }
-    value_list = [i.value for i in material_value.target_value]
+    # color_prop_set = {
+    #     "_Color",
+    #     "_ShadeColor",
+    #     "_RimColor",
+    #     "_EmissionColor",
+    #     "_OutlineColor",
+    # }
 
     # Color系統のパラメーターの場合
-    if material_value.property_name in color_prop_set:
-        mtoon_attr_name = get_mtoon_attr_name_from_property_type(material_value.property_name)
-        set_attr_from_strings(mtoon_ext, mtoon_attr_name, value_list)
+    mtoon_attr_name = get_mtoon_attr_name_from_property_type(material_value.property_name)
+    value_list = [i.value for i in material_value.target_value]
+    match material_value.property_name:
+        case "_Color":
+            set_attr_from_strings(mtoon_ext, mtoon_attr_name, value_list)
 
-    # UV Coordinateの場合
-    if "_MainTex_ST" in material_value.property_name:
-        uv_scale = (value_list[0], value_list[1])
-        scale_attr = MTOON0_ATTRIBUTE_NAMES["texture_scale"]
-        uv_offset = (value_list[2], value_list[3])
-        offset_attr = MTOON0_ATTRIBUTE_NAMES["texture_offset"]
+        case "_ShadeColor" | "_RimColor" | "_EmissionColor" | "_OutlineColor":
+            set_attr_from_strings(mtoon_ext, mtoon_attr_name, value_list[:-1])
 
-        set_attr_from_strings(mtoon_ext, scale_attr, uv_scale)
-        set_attr_from_strings(mtoon_ext, offset_attr, uv_offset)
+        case "_MainTex_ST":
+            # uv_scale = (value_list[0], value_list[1])
+            # uv_offset = (value_list[2], value_list[3])
+            # scale_attr = MTOON0_ATTRIBUTE_NAMES["texture_scale"]
+            # offset_attr = MTOON0_ATTRIBUTE_NAMES["texture_offset"]
+            for k, v in MTOON0_ATTRIBUTE_NAMES.items():
+                if "scale" in k:
+                    value = (value_list[0], value_list[1])
+                elif "offset" in k:
+                    value = (value_list[2], value_list[3])
+                else:
+                    return
+
+                set_attr_from_strings(mtoon_ext, v, value)
+
+    # if material_value.property_name in color_prop_set:
+    #     mtoon_attr_name = get_mtoon_attr_name_from_property_type(material_value.property_name)
+    #     set_attr_from_strings(mtoon_ext, mtoon_attr_name, value_list)
+
+    # # UV Coordinateの場合
+    # if "_MainTex_ST" in material_value.property_name:
+    #     uv_scale = (value_list[0], value_list[1])
+    #     scale_attr = MTOON0_ATTRIBUTE_NAMES["texture_scale"]
+    #     uv_offset = (value_list[2], value_list[3])
+    #     offset_attr = MTOON0_ATTRIBUTE_NAMES["texture_offset"]
+
+    #     set_attr_from_strings(mtoon_ext, scale_attr, uv_scale)
+    #     set_attr_from_strings(mtoon_ext, offset_attr, uv_offset)

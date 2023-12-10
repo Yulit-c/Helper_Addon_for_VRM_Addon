@@ -1129,8 +1129,16 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
 
     @classmethod
     def poll(cls, context):
+        if not (evaluation_expression_morph_collection() and evaluation_expression_material_collection()):
+            return False
+
         # TODO : いずれかのバインドが1つ以上存在する｡
-        return True
+        active_expression = get_active_expression()
+        return (
+            active_expression.morph_target_binds
+            or active_expression.material_color_binds
+            or active_expression.texture_transform_binds
+        )
 
     def execute(self, context):
         # アクティブエクスプレッションと各Bindsを取得する｡
@@ -1139,13 +1147,15 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
         material_color_binds = active_expression.material_color_binds
         texture_transform_binds = active_expression.texture_transform_binds
 
+        bpy.ops.vrm_helper.vrm1_expression_restore_initial_values()
+
         # ----------------------------------------------------------
         #    Morph Target Binds
         # ----------------------------------------------------------
         # アクティブエクスプレッションのMorpth Target Bindsの全てのBindの
         # メッシュ/シェイプキーに対してウェイトを反映する｡
         # 対象メッシュは処理前に全てのシェイプキーのウェイトを0にする｡
-        reset_shape_keys_value_in_morph_binds(morph_target_binds)
+        # reset_shape_keys_value_in_morph_binds(morph_target_binds)
 
         # Morph Target Bindに設定されているBlend Shapeの値を対応するShape Keyの値に代入する｡
         existing_bind_info = {}
@@ -1174,7 +1184,7 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
             get_addon_collection_name("VRM1_EXPRESSION_MATERIAL")
         )
         if expression_material_collection.all_objects:
-            bpy.ops.vrm_helper.vrm1_expression_restore_mtoon1_parameters()
+            # bpy.ops.vrm_helper.vrm1_expression_restore_mtoon1_parameters()
             # ----------------------------------------------------------
             #    Material Color Binds
             # ----------------------------------------------------------
@@ -1190,8 +1200,6 @@ class VRMHELPER_OT_vrm1_expression_assign_expression_to_scene(VRMHELPER_vrm1_exp
             # Materialに対してパラメーターを反映する｡
             for transform_bind in texture_transform_binds:
                 set_mtoon1_texture_transform_from_bind(transform_bind)
-
-            # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
         return {"FINISHED"}
 
