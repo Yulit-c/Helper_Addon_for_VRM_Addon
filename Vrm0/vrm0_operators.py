@@ -829,14 +829,19 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
             # MaterialとProperty Nameの値をセットする｡
             new_uv_value.material = source_material
             new_uv_value.property_name = prop_name
-            # target_valueの値をセットする｡
-            uv_scale = []
+
+            # Texture Coordinateの値を取得してBindにセットする｡初期値から選択がなければ初期値を適用する｡
+            if stored_prop := [
+                i for i in get_scene_vrm0_mtoon_stored_prop() if i.material == source_material
+            ]:
+                uv_scale = stored_prop[0].texture_scale
+                uv_offset = stored_prop[0].texture_offset
+
             if mtoon_uv_parameters_dict["texture_scale"]:
                 uv_scale = mtoon_uv_parameters_dict["texture_scale"]
-            uv_offset = []
             if mtoon_uv_parameters_dict["texture_offset"]:
                 uv_offset = mtoon_uv_parameters_dict["texture_offset"]
-            # value_set = mtoon_uv_parameters_dict["texture_scale"] + mtoon_uv_parameters_dict["texture_offset"]
+            # target_valueの値をセットする｡
             target_value = new_uv_value.target_value
             logger.debug(uv_scale)
             for n, scale_value in enumerate(uv_scale):
