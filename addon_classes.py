@@ -426,7 +426,7 @@ class ReferenceSpringBone1SpringPropertyGroup:
 #    Root
 # ----------------------------------------------------------
 class ReferenceSpringBone1SpringBonePropertyGroup:
-    colliders: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderPropertyGroup
+    colliders: bpy.types.CollectionProperty  # ReferenceVrm1ColliderPropertyGroup
     collider_groups: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderGroupPropertyGroup
     springs: bpy.types.CollectionProperty  # ReferenceSpringBone1SpringPropertyGroup
 

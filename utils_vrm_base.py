@@ -305,7 +305,6 @@ def is_existing_target_armature() -> bool:
         return False
 
 
-
 def get_vrm_extension_all_root_property() -> Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]:
     """
     Target Armatureに登録されているVRM Addonの全体のルートプロパティを取得する｡
@@ -437,19 +436,22 @@ def get_vrm1_extension_property_expression() -> ReferenceVrm1ExpressionsProperty
     return vrm1_expressions
 
 
-def get_vrm1_extension_collider() -> ReferenceVrm1ColliderPropertyGroup:
+def get_vrm1_extension_collider() -> bpy.types.bpy_prop_collection:
+    """ReferenceVrm1ColliderPropertyGroup"""
     vrm_springs = get_vrm_extension_all_root_property().spring_bone1
     collider_prop = vrm_springs.colliders
     return collider_prop
 
 
-def get_vrm1_extension_collider_group() -> ReferenceVrm1ColliderGroupPropertyGroup:
+def get_vrm1_extension_collider_group() -> bpy.types.bpy_prop_collection:
+    """ReferenceVrm1ColliderGroupPropertyGroup"""
     vrm_springs = get_vrm_extension_all_root_property().spring_bone1
     cg_prop = vrm_springs.collider_groups
     return cg_prop
 
 
-def get_vrm1_extension_spring() -> ReferenceSpringBone1SpringPropertyGroup:
+def get_vrm1_extension_spring() -> bpy.types.bpy_prop_collection:
+    """ReferenceSpringBone1SpringPropertyGroup"""
     vrm_springs = get_vrm_extension_all_root_property().spring_bone1
     spring_prop = vrm_springs.springs
     return spring_prop
@@ -1165,37 +1167,34 @@ def check_vrm_material_mode(
 
     return "GLTF"
 
+
 def re_link_all_expression_bind_objects2collection():
-    pass
-
-
-def get_all_collider_objects_from_scene() -> list[Object]:
     """
-    Target ArmatureのVRM Extensionに登録された全てのコライダーオブジェクトのリストを返す｡
-
-    Returns
-    -------
-    list[Object]
-        コライダーを定義するEmpty Objectのリスト｡
-
+    アドオンが定義するコレクション構造を構成した上で､Blend Shape/Expressionにバインドされている
+    オブジェクトまたはマテリアルを持つオブジェクトを対応するコレクションにリンクさせる｡
     """
-    # Target ArmatureのVRM Extensionに定義された全コライダーオブジェクトを取得する｡
-    collider_object_list = []
-    if not (colliders := get_vrm_extension_property("COLLIDER")):
-        return collider_object_list
+    addon_collection_dict = setting_vrm_helper_collection()
+    if not get_target_armature():
+        return
 
-    for collider in colliders:
-        empty_object = collider.bpy_object
-        if not empty_object:
-            continue
+    # 現在のモードに応じてVRM Extensionで定義されているColliderオブジェクトのリストを取得する｡
+    bind_object_list: list[bpy.types.Object]
+    match check_addon_mode():
+        case "0":
+            dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+            bind_object_list = []
 
-        collider_object_list.append(empty_object)
+        case "1":
+            dest_collection = addon_collection_dict["VRM1_COLLIDER"]
+            bind_object_list = []
 
-        # コライダータイプがCapsuleであれば子オブジェクトもリストに追加する｡
-        if children := empty_object.children:
-            collider_object_list.append(children[0])
+        case "2":
+            return
 
-    return collider_object_list
+    # 取得したColliderオブジェクトを対象のコレクションにリンクする｡
+    for obj in bind_object_list:
+        unlink_object_from_all_collections(obj)
+        dest_collection.objects.link(obj)
 
 
 def re_link_all_collider_object2collection():
@@ -1208,10 +1207,31 @@ def re_link_all_collider_object2collection():
     if not get_target_armature():
         return
 
-    dest_collection = addon_collection_dict["VRM1_COLLIDER"]
-    collider_objects = get_all_collider_objects_from_scene()
+    # 現在のモードに応じてVRM Extensionで定義されているColliderオブジェクトのリストを取得する｡
+    collider_object_list: list[bpy.types.Object]
+    match check_addon_mode():
+        case "0":
+            dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+            collider_object_list = [
+                j.bpy_object for i in get_vrm0_extension_collider_group() for j in i.colliders if j.bpy_object
+            ]
 
-    for obj in collider_objects:
+        case "1":
+            dest_collection = addon_collection_dict["VRM1_COLLIDER"]
+            collider_object_list = []
+            for i in get_vrm1_extension_collider():
+                if not i.bpy_object:
+                    continue
+                collider_object_list.append(i.bpy_object)
+                if not i.bpy_object.children:
+                    continue
+                collider_object_list.append(i.bpy_object.children[0])
+
+        case "2":
+            return
+
+    # 取得したColliderオブジェクトを対象のコレクションにリンクする｡
+    for obj in collider_object_list:
         unlink_object_from_all_collections(obj)
         dest_collection.objects.link(obj)
 

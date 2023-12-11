@@ -2401,6 +2401,22 @@ def get_scene_basic_prop() -> VRMHELPER_SCENE_basic_settings:
     return scene_basic_prop
 
 
+def check_addon_mode() -> str:
+    """
+    アドオンのProperty Group中のUI Modeの値を返す｡
+
+    Returns
+    -------
+    str
+        "0" : vrm ver 0.x
+        "1" : vrm ver 1.x
+        "2" : Misc Tools
+
+    """
+
+    return get_scene_basic_prop().tool_mode
+
+
 def get_target_armature() -> Optional[bpy.types.Object]:
     """
     Basic Prop階層下のTarget Armatureに登録されたArmature Objectを返す｡
