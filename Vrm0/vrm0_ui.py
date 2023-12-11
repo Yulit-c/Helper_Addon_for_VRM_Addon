@@ -67,19 +67,13 @@ from ..property_groups import (
     initialize_material_value_prop,
     get_vrm0_wm_root_prop,
     get_ui_vrm0_collider_group_prop,
-    get_ui_vrm0_spring_prop,
 )
 
 from ..utils_common import (
-    get_properties_to_dict,
     define_ui_list_rows,
-    set_properties_to_from_dict,
 )
 
 from ..utils_vrm_base import (
-    is_existing_target_armature,
-    check_addon_mode,
-    get_vrm_extension_root_property,
     get_vrm0_extension_blend_shape,
     get_vrm0_extension_active_blend_shape_group,
     get_vrm0_extension_secondary_animation,
@@ -94,9 +88,6 @@ from .utils_vrm0_first_person import (
 )
 
 from .utils_vrm0_blend_shape import (
-    get_scene_vrm0_mtoon_stored_prop,
-    vrm0_get_source_vrm0_blend_shape_bind4ui_list,
-    vrm0_get_source_vrm0_blend_shape_material4ui_list,
     get_ui_vrm0_blend_shape_bind_prop,
     get_ui_vrm0_blend_shape_material_prop,
     vrm0_add_items2blend_shape_bind_ui_list,
@@ -332,6 +323,8 @@ def draw_panel_vrm0_blend_shape(self, context, layout: bpy.types.UILayout):
         text="Assign Active Blen Shape",
     )
 
+    if not active_blend_shape:
+        return
     # ----------------------------------------------------------
     #    選択された編集対象のリストとオペレーターを描画
     # ----------------------------------------------------------

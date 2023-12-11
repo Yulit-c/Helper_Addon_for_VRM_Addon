@@ -78,6 +78,7 @@ from .property_groups import (
     VRMHELPER_SCENE_vrm1_mtoon1_stored_parameters,
     VRMHELPER_WM_operator_spring_bone_group_list_items,
     get_scene_basic_prop,
+    check_addon_mode,
     get_target_armature,
     get_target_armature_data,
     get_ui_bone_group_prop,
@@ -303,22 +304,6 @@ def is_existing_target_armature() -> bool:
     else:
         return False
 
-
-def check_addon_mode() -> str:
-    """
-    アドオンのProperty Group中のUI Modeの値を返す｡
-
-    Returns
-    -------
-    str
-        "0" : vrm ver 0.x
-        "1" : vrm ver 1.x
-        "2" : Misc Tools
-
-    """
-    basic_prop = get_scene_basic_prop()
-
-    return basic_prop.tool_mode
 
 
 def get_vrm_extension_all_root_property() -> Optional[ReferenceVrmAddonArmatureExtensionPropertyGroup]:
@@ -1180,6 +1165,9 @@ def check_vrm_material_mode(
 
     return "GLTF"
 
+def re_link_all_expression_bind_objects2collection():
+    pass
+
 
 def get_all_collider_objects_from_scene() -> list[Object]:
     """
@@ -1220,12 +1208,12 @@ def re_link_all_collider_object2collection():
     if not get_target_armature():
         return
 
-    vrm1_collider_collection = addon_collection_dict["VRM1_COLLIDER"]
+    dest_collection = addon_collection_dict["VRM1_COLLIDER"]
     collider_objects = get_all_collider_objects_from_scene()
 
     for obj in collider_objects:
         unlink_object_from_all_collections(obj)
-        vrm1_collider_collection.objects.link(obj)
+        dest_collection.objects.link(obj)
 
 
 def add_list_item2bone_group_list4operator():

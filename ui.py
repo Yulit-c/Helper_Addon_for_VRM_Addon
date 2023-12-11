@@ -41,20 +41,11 @@ from .addon_constants import (
 from .property_groups import (
     VRMHELPER_SCENE_basic_settings,
     get_scene_basic_prop,
-    get_target_armature_data,
 )
 
-from .utils_common import (
-    get_properties_to_dict,
-    define_ui_list_rows,
-    set_properties_to_from_dict,
-)
 
 from .utils_vrm_base import (
-    get_vrm_extension_root_property,
-    get_vrm_extension_property,
     is_existing_target_armature,
-    check_addon_mode,
 )
 
 

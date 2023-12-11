@@ -122,8 +122,10 @@ def vrm0_get_source_vrm0_blend_shape_bind4ui_list() -> (
     """
 
     # データ取得対象となる'morph_target_binds'から取得する｡
-    active_item = get_active_blend_shape()
     binds_dict = {}
+    if not (active_item := get_active_blend_shape()):
+        return binds_dict
+
     for n, bind in enumerate(active_item.binds):
         bind: ReferenceVrm0BlendShapeBindPropertyGroup = bind
         binds_dict.setdefault(bind.mesh.mesh_object_name, []).append((bind, n))

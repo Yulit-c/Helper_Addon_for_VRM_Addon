@@ -867,7 +867,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_both_binds_from_scene(VRMHELPER_vrm0_ble
 
     @classmethod
     def poll(cls, context):
-        return evaluation_expression_morph_collection() and evaluation_expression_material_collection()
+        return evaluation_expression_morph_collection() or evaluation_expression_material_collection()
 
     def execute(self, context):
         os.system("cls")

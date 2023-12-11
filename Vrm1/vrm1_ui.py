@@ -64,6 +64,7 @@ from ..property_groups import (
     VRMHELPER_WM_vrm1_expression_list_items,
     VRMHELPER_WM_vrm1_collider_list_items,
     VRMHELPER_WM_vrm1_constraint_list_items,
+    check_addon_mode,
     get_vrm1_wm_root_prop,
     get_target_armature,
     get_target_armature_data,
@@ -72,7 +73,6 @@ from ..property_groups import (
     get_ui_vrm1_expression_morph_prop,
     get_ui_vrm1_expression_material_prop,
     get_ui_vrm1_collider_prop,
-    get_ui_vrm1_constraint_prop,
 )
 
 from ..utils_common import (
@@ -85,7 +85,6 @@ from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
     get_vrm1_extension_property_expression,
-    check_addon_mode,
 )
 
 from .utils_vrm1_first_person import (

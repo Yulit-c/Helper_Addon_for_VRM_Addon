@@ -78,6 +78,7 @@ from .utils_common import (
 
 from .utils_vrm_base import (
     set_new_value2index_prop,
+    re_link_all_expression_bind_objects2collection,
     re_link_all_collider_object2collection,
 )
 
@@ -159,6 +160,7 @@ class VRMHELPER_OT_evaluate_addon_collections(bpy.types.Operator):
 
     def execute(self, context):
         os.system("cls")
+        re_link_all_expression_bind_objects2collection()
         re_link_all_collider_object2collection()
         return {"FINISHED"}
 
