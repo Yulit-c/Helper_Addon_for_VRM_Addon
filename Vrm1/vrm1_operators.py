@@ -113,7 +113,7 @@ from ..utils_vrm_base import (
     evaluation_expression_morph_collection,
     evaluation_expression_material_collection,
     get_vrm_extension_property,
-    get_vrm1_extension_property_expression,
+    get_vrm1_extension_expression,
     get_vrm1_extension_collider,
     get_vrm1_extension_collider_group,
     get_vrm1_extension_spring,
@@ -337,7 +337,7 @@ class VRMHELPER_OT_vrm1_expression_create_custom_expression(VRMHELPER_vrm1_expre
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        vrm1_expresions = get_vrm1_extension_property_expression()
+        vrm1_expresions = get_vrm1_extension_expression()
         custom_expressions = vrm1_expresions.custom
         new_item = custom_expressions.add()
         new_item.custom_name = "custom_expression"
@@ -362,7 +362,7 @@ class VRMHELPER_OT_vrm1_expression_remove_custom_expression(VRMHELPER_vrm1_expre
         ] < 0
 
     def execute(self, context):
-        vrm1_expresions = get_vrm1_extension_property_expression()
+        vrm1_expresions = get_vrm1_extension_expression()
         custom_expressions = vrm1_expresions.custom
         active_item = get_active_list_item_in_expression()
         custom_expressions.remove(active_item.expression_index[1])
@@ -384,12 +384,12 @@ class VRMHELPER_OT_vrm1_expression_clear_custom_expression(VRMHELPER_vrm1_expres
     @classmethod
     def poll(cls, context):
         # Expressionsにカスタムエクスプレッションが1つ以上存在している
-        vrm1_expresions = get_vrm1_extension_property_expression()
+        vrm1_expresions = get_vrm1_extension_expression()
         custom_expressions = vrm1_expresions.custom
         return custom_expressions
 
     def execute(self, context):
-        vrm1_expresions = get_vrm1_extension_property_expression()
+        vrm1_expresions = get_vrm1_extension_expression()
         custom_expressions = vrm1_expresions.custom
         custom_expressions.clear()
 

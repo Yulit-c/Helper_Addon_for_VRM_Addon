@@ -227,7 +227,7 @@ class ReferenceVrm1MeshAnnotationPropertyGroup:
 
 
 class ReferenceVrm1FirstPersonPropertyGroup:
-    mesh_annotations: bpy.types.CollectionProperty  # ReferenceVrm1MeshAnnotationPropertyGroup
+    mesh_annotations: bpy.types.CollectionProperty  # Vrm1MeshAnnotationPropertyGroup
 
 
 # ----------------------------------------------------------
@@ -269,9 +269,9 @@ class ReferenceVrm1TextureTransformBindPropertyGroup:
 
 
 class ReferenceVrm1ExpressionPropertyGroup:
-    morph_target_binds: bpy.types.CollectionProperty  # ReferenceVrm1MorphTargetBindPropertyGroup
-    material_color_binds: bpy.types.CollectionProperty  # ReferenceVrm1MaterialColorBindPropertyGroup
-    texture_transform_binds: bpy.types.CollectionProperty  # ReferenceVrm1TextureTransformBindPropertyGroup
+    morph_target_binds: bpy.types.CollectionProperty  # Vrm1MorphTargetBindPropertyGroup
+    material_color_binds: bpy.types.CollectionProperty  # Vrm1MaterialColorBindPropertyGroup
+    texture_transform_binds: bpy.types.CollectionProperty  # Vrm1TextureTransformBindPropertyGroup
     is_binary: bpy.types.BoolProperty
 
     EXPRESSION_OVERRIDE_TYPE_VALUES = Literal["none", "block", "blend"]
@@ -316,9 +316,9 @@ class ReferenceVrm1CustomExpressionPropertyGroup(ReferenceVrm1ExpressionProperty
 
 class ReferenceVrm1ExpressionsPropertyGroup:
     preset: ReferenceVrm1ExpressionsPresetPropertyGroup
-    custom: bpy.types.CollectionProperty  # ReferenceVrm1CustomExpressionPropertyGroup
+    custom: bpy.types.CollectionProperty  # Vrm1CustomExpressionPropertyGroup
 
-    expression_ui_list_elements: bpy.types.CollectionProperty  # ReferenceStringPropertyGroup
+    expression_ui_list_elements: bpy.types.CollectionProperty  # StringPropertyGroup
     active_expression_ui_list_element_index: bpy.types.IntProperty
 
 
@@ -373,7 +373,7 @@ class ReferenceVrm1ColliderPropertyGroup:
 # ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    colliders: bpy.types.CollectionProperty  # ReferenceVrm1ColliderPropertyGroup
+    colliders: bpy.types.CollectionProperty  # Vrm1ColliderPropertyGroup
     show_expanded: bpy.types.BoolProperty
     uuid: bpy.types.StringProperty
     search_one_time_uuid: bpy.types.StringProperty
@@ -412,8 +412,8 @@ class ReferenceSpringBone1ColliderGroupPropertyGroup:
 
 class ReferenceSpringBone1SpringPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    joints: bpy.types.CollectionProperty  # ReferenceSpringBone1JointPropertyGroup
-    collider_groups: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderGroupPropertyGroup
+    joints: bpy.types.CollectionProperty  # SpringBone1JointPropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # SpringBone1ColliderGroupPropertyGroup
     center: ReferenceBonePropertyGroup
 
     show_expanded: bpy.types.BoolProperty
@@ -426,9 +426,9 @@ class ReferenceSpringBone1SpringPropertyGroup:
 #    Root
 # ----------------------------------------------------------
 class ReferenceSpringBone1SpringBonePropertyGroup:
-    colliders: bpy.types.CollectionProperty  # ReferenceVrm1ColliderPropertyGroup
-    collider_groups: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderGroupPropertyGroup
-    springs: bpy.types.CollectionProperty  # ReferenceSpringBone1SpringPropertyGroup
+    colliders: bpy.types.CollectionProperty  # Vrm1ColliderPropertyGroup
+    collider_groups: bpy.types.CollectionProperty  # SpringBone1ColliderGroupPropertyGroup
+    springs: bpy.types.CollectionProperty  # SpringBone1SpringPropertyGroup
 
     enable_animation: bpy.types.BoolProperty
 

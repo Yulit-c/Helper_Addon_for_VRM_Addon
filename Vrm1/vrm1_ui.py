@@ -84,7 +84,7 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     get_vrm_extension_root_property,
     get_vrm_extension_property,
-    get_vrm1_extension_property_expression,
+    get_vrm1_extension_expression,
 )
 
 from .utils_vrm1_first_person import (
@@ -578,7 +578,7 @@ class VRMHELPER_UL_vrm1_expression_list(UIList):
         row = sp.row(align=True)
 
         # プリセットエクスプレッションの場合はlabel､カスタムの場合はpropで描画する
-        vrm1_expressions = get_vrm1_extension_property_expression()
+        vrm1_expressions = get_vrm1_extension_expression()
         # プリセットエクスプレッションの場合
         if item.expression_index[1] < 0:
             label_name = PRESET_EXPRESSION_NAME_DICT[item.name]

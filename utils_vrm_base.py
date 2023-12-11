@@ -62,6 +62,7 @@ from .addon_classes import (
 )
 
 from .addon_constants import (
+    PRESET_EXPRESSION_NAME_DICT,
     MTOON0_ATTRIBUTE_NAMES,
     MTOON1_ATTRIBUTE_NAMES,
     MTOON0_DEFAULT_VALUES,
@@ -430,7 +431,7 @@ def get_vrm1_extension_root_property() -> ReferenceVrm1PropertyGroup:
     return vrm1_root
 
 
-def get_vrm1_extension_property_expression() -> ReferenceVrm1ExpressionsPropertyGroup:
+def get_vrm1_extension_expression() -> ReferenceVrm1ExpressionsPropertyGroup:
     vrm1_extension = get_vrm1_extension_root_property()
     vrm1_expressions = vrm1_extension.expressions
     return vrm1_expressions
@@ -1178,21 +1179,42 @@ def re_link_all_expression_bind_objects2collection():
         return
 
     # 現在のモードに応じてVRM Extensionで定義されているColliderオブジェクトのリストを取得する｡
-    bind_object_list: list[bpy.types.Object]
+    bind_objects: set[bpy.types.Object]
     match check_addon_mode():
         case "0":
             dest_collection = addon_collection_dict["VRM0_COLLIDER"]
-            bind_object_list = []
+            # Bindsに登録されているオブジェクトを取得する
+            shape_key_objects = {
+                i.mesh.bpy_object
+                for i in get_vrm0_extension_blend_shape().blend_shape_groups.binds
+                if i.mesh.bpy_object
+            }
+
+            # Material Valueに登録されたマテリアルを持つオブジェクトを取得する
+            binded_materials = {
+                i.material
+                for i in get_vrm0_extension_blend_shape().blend_shape_groups.material_values
+                if i.material
+            }
+            mat_value_objects = {
+                i for i in bpy.data.objects for j in i.material_slots if j.material in binded_materials
+            }
+
+            bind_objects = shape_key_objects | mat_value_objects
 
         case "1":
             dest_collection = addon_collection_dict["VRM1_COLLIDER"]
-            bind_object_list = []
+            expressions = get_vrm1_extension_expression()
+            morph_objects = {}
+            mat_objects = {}
+            for i in PRESET_EXPRESSION_NAME_DICT.keys():
+                pass
 
         case "2":
             return
 
     # 取得したColliderオブジェクトを対象のコレクションにリンクする｡
-    for obj in bind_object_list:
+    for obj in bind_objects:
         unlink_object_from_all_collections(obj)
         dest_collection.objects.link(obj)
 
@@ -1208,30 +1230,30 @@ def re_link_all_collider_object2collection():
         return
 
     # 現在のモードに応じてVRM Extensionで定義されているColliderオブジェクトのリストを取得する｡
-    collider_object_list: list[bpy.types.Object]
+    collider_objects: set[bpy.types.Object]
     match check_addon_mode():
         case "0":
             dest_collection = addon_collection_dict["VRM0_COLLIDER"]
-            collider_object_list = [
+            collider_objects = {
                 j.bpy_object for i in get_vrm0_extension_collider_group() for j in i.colliders if j.bpy_object
-            ]
+            }
 
         case "1":
             dest_collection = addon_collection_dict["VRM1_COLLIDER"]
-            collider_object_list = []
+            collider_objects = {}
             for i in get_vrm1_extension_collider():
                 if not i.bpy_object:
                     continue
-                collider_object_list.append(i.bpy_object)
+                collider_objects.add(i.bpy_object)
                 if not i.bpy_object.children:
                     continue
-                collider_object_list.append(i.bpy_object.children[0])
+                collider_objects.add(i.bpy_object.children[0])
 
         case "2":
             return
 
     # 取得したColliderオブジェクトを対象のコレクションにリンクする｡
-    for obj in collider_object_list:
+    for obj in collider_objects:
         unlink_object_from_all_collections(obj)
         dest_collection.objects.link(obj)
 
