@@ -684,13 +684,19 @@ class VRMHELPER_OT_vrm0_blend_shape_restore_mtoon0_parameters(VRMHELPER_vrm0_ble
     bl_description = "Restore stored parameters of Mtoon1"
     bl_options = {"UNDO"}
 
-    @classmethod
-    def poll(cls, context):
-        return (
-            c := bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
-        ) and c.all_objects
+    # @classmethod
+    # def poll(cls, context):
+    #     return (
+    #         c := bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
+    #     ) and c.all_objects
 
     def execute(self, context):
+        if (
+            not (c := bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL")))
+            and c.all_objects
+        ):
+            return {"CANCELLED"}
+
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
 
         for mat in get_all_materials_from_source_collection_objects(source_collection):
@@ -751,12 +757,10 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
     bl_description = "Set Material Value from the material of the target objects on the scene"
     bl_options = {"UNDO"}
 
-    @classmethod
-    def poll(cls, context):
-        # 1つ以上のオブジェクトがリンクされた'VRM0_BlendShape_Material'のコレクションが存在する｡
-        return evaluation_expression_material_collection()
-
     def execute(self, context):
+        if not evaluation_expression_material_collection():
+            return {"CANCELLED"}
+
         active_blend_shape = get_active_blend_shape()
         material_values = active_blend_shape.material_values
         source_collection = bpy.data.collections.get(get_addon_collection_name("VRM0_BLENDSHAPE_MATERIAL"))
@@ -775,7 +779,7 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
         source_materials = sorted(list(source_materials), key=get_index)
 
         for source_material in source_materials:
-            logger.debug("\n\n")
+            logger.debug("\n")
             logger.debug(source_material.name)
             # ----------------------------------------------------------
             #    Material Color
@@ -841,17 +845,16 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
                 uv_scale = mtoon_uv_parameters_dict["texture_scale"]
             if mtoon_uv_parameters_dict["texture_offset"]:
                 uv_offset = mtoon_uv_parameters_dict["texture_offset"]
+
             # target_valueの値をセットする｡
             target_value = new_uv_value.target_value
-            logger.debug(uv_scale)
+            logger.debug(f"Set UV Scale : {uv_scale}")
             for n, scale_value in enumerate(uv_scale):
                 target_value[n].value = scale_value
 
-            logger.debug(uv_offset)
+            logger.debug(f"Set UV Offset : {uv_offset}")
             for n, offset_value in enumerate(uv_offset):
                 target_value[n + 2].value = offset_value
-
-        # TODO : Lit Color以外のTexture Transformの値をLit Colorと同じにする｡
 
         # ---------------------------------------------------------------------------------
         self.offset_active_item_index(self.mode_dict["MATERIAL"])

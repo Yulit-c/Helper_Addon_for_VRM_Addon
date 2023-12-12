@@ -1098,7 +1098,7 @@ def set_mtoon_default_values(target_material: Material):
     for stored_parameter_name, mtoon_attr_name in attr_dict.items():
         if source_patameters and (value := source_patameters.get(stored_parameter_name)):
             # value = source_patameters.get(stored_parameter_name)
-            logger.debug(f"Restore Stored Values : {target_material.name}")
+            # logger.debug(f"Restore Stored Values : {target_material.name}")
             if stored_parameter_name in {"texture_scale", "texture_offset"}:
                 for k, v in MTOON1_ATTRIBUTE_NAMES.items():
                     if not (re.search(r"scale|offset", k)):
@@ -1108,7 +1108,7 @@ def set_mtoon_default_values(target_material: Material):
                 set_attr_from_strings(mtoon_ext, mtoon_attr_name, value)
 
         else:
-            logger.debug(f"Return to Default Values : {target_material.name}")
+            # logger.debug(f"Return to Default Values : {target_material.name}")
             return_default_values_of_mtoon_properties(target_material)
 
 

@@ -630,8 +630,6 @@ def set_mtoon0_parameters_from_material_value(material_value: ReferenceVrm0Mater
     if not (target_material := material_value.material):
         return
 
-    logger.debug(material_value.property_name)
-
     mtoon_ext = target_material.vrm_addon_extension.mtoon1
     # color_prop_set = {
     #     "_Color",
@@ -660,7 +658,7 @@ def set_mtoon0_parameters_from_material_value(material_value: ReferenceVrm0Mater
                 if "scale" in k:
                     value = (value_list[0], value_list[1])
                 elif "offset" in k:
-                    value = (value_list[2], value_list[3])
+                    value = (value_list[2], value_list[3] * -1)
                 else:
                     return
 
