@@ -50,6 +50,9 @@ from .addon_classes import (
     ReferenceVrm1FirstPersonPropertyGroup,
     ReferenceVrm1ExpressionPropertyGroup,
     ReferenceVrm1MaterialColorBindPropertyGroup,
+    ReferenceVrm1MorphTargetBindPropertyGroup,
+    ReferenceVrm1MaterialColorBindPropertyGroup,
+    ReferenceVrm1TextureTransformBindPropertyGroup,
     ReferenceVrm1ExpressionsPropertyGroup,
     ReferenceVrm1ColliderPropertyGroup,
     ReferenceVrm1ColliderGroupPropertyGroup,
@@ -1179,44 +1182,68 @@ def re_link_all_expression_bind_objects2collection():
         return
 
     # 現在のモードに応じてVRM Extensionで定義されているColliderオブジェクトのリストを取得する｡
-    bind_objects: set[bpy.types.Object]
+    morph_objects: set[bpy.types.Object]
+    mat_objects: set[bpy.types.Object]
     match check_addon_mode():
         case "0":
-            dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+            morph_collection = addon_collection_dict["VRM0_BLEND_SHAPE_MORPH"]
+            mat_collection = addon_collection_dict["VRM0_BLEND_SHAPE_MATERIAL"]
             # Bindsに登録されているオブジェクトを取得する
-            shape_key_objects = {
-                i.mesh.bpy_object
-                for i in get_vrm0_extension_blend_shape().blend_shape_groups.binds
-                if i.mesh.bpy_object
+            morph_objects = {
+                j.mesh.bpy_object
+                for i in get_vrm0_extension_blend_shape().blend_shape_groups
+                for j in i.binds
+                if j.mesh.bpy_object
             }
 
             # Material Valueに登録されたマテリアルを持つオブジェクトを取得する
             binded_materials = {
-                i.material
-                for i in get_vrm0_extension_blend_shape().blend_shape_groups.material_values
-                if i.material
+                j.material
+                for i in get_vrm0_extension_blend_shape().blend_shape_groups
+                for j in i.material_values
+                if j.material
             }
-            mat_value_objects = {
+            mat_objects = {
                 i for i in bpy.data.objects for j in i.material_slots if j.material in binded_materials
             }
 
-            bind_objects = shape_key_objects | mat_value_objects
-
         case "1":
-            dest_collection = addon_collection_dict["VRM1_COLLIDER"]
+            morph_collection = addon_collection_dict["VRM1_EXPRESSION_MORPH"]
+            mat_collection = addon_collection_dict["VRM1_EXPRESSION_MATERIAL"]
             expressions = get_vrm1_extension_expression()
-            morph_objects = {}
-            mat_objects = {}
-            for i in PRESET_EXPRESSION_NAME_DICT.keys():
-                pass
+            morph_objects = set()
+            binded_mats = set()
+            mat_objects = set()
+            # Prest/Custom Expressionに紐付いている全てのオブジェクトを取得する
+            presets = [getattr(expressions.preset, i) for i in PRESET_EXPRESSION_NAME_DICT.keys()]
+            expression: ReferenceVrm1ExpressionPropertyGroup
+            for expression in presets + list(expressions.custom):
+                i: ReferenceVrm1MorphTargetBindPropertyGroup
+                # Morpth Target Bindに登録されているオブジェクトを取得する
+                for i in expression.morph_target_binds:
+                    if not i.node.bpy_object:
+                        continue
+                    morph_objects.add(i.node.bpy_object)
+
+                # Material Color Bindに登録されているマテリアルを取得する｡
+                for i in list(expression.material_color_binds) + list(expression.texture_transform_binds):
+                    if not i.material:
+                        continue
+                    binded_mats.add(i.material)
+            # 登録マテリアルを参照している全てのオブジェクトを取得する
+            mat_objects = {i for i in bpy.data.objects for j in i.material_slots if j.material in binded_mats}
 
         case "2":
             return
 
-    # 取得したColliderオブジェクトを対象のコレクションにリンクする｡
-    for obj in bind_objects:
+    # 取得したオブジェクトを対象のコレクションにリンクする｡
+    for obj in morph_objects:
         unlink_object_from_all_collections(obj)
-        dest_collection.objects.link(obj)
+        morph_collection.objects.link(obj)
+
+    for obj in mat_objects:
+        unlink_object_from_all_collections(obj)
+        mat_collection.objects.link(obj)
 
 
 def re_link_all_collider_object2collection():
@@ -1240,7 +1267,7 @@ def re_link_all_collider_object2collection():
 
         case "1":
             dest_collection = addon_collection_dict["VRM1_COLLIDER"]
-            collider_objects = {}
+            collider_objects = set()
             for i in get_vrm1_extension_collider():
                 if not i.bpy_object:
                     continue

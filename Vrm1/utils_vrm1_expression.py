@@ -79,7 +79,7 @@ from ..utils_common import (
 from ..utils_vrm_base import (
     MToonMaterialParameters,
     MTOON1_ATTRIBUTE_NAMES,
-    get_vrm1_extension_property_expression,
+    get_vrm1_extension_expression,
     get_mtoon_attr_name_from_property_type,
     get_mtoon_color_current_parameters,
     get_mtoon_uv_transform_current_parameters,
@@ -137,7 +137,7 @@ def get_source_vrm1_expression4ui_list() -> (
         情報を持つ辞書を格納したリストのタプル｡
     """
 
-    expressions = get_vrm1_extension_property_expression()
+    expressions = get_vrm1_extension_expression()
 
     # ----------------------------------------------------------
     #    Preset Expression
