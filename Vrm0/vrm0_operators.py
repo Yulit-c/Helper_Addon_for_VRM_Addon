@@ -844,7 +844,8 @@ class VRMHELPER_OT_vrm0_blend_shape_set_material_value_from_scene(VRMHELPER_vrm0
             if mtoon_uv_parameters_dict["texture_scale"]:
                 uv_scale = mtoon_uv_parameters_dict["texture_scale"]
             if mtoon_uv_parameters_dict["texture_offset"]:
-                uv_offset = mtoon_uv_parameters_dict["texture_offset"]
+                # VRM0ではOffsetのYを反転してBlenderとVRMフォーマットの差異を吸収する
+                uv_offset = [x * y for x, y in zip(mtoon_uv_parameters_dict["texture_offset"], (1.0, -1.0))]
 
             # target_valueの値をセットする｡
             target_value = new_uv_value.target_value

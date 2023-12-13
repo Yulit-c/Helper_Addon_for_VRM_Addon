@@ -27,6 +27,7 @@ from typing import (
 )
 
 import bpy
+from mathutils import Vector
 
 
 from ..addon_classes import (
@@ -593,7 +594,8 @@ def search_existing_material_uv_and_update(
         scale_value = mtoon_parameters_dict["texture_scale"]
         offset_value = mtoon_parameters_dict["texture_offset"]
         new_scale = scale_value if scale_value else [None, None]
-        new_offset = offset_value if offset_value else [None, None]
+        # VRM0ではOffsetのYを反転してBlenderとVRMフォーマットの差異を吸収する
+        new_offset = [x * y for x, y in zip(offset_value, (1.0, -1.0))] if offset_value else [None, None]
         new_values = new_scale + new_offset
 
         if new_values == old_values or not (any(new_values)):
