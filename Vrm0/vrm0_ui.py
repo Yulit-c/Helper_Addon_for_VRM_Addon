@@ -156,6 +156,7 @@ from .vrm0_operators import (
     VRMHELPER_OT_vrm0_spring_clear_bone,
     VRMHELPER_OT_vrm0_spring_add_bone_group_from_source,
     VRMHELPER_OT_vrm0_spring_remove_empty_joint_slots,
+    VRMHELPER_OT_vrm0_collider_mirroring_collider,
     # ----------------------------------------------------------
     #    Spring Bone Group's Collider Group
     # ----------------------------------------------------------
@@ -585,9 +586,9 @@ def draw_panel_vrm0_collider_group(self, context, layout: bpy.types.UILayout):
                 box_prop.prop(cg_prop, "active_collider_radius", text="Active Collider Radius")
 
         box_op = box.box()
-        op = box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
-        op.collider_radius = 0.08
+        box_op.operator(VRMHELPER_OT_vrm0_collider_create_from_bone.bl_idname)
         box_op.operator(VRMHELPER_OT_vrm0_collider_remove_from_empty.bl_idname)
+        box_op.operator(VRMHELPER_OT_vrm0_collider_mirroring_collider.bl_idname)
 
 
 def draw_panel_vrm0_spring(self, context, layout: bpy.types.UILayout):

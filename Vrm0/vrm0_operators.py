@@ -23,7 +23,7 @@ else:
     from . import utils_vrm0_spring
 
 
-import os, time, uuid, math
+import os, re, time, uuid, math
 import numpy as np
 from typing import (
     Literal,
@@ -1277,6 +1277,68 @@ class VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object(VRMHELPER_vrm0_co
         return {"FINISHED"}
 
 
+class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_group_base):
+    bl_idname = "vrm_helper.vrm0_collider_mirroring_collider"
+    bl_label = "Mirroring Collider"
+    bl_description = "Symmetrize the selected collider object"
+
+    @classmethod
+    def poll(cls, context):
+        # 選択オブジェクトにEmptyが含まれていなければ使用不可｡
+        return filtering_empty_from_selected_objects()
+
+    def execute(self, context):
+        from pprint import pprint
+
+        colliders_dict = {
+            j.bpy_object: i for i in get_vrm0_extension_collider_group() for j in i.colliders if j.bpy_object
+        }
+
+        reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
+        left_and_right_collider_objects = [
+            i for i in context.selected_objects if i.type == "EMPTY" and (mo := reg.match(i.name))
+        ]
+        for i in left_and_right_collider_objects:
+            if not (mo := reg.match(i.name)):
+                continue
+
+            logger.debug(mo.groups())
+            match mo.group(3):
+                case "l" | "r":
+                    l = ["l", "r"]
+                    l.remove(mo.group(3))
+                    opposite_suffix = l[0]
+
+                case "L" | "R":
+                    l = ["L", "R"]
+                    l.remove(mo.group(3))
+                    opposite_suffix = l[0]
+
+                case "left" | "right":
+                    l = ["left", "right"]
+                    l.remove(mo.group(3))
+                    opposite_suffix = l[0]
+
+                case "Left" | "Right":
+                    l = ["Left", "Right"]
+                    l.remove(mo.group(3))
+                    opposite_suffix = l[0]
+
+            opposite_name = mo.group(1) + mo.group(2) + opposite_suffix
+            if mo.group(4):
+                opposite_name += mo.group(4)
+            if not (opposite_object := bpy.data.objects.get(opposite_name)):
+                continue
+
+            left_and_right_collider_objects.remove(opposite_object)
+            logger.debug(opposite_object)
+            logger.debug("")
+
+            # logger.debug(left_and_right_collider_objects.pop)
+
+        return {"FINISHED"}
+
+
 """---------------------------------------------------------
     Spring Bone Group
 ---------------------------------------------------------"""
@@ -1820,6 +1882,7 @@ CLASSES = (
     VRMHELPER_OT_vrm0_collider_create_from_bone,
     VRMHELPER_OT_vrm0_collider_remove_from_empty,
     VRMHELPER_OT_vrm0_collider_refresh_active_item_by_object,
+    VRMHELPER_OT_vrm0_collider_mirroring_collider,
     # ----------------------------------------------------------
     #    Spring Bone Group
     # ----------------------------------------------------------
