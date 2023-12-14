@@ -95,6 +95,7 @@ from ..utils_common import (
     get_selected_bone,
     get_selected_bone_names,
     get_pose_bone_by_name,
+    get_mirror_name,
     generate_head_collider_position,
     generate_tail_collider_position,
     filtering_empty_from_selected_objects,
@@ -1290,51 +1291,91 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
     def execute(self, context):
         from pprint import pprint
 
-        colliders_dict = {
-            j.bpy_object: i for i in get_vrm0_extension_collider_group() for j in i.colliders if j.bpy_object
-        }
+        # Collider Empty ObjectをキーとしてColliderが属しているCollider Groupをバリューとして登録する
+        cg = get_vrm0_extension_collider_group()
+        cg_dict = {j.bpy_object: i for i in cg for j in i.colliders if j.bpy_object}
+        cg_bone_dict = {i.node.bone_name: i for i in cg if i.node.bone_name}
 
+        # reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
         reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
-        left_and_right_collider_objects = [
-            i for i in context.selected_objects if i.type == "EMPTY" and (mo := reg.match(i.name))
-        ]
+        left_and_right_collider_objects = [i for i in context.selected_objects if i.type == "EMPTY"]
         for i in left_and_right_collider_objects:
-            if not (mo := reg.match(i.name)):
+            if not i in cg_dict.keys():
+                logger.debug("Skip")
                 continue
 
-            logger.debug(mo.groups())
-            match mo.group(3):
-                case "l" | "r":
-                    l = ["l", "r"]
-                    l.remove(mo.group(3))
-                    opposite_suffix = l[0]
+            opposite_name = get_mirror_name(i.name)
 
-                case "L" | "R":
-                    l = ["L", "R"]
-                    l.remove(mo.group(3))
-                    opposite_suffix = l[0]
+            # if not (mo := reg.match(i.name)):
+            #     continue
 
-                case "left" | "right":
-                    l = ["left", "right"]
-                    l.remove(mo.group(3))
-                    opposite_suffix = l[0]
+            # match mo.group(3):
+            #     case "l" | "r":
+            #         l = ["l", "r"]
+            #         l.remove(mo.group(3))
+            #         opposite_suffix = l[0]
 
-                case "Left" | "Right":
-                    l = ["Left", "Right"]
-                    l.remove(mo.group(3))
-                    opposite_suffix = l[0]
+            #     case "L" | "R":
+            #         l = ["L", "R"]
+            #         l.remove(mo.group(3))
+            #         opposite_suffix = l[0]
 
-            opposite_name = mo.group(1) + mo.group(2) + opposite_suffix
-            if mo.group(4):
-                opposite_name += mo.group(4)
+            #     case "left" | "right":
+            #         l = ["left", "right"]
+            #         l.remove(mo.group(3))
+            #         opposite_suffix = l[0]
+
+            #     case "Left" | "Right":
+            #         l = ["Left", "Right"]
+            #         l.remove(mo.group(3))
+            #         opposite_suffix = l[0]
+
+            # opposite_name = mo.group(1) + mo.group(2) + opposite_suffix
+            # if mo.group(4):
+            # opposite_name += mo.group(4)
+
+            # 対称 Collider Emptyが存在しない場合は新規作成してCollider Groupに登録する
             if not (opposite_object := bpy.data.objects.get(opposite_name)):
-                continue
+                source_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = cg_dict[i]
+                if not (opposite_bone := i.parent.data.bones.get(get_mirror_name(source_cg.node.bone_name))):
+                    logger.debug("Skip")
+                    continue
 
-            left_and_right_collider_objects.remove(opposite_object)
-            logger.debug(opposite_object)
-            logger.debug("")
+                # 新規コライダーの作成｡
+                # https://github.com/saturday06/VRM-Addon-for-Blender
+                opposite_object = bpy.data.objects.new(name=opposite_name, object_data=None)
+                # Empty Objectのパラメーター
+                opposite_object.parent = i.parent
+                opposite_object.parent_type = "BONE"
+                opposite_object.parent_bone = opposite_bone.name
+                opposite_object.empty_display_type = "SPHERE"
+                opposite_object.empty_display_size = i.empty_display_size
+                opposite_object.location = i.location * Vector()
+                # オブジェクトをコレクションにリンク
+                addon_collection_dict = setting_vrm_helper_collection()
+                dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+                link_object2collection(opposite_object, dest_collection)
 
-            # logger.debug(left_and_right_collider_objects.pop)
+                # VRM Extensionのパラメーター
+                opposite_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
+                if not (opposite_cg := cg_bone_dict.get(opposite_bone.name)):
+                    opposite_cg = cg.add()
+                    opposite_cg.node.bone_name = opposite_bone.name
+                    opposite_cg.uuid = uuid.uuid4().hex
+                    opposite_cg.refresh(i.parent)
+
+                collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = opposite_cg.colliders.add()
+                collider.bpy_object = opposite_object
+
+            # 既に対称Collider Emptyが存在する場合はソースリストからオブジェクトを取り除く
+            else:
+                if opposite_object in left_and_right_collider_objects:
+                    left_and_right_collider_objects.remove(opposite_object)
+
+            # 対称Collider Emptyの位置を更新する｡
+            new_location = i.location * Vector((-1.0, 1.0, 1.0))
+            # logger.debug(f"Opposite Object : {opposite_object.name} -- New Location : {new_location}")
+            opposite_object.location = new_location
 
         return {"FINISHED"}
 

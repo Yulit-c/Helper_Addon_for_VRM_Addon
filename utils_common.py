@@ -15,8 +15,8 @@ else:
     from .Logging import preparation_logger
     from . import preferences
 
+import re
 
-from pprint import pprint
 from typing import (
     Optional,
     Iterator,
@@ -269,6 +269,50 @@ def get_pose_bone_by_name(source: bpy.types.Object, bone_name: str) -> Optional[
 
     obtained_pose_bone = source.pose.bones[bone_name]
     return obtained_pose_bone
+
+
+def get_mirror_name(source: str) -> str:
+    logger.debug(source)
+    # reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
+    if not (mo := re.match(r"(.*(?:\.|_|-))?(left|right|l|r)(.*)", source, re.IGNORECASE)):
+        logger.debug("Not Match")
+        return ""
+
+    mo_group = mo.groups()
+    match mo_group[1]:
+        case "l" | "r":
+            l = ["l", "r"]
+            l.remove(mo_group[1])
+            opposite_suffix = l[0]
+
+        case "L" | "R":
+            l = ["L", "R"]
+            l.remove(mo_group[1])
+            opposite_suffix = l[0]
+
+        case "left" | "right":
+            l = ["left", "right"]
+            l.remove(mo_group[1])
+            opposite_suffix = l[0]
+
+        case "Left" | "Right":
+            l = ["Left", "Right"]
+            l.remove(mo_group[1])
+            opposite_suffix = l[0]
+
+        case _:
+            logger.debug("Match _")
+            return ""
+
+    opposite_name = opposite_suffix
+    if mo_group[0]:
+        opposite_name = mo_group[0] + opposite_name
+
+    if mo_group[2]:
+        opposite_name += mo_group[2]
+
+    logger.debug(f"{source} -->> {opposite_name}")
+    return opposite_name
 
 
 def get_branch_root_bone(source_bone: bpy.types.Bone) -> Optional[bpy.types.Bone]:

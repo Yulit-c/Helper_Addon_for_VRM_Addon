@@ -233,7 +233,6 @@ class VRMHELPER_operator_base(bpy.types.Operator):
 
         """
 
-        logger.debug(type(self.vrm_mode))
         pattern = (self.vrm_mode, comopnent_type)
         logger.debug(pattern)
 
