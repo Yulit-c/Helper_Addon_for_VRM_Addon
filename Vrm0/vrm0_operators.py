@@ -1289,57 +1289,25 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
         return filtering_empty_from_selected_objects()
 
     def execute(self, context):
-        from pprint import pprint
-
         # Collider Empty ObjectをキーとしてColliderが属しているCollider Groupをバリューとして登録する
         cg = get_vrm0_extension_collider_group()
         cg_dict = {j.bpy_object: i for i in cg for j in i.colliders if j.bpy_object}
         cg_bone_dict = {i.node.bone_name: i for i in cg if i.node.bone_name}
 
-        # reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
-        reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
-        left_and_right_collider_objects = [i for i in context.selected_objects if i.type == "EMPTY"]
-        for i in left_and_right_collider_objects:
-            if not i in cg_dict.keys():
-                logger.debug("Skip")
-                continue
-
+        # 選択オブジェクトの内､VRM0 Colliderとして定義されているEmpty Objectを抽出する
+        keys = cg_dict.keys()
+        collider_empty_object = [i for i in context.selected_objects if i.type == "EMPTY" and i in keys]
+        for i in collider_empty_object:
             opposite_name = get_mirror_name(i.name)
-
-            # if not (mo := reg.match(i.name)):
-            #     continue
-
-            # match mo.group(3):
-            #     case "l" | "r":
-            #         l = ["l", "r"]
-            #         l.remove(mo.group(3))
-            #         opposite_suffix = l[0]
-
-            #     case "L" | "R":
-            #         l = ["L", "R"]
-            #         l.remove(mo.group(3))
-            #         opposite_suffix = l[0]
-
-            #     case "left" | "right":
-            #         l = ["left", "right"]
-            #         l.remove(mo.group(3))
-            #         opposite_suffix = l[0]
-
-            #     case "Left" | "Right":
-            #         l = ["Left", "Right"]
-            #         l.remove(mo.group(3))
-            #         opposite_suffix = l[0]
-
-            # opposite_name = mo.group(1) + mo.group(2) + opposite_suffix
-            # if mo.group(4):
-            # opposite_name += mo.group(4)
-
             # 対称 Collider Emptyが存在しない場合は新規作成してCollider Groupに登録する
             if not (opposite_object := bpy.data.objects.get(opposite_name)):
                 source_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = cg_dict[i]
-                if not (opposite_bone := i.parent.data.bones.get(get_mirror_name(source_cg.node.bone_name))):
-                    logger.debug("Skip")
-                    continue
+                # 処理対象Colliderの参照ボーンの対称ボーンが存在するばあいはそれを､存在しない場合は参照ボーンを
+                # 新規作成Colliderの参照ボーンに設定する｡
+                if opposite_bone := i.parent.data.bones.get(get_mirror_name(source_cg.node.bone_name)):
+                    parent_bone_name = opposite_bone.name
+                else:
+                    parent_bone_name = source_cg.node.bone_name
 
                 # 新規コライダーの作成｡
                 # https://github.com/saturday06/VRM-Addon-for-Blender
@@ -1347,7 +1315,7 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
                 # Empty Objectのパラメーター
                 opposite_object.parent = i.parent
                 opposite_object.parent_type = "BONE"
-                opposite_object.parent_bone = opposite_bone.name
+                opposite_object.parent_bone = parent_bone_name
                 opposite_object.empty_display_type = "SPHERE"
                 opposite_object.empty_display_size = i.empty_display_size
                 opposite_object.location = i.location * Vector()
@@ -1358,9 +1326,9 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
 
                 # VRM Extensionのパラメーター
                 opposite_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
-                if not (opposite_cg := cg_bone_dict.get(opposite_bone.name)):
+                if not (opposite_cg := cg_bone_dict.get(parent_bone_name)):
                     opposite_cg = cg.add()
-                    opposite_cg.node.bone_name = opposite_bone.name
+                    opposite_cg.node.bone_name = parent_bone_name
                     opposite_cg.uuid = uuid.uuid4().hex
                     opposite_cg.refresh(i.parent)
 
@@ -1369,13 +1337,15 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
 
             # 既に対称Collider Emptyが存在する場合はソースリストからオブジェクトを取り除く
             else:
-                if opposite_object in left_and_right_collider_objects:
-                    left_and_right_collider_objects.remove(opposite_object)
+                if opposite_object in collider_empty_object:
+                    collider_empty_object.remove(opposite_object)
 
             # 対称Collider Emptyの位置を更新する｡
             new_location = i.location * Vector((-1.0, 1.0, 1.0))
             # logger.debug(f"Opposite Object : {opposite_object.name} -- New Location : {new_location}")
             opposite_object.location = new_location
+
+            # TODO : 新規作成したColliderは反転元と同じCollider Groupに登録する
 
         return {"FINISHED"}
 

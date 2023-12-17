@@ -162,6 +162,7 @@ from .vrm1_operators import (
     VRMHELPER_OT_vrm1_collider_create_from_bone,
     VRMHELPER_OT_vrm1_collider_remove_from_empty,
     VRMHELPER_OT_vrm1_collider_refresh_active_item_by_object,
+    VRMHELPER_OT_vrm1_collider_mirroring_collider,
     # ----------------------------------------------------------
     #    Collider Group
     # ----------------------------------------------------------
@@ -788,6 +789,7 @@ def draw_panel_vrm1_collider(self, context: Context, layout: UILayout):
     row = box.row()
     row.operator(VRMHELPER_OT_vrm1_collider_create_from_bone.bl_idname)
     row.operator(VRMHELPER_OT_vrm1_collider_remove_from_empty.bl_idname)
+    row.operator(VRMHELPER_OT_vrm1_collider_mirroring_collider.bl_idname)
 
     # アクティブアイテムがボーン名である場合はプロパティを表示する｡
     if items_list := get_ui_vrm1_collider_prop():

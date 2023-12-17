@@ -275,7 +275,6 @@ def get_mirror_name(source: str) -> str:
     logger.debug(source)
     # reg = re.compile(r"(.+)(\.|_|-)(l|r|left|right)(.*)", re.IGNORECASE)
     if not (mo := re.match(r"(.*(?:\.|_|-))?(left|right|l|r)(.*)", source, re.IGNORECASE)):
-        logger.debug("Not Match")
         return ""
 
     mo_group = mo.groups()
@@ -301,7 +300,6 @@ def get_mirror_name(source: str) -> str:
             opposite_suffix = l[0]
 
         case _:
-            logger.debug("Match _")
             return ""
 
     opposite_name = opposite_suffix
