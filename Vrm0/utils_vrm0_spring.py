@@ -25,6 +25,7 @@ import bpy
 from bpy.types import (
     PropertyGroup,
 )
+from mathutils import Vector
 
 from ..addon_classes import (
     ReferenceStringPropertyGroup,
@@ -56,6 +57,8 @@ from ..property_groups import (
 
 from ..utils_common import (
     get_parent_count,
+    setting_vrm_helper_collection,
+    link_object2collection,
 )
 
 from ..utils_vrm_base import (
@@ -283,14 +286,68 @@ def vrm0_remove_collider_group_in_springs(
                 bone_group.collider_groups.remove(index)
 
 
+def create_collider_empty_object(
+    object_name: str,
+    parent_bone_name: str,
+    collider_size: float,
+    location: Vector,
+) -> bpy.types.Object:
+    """
+    VRM0 Colliderを定義するEmpty Objectを作成する
+
+    Parameters
+    ----------
+    object_name : str
+        作成されるEmpty Objectの名前
+
+    parent_bone_name : str
+        作成されるColliderのペアレントとなるボーンの名前
+
+    collider_size : float
+        作成されるColliderのサイズ
+
+    location : Vector
+        作成されるColliderの位置
+
+    Returns
+    -------
+    bpy.types.Object
+        作成されたEmpty Object
+
+    """
+
+    # https://github.com/saturday06/VRM-Addon-for-Blender
+    collider_object = bpy.data.objects.new(name=object_name, object_data=None)
+    # Empty Objectのパラメーター
+    collider_object.parent = get_target_armature()
+    collider_object.parent_type = "BONE"
+    collider_object.parent_bone = parent_bone_name
+    collider_object.empty_display_type = "SPHERE"
+    collider_object.empty_display_size = collider_size
+    collider_object.location = location
+    # オブジェクトをコレクションにリンク
+    addon_collection_dict = setting_vrm_helper_collection()
+    dest_collection = addon_collection_dict["VRM0_COLLIDER"]
+    link_object2collection(collider_object, dest_collection)
+
+    return collider_object
+
+
 # ----------------------------------------------------------
 #    Spring Bone Group
 # ----------------------------------------------------------
 def get_source_vrm0_springs() -> tuple[ReferenceVrm0SecondaryAnimationGroupPropertyGroup]:
-    # VRM ExtensionのSpring Bone Groupsを取得する
-    ext_bone_groups = get_vrm_extension_property("SPRING")
+    """
+    VRM0のSpring Bone Groupをタプルに変換して返す
 
-    # VRM1のSpring Bone Groupsをリストに格納して返す｡
+    Returns
+    -------
+    tuple[ReferenceVrm0SecondaryAnimationGroupPropertyGroup]
+        タプルに変換されたVRM0 Spring Bone GroupのCollection Property
+
+    """
+    # VRM0のSpring Bone Groupsを取得する
+    ext_bone_groups = get_vrm_extension_property("SPRING")
     bone_groups = tuple(ext_bone_groups)
 
     return bone_groups

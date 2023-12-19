@@ -145,6 +145,7 @@ from .utils_vrm0_blend_shape import (
 from .utils_vrm0_spring import (
     remove_vrm0_collider_when_removed_collider_group,
     get_active_list_item_in_collider_group,
+    create_collider_empty_object,
     remove_vrm0_collider_by_selected_object,
     vrm0_remove_collider_group_in_springs,
     vrm0_get_active_list_item_in_spring,
@@ -1289,63 +1290,7 @@ class VRMHELPER_OT_vrm0_collider_mirroring_collider(VRMHELPER_vrm0_collider_grou
         return filtering_empty_from_selected_objects()
 
     def execute(self, context):
-        # Collider Empty ObjectをキーとしてColliderが属しているCollider Groupをバリューとして登録する
         cg = get_vrm0_extension_collider_group()
-        cg_dict = {j.bpy_object: i for i in cg for j in i.colliders if j.bpy_object}
-        cg_bone_dict = {i.node.bone_name: i for i in cg if i.node.bone_name}
-
-        # 選択オブジェクトの内､VRM0 Colliderとして定義されているEmpty Objectを抽出する
-        keys = cg_dict.keys()
-        collider_empty_object = [i for i in context.selected_objects if i.type == "EMPTY" and i in keys]
-        for i in collider_empty_object:
-            opposite_name = get_mirror_name(i.name)
-            # 対称 Collider Emptyが存在しない場合は新規作成してCollider Groupに登録する
-            if not (opposite_object := bpy.data.objects.get(opposite_name)):
-                source_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup = cg_dict[i]
-                # 処理対象Colliderの参照ボーンの対称ボーンが存在するばあいはそれを､存在しない場合は参照ボーンを
-                # 新規作成Colliderの参照ボーンに設定する｡
-                if opposite_bone := i.parent.data.bones.get(get_mirror_name(source_cg.node.bone_name)):
-                    parent_bone_name = opposite_bone.name
-                else:
-                    parent_bone_name = source_cg.node.bone_name
-
-                # 新規コライダーの作成｡
-                # https://github.com/saturday06/VRM-Addon-for-Blender
-                opposite_object = bpy.data.objects.new(name=opposite_name, object_data=None)
-                # Empty Objectのパラメーター
-                opposite_object.parent = i.parent
-                opposite_object.parent_type = "BONE"
-                opposite_object.parent_bone = parent_bone_name
-                opposite_object.empty_display_type = "SPHERE"
-                opposite_object.empty_display_size = i.empty_display_size
-                opposite_object.location = i.location * Vector()
-                # オブジェクトをコレクションにリンク
-                addon_collection_dict = setting_vrm_helper_collection()
-                dest_collection = addon_collection_dict["VRM0_COLLIDER"]
-                link_object2collection(opposite_object, dest_collection)
-
-                # VRM Extensionのパラメーター
-                opposite_cg: ReferenceVrm0SecondaryAnimationColliderGroupPropertyGroup
-                if not (opposite_cg := cg_bone_dict.get(parent_bone_name)):
-                    opposite_cg = cg.add()
-                    opposite_cg.node.bone_name = parent_bone_name
-                    opposite_cg.uuid = uuid.uuid4().hex
-                    opposite_cg.refresh(i.parent)
-
-                collider: ReferencerVrm0SecondaryAnimationColliderPropertyGroup = opposite_cg.colliders.add()
-                collider.bpy_object = opposite_object
-
-            # 既に対称Collider Emptyが存在する場合はソースリストからオブジェクトを取り除く
-            else:
-                if opposite_object in collider_empty_object:
-                    collider_empty_object.remove(opposite_object)
-
-            # 対称Collider Emptyの位置を更新する｡
-            new_location = i.location * Vector((-1.0, 1.0, 1.0))
-            # logger.debug(f"Opposite Object : {opposite_object.name} -- New Location : {new_location}")
-            opposite_object.location = new_location
-
-            # TODO : 新規作成したColliderは反転元と同じCollider Groupに登録する
 
         return {"FINISHED"}
 
@@ -1643,16 +1588,6 @@ class VRMHELPER_OT_vrm0_spring_add_bone_group_from_source(
 
         # グループ分けされたボーンリストとボーンをSpring Bone GroupとBoneに登録する｡
         for group_name, root_bones in target_bones_dict.items():
-            # bone_group_name = "Spring Bone Group"
-            # Blender 4.0以降はBone GroupはBone Colledtionに統合されているため､グルーピング処理を分岐する｡
-            # if bpy.app.version < (4, 0, 0):
-            #     pose_bone: bpy.types.PoseBone = pose.bones.get(root_bone.name)
-            #     if pose_bone.bone_group:
-            #         source_bone_group = pose.bone_groups[group_index]
-            #         bone_group_name = source_bone_group.name
-            # else:
-            #     pass
-
             # group_name毎にスプリングボーングループを作成する｡
             spring_bone_groups = get_vrm0_extension_spring_bone_group()
             registered_bones = {bone.bone_name for group in spring_bone_groups for bone in group.bones}
