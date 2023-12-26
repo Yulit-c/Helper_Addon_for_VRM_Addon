@@ -373,7 +373,7 @@ class ReferenceVrm1ColliderPropertyGroup:
 # ----------------------------------------------------------
 class ReferenceVrm1ColliderGroupPropertyGroup:
     vrm_name: bpy.types.StringProperty
-    colliders: bpy.types.CollectionProperty  # Vrm1ColliderPropertyGroup
+    colliders: bpy.types.CollectionProperty  # ReferenceSpringBone1ColliderReferencePropertyGroup
     show_expanded: bpy.types.BoolProperty
     uuid: bpy.types.StringProperty
     search_one_time_uuid: bpy.types.StringProperty
