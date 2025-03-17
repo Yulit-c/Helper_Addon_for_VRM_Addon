@@ -1450,6 +1450,7 @@ class VRMHELPER_OT_vrm1_collider_create_from_bone(VRMHELPER_vrm1_collider_base):
             armature_data.use_mirror_x = True
 
         # Object Modeに移行してArmature Objectの選択を解除する｡
+        bpy.context.view_layer.objects.active = target_armature
         bpy.ops.object.mode_set(mode="OBJECT")
         target_armature.select_set(False)
 
@@ -2216,7 +2217,7 @@ class VRMHELPER_OT_vrm1_spring_assign_parameters_to_joints(
         # TODO : 処理内でターゲットのCollider Groupを追加する｡
         springs = get_vrm_extension_property("SPRING")
         springs_collection = get_ui_vrm1_operator_spring_prop()
-        collider_group_collection = get_ui_vrm1_operator_collider_group_prop()
+        collider_group_collection = [i for i in get_ui_vrm1_operator_collider_group_prop() if i.is_target]
 
         # フィルターワードに従ってスプリングの中から対象候補を抽出する｡
         spring_settings = get_scene_vrm1_spring_prop()

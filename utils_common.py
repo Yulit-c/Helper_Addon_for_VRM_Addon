@@ -125,7 +125,7 @@ def get_properties_to_dict(source: object, property_names: Iterator[str]) -> dic
 
     result = {}
     for name in property_names:
-        if value := getattr(source, name):
+        if (value := getattr(source, name, None)) != None:
             result[name] = value
 
     return result
